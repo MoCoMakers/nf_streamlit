@@ -31,3 +31,4 @@ def check_password():
 if check_password():
     st.write("Here goes your normal Streamlit app... Team MCH")
     st.button("Click me")
+    st.button("Click me the sequel")
