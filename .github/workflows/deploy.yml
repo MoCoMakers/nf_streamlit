@@ -8,7 +8,7 @@ jobs:
       prod_private_key: ${{ secrets.prod_private_key }}
       prod_user: ${{ secrets.prod_user }}
       prod_path: ${{ secrets.prod_path }}
-      prod_url: ${{ secrets.url }}
+      prod_url: ${{ secrets.prod_url }}
     steps:
       - if: ${{ env.prod_private_key == '' }}
         run: echo 'This step will only run if the secret has a value set.'
