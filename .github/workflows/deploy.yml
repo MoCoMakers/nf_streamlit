@@ -14,9 +14,11 @@ jobs:
         run: echo 'This step will only run if the secret has a value set.'
       - if: ${{ env.prod_private_key != '' }}
         run: |
-           echo 'This step has the prod_pass' \
+           echo -e "This step has the prod_pass" \
            eval $(ssh-agent -s) \
+           echo -e " " \
            ssh-add <(echo "$prod_private_key") \
-           echo "$(ls)"
+           echo -e " " \
+           echo -e "$(ls)"
 
             
