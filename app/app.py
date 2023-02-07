@@ -419,7 +419,7 @@ def make_mrgd_hts(drcs, smm_name_to_specimen_id):
 
 if check_password():
 
-    data_path = Path("/home/gatlay/syn5522627")
+    data_path = Path("syn5522627")
 
     (
         df_qhts_pdh,
