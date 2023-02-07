@@ -1,5 +1,5 @@
 from pathlib import Path
-import return
+import re
 
 import funcy
 import numpy as np
