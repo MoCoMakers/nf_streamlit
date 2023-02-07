@@ -1,0 +1,13 @@
+name: deploy-to-server
+on: [push]
+      
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      prod_pass: ${{ secrets.prod_pass }}
+    steps:
+      - if: ${{ env.prod_pass == '' }}
+        run: echo 'This step will only run if the secret has a value set.'
+      - if: ${{ env.prod_pass != '' }}
+        run: echo 'This step has the prod_pass'
