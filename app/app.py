@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
 from st_aggrid import AgGrid
-from st_aggrid import GridOptionBuilder, GridUpdateMode, DataReturnMode
+from st_aggrid import GridOptionsBuilder, GridUpdateMode, DataReturnMode
 
 def check_password():
     """Returns `True` if the user had the correct password."""
