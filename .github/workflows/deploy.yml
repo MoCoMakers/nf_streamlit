@@ -17,4 +17,4 @@ jobs:
           echo -e "This step has the prod_pass"
           eval $(ssh-agent -s)
           ssh-add <(echo "$prod_private_key")
-          ssh -o StrictHostKeyChecking=no -p 22 gatlay@nf.mocomakers.com 'bash -s /home/gatlay/nf_streamlit/scripts/deployment.sh /home/gatlay/nf_streamlit/ gatlay main'            
+          ssh -o StrictHostKeyChecking=no -p 22 gatlay@nf.mocomakers.com 'bash -c "/home/gatlay/nf_streamlit/scripts/deployment.sh /home/gatlay/nf_streamlit/ gatlay main"'            
