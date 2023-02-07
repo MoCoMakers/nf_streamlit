@@ -1,4 +1,15 @@
+from pathlib import Path
+import return
+
+import funcy
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import streamlit as st
+from st_aggrid import AgGrid
+from st_aggrid import GridOptionBuilder, GridUpdateMode, DataReturnMode
 
 def check_password():
     """Returns `True` if the user had the correct password."""
@@ -32,3 +43,5 @@ if check_password():
     st.write("Here goes your normal Streamlit app... Team MCH")
     st.button("Click me")
     st.button("Click me the sequel")
+
+    data_path = Path("/home/gatlay/syn5522627")
