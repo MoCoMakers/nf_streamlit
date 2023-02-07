@@ -17,4 +17,4 @@ jobs:
           echo -e "This step has the prod_pass"
           eval $(ssh-agent -s)
           ssh-add <(echo "$prod_private_key")
-          ssh -p 22 "$prod_user"@"$prod_url" 'bash -s $prod_path/scripts/deployment.sh $PRD_PATH $PRD_USER main'            
+          ssh -p 22 gatlay@nf.mocomakers.com 'bash -s $prod_path/scripts/deployment.sh $PRD_PATH $PRD_USER main'            
