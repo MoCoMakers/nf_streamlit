@@ -41,9 +41,11 @@ def check_password():
         # Password correct.
         return True
 
+
 # standardized column names for response and concentration
 R_COLS = [f"DATA{ii}" for ii in range(11)]
 C_COLS = [f"CONC{ii}" for ii in range(11)]
+
 
 # pairs of files that represent the same cell line
 # the top member is from the top level of the synapse dataset
@@ -92,6 +94,44 @@ SMM_NAME_GROUPS = [
     ("s-ntap-MTC-1.csv",),
 ]
 
+SMM_HIDE_COLS = [
+    "index",
+    "path",
+    "parent",
+    "id",
+    "synapseStore",
+    "contentType",
+    "used",
+    "executed",
+    "activityName",
+    "experimentalTimepoint",
+    "timePointUnit",
+    "accessType",
+    "activityDescription",
+    "studyId",
+    "fundingAgency",
+    "isPrimaryCell",
+    "entityId",
+    "Resource_id",
+    "isCellLine",
+    "resourceType",
+    "experimentalCondition",
+    "reporterGene",
+    "accessTeam",
+    "cellLineMetadataSynId",
+    "specimenMetadataSynId",
+    "initiative",
+    "isMultiIndividual",
+    "fileFormat",
+    "assay",
+    "individualMetadataSynId",
+    "studyName",
+    "isMultiSpecimen",
+    "eTag",
+    "reporterSubstance",
+    "dataType",
+    "drugScreenType",
+]
 
 BREWER_12_PAIRED = [
     "#a6cee3",
@@ -417,103 +457,364 @@ def make_mrgd_hts(drcs, smm_name_to_specimen_id):
     return dfs_mrgd
 
 
-if check_password():
+data_path = Path("/home/galtay/data/hack4nf-2022/synapse/syn5522627")
+(
+    df_qhts_pdh,
+    df_ssm,
+    df_smm,
+    df_smm_hts,
+    df_smm_mrgd,
+    smm_name_to_specimen_id,
+) = read_metadata(data_path)
+df_smm_mrgdi = df_smm_mrgd.reset_index()
+smm_show_cols = [col for col in df_smm_hts.columns if col not in SMM_HIDE_COLS]
+dfs_raw = read_raw_hts(df_smm_hts)
 
-    data_path = Path("syn5522627")
+drcs = {}
+for smm_name, df_raw in dfs_raw.items():
+    rows = df_smm_hts[df_smm_hts["name"] == smm_name][smm_show_cols]
+    assert rows.shape[0] == 1
+    row = rows.iloc[0]
+    drc = DoseResponseCurve(row.to_dict(), df_raw)
+    drcs[smm_name] = drc
 
-    (
-        df_qhts_pdh,
-        df_ssm,
-        df_smm,
-        df_smm_hts,
-        df_smm_mrgd,
-        smm_name_to_specimen_id,
-    ) = read_metadata(data_path)
-
-
-    smm_hide_cols = [
-        "index",
-        "path",
-        "parent",
-        "id",
-        "synapseStore",
-        "contentType",
-        "used",
-        "executed",
-        "activityName",
-        "experimentalTimepoint",
-        "timePointUnit",
-        "accessType",
-        "activityDescription",
-        "studyId",
-        "fundingAgency",
-        "isPrimaryCell",
-        "entityId",
-        "Resource_id",
-        "isCellLine",
-        "resourceType",
-        "experimentalCondition",
-        "reporterGene",
-        "accessTeam",
-        "cellLineMetadataSynId",
-        "specimenMetadataSynId",
-        "initiative",
-        "isMultiIndividual",
-        "fileFormat",
-        "assay",
-        "individualMetadataSynId",
-        "studyName",
-        "isMultiSpecimen",
-        "eTag",
-        "reporterSubstance",
-        "dataType",
-        "drugScreenType",
-    ]
-    smm_show_cols = [col for col in df_smm_hts.columns if col not in smm_hide_cols]
+dfs_mrgd = make_mrgd_hts(drcs, smm_name_to_specimen_id)
+# all df_mrgd have the same compounds
+df_compounds = dfs_mrgd[next(iter(dfs_mrgd.keys()))]
+df_compounds = df_compounds[["NCGC SID", "name", "target", "MoA", "SMILES"]]
 
 
-    dfs_raw = read_raw_hts(df_smm_hts)
 
 
-    drcs = {}
-    for smm_name, df_raw in dfs_raw.items():
-        rows = df_smm_hts[df_smm_hts["name"] == smm_name][smm_show_cols]
-        assert rows.shape[0] == 1
-        row = rows.iloc[0]
-        drc = DoseResponseCurve(row.to_dict(), df_raw)
-        drcs[smm_name] = drc
-
-    dfs_mrgd = make_mrgd_hts(drcs, smm_name_to_specimen_id)
-
-    # all df_mrgd have the same compounds
-    df_compounds = dfs_mrgd[next(iter(dfs_mrgd.keys()))]
-    df_compounds = df_compounds[["NCGC SID", "name", "target", "MoA", "SMILES"]]
-
-    # with st.sidebar:
-    #     st.header("Cell Line")
-    #     st_specimen_id = st.selectbox("Specimen ID", df_smm_mrgd.index)
-    #     st.write(df_smm_mrgd.loc[st_specimen_id].to_dict())
-
-    #     st.header("Compound")
-    #     unique_ncgc_sids = set()
-    #     for smm_name, drc in drcs.items():
-    #         unique_ncgc_sids.update(drc.df["NCGC SID"].unique())
-    #     unique_ncgc_sids = sorted(list(unique_ncgc_sids))
-    #     st_ncgc_sid = st.selectbox("NCGC SID", unique_ncgc_sids)
-
-    #     tmp_row = dfs_mrgd[st_specimen_id][dfs_mrgd[st_specimen_id]["NCGC SID"] == st_ncgc_sid]
-    #     st.write(tmp_row[["NCGC SID", "name", "target", "MoA", "SMILES"]].iloc[0].to_dict())
 
 
-    tab1, tab2, tab3 = st.tabs(["Raw Data", "Compound Explorer", "Cell Line Explorer"])
+def get_measured_trace(row, label=None, showlegend=False, color=None):
+    cs = row[C_COLS].astype(float).values
+    rs = row[R_COLS].astype(float).values
+    tr_measured = go.Scatter(
+        x=cs,
+        y=rs,
+        mode="markers",
+        name=label,
+        showlegend=showlegend,
+        marker_color=color,
+    )
+    return tr_measured
 
-    def show_raw_data(drcs):
-        for smm_name_group in SMM_NAME_GROUPS:
 
-            col1, col2 = st.columns(2)
+def get_fit_trace(row, label=None, showlegend=False, color=None):
+    cs = row[C_COLS].astype(float).values
+    fit_rs = ll4(
+        cs,
+        row["HILL"],
+        row["INF"],
+        row["ZERO"],
+        row["AC50"],
+    )
+    tr_fit = go.Scatter(
+        x=cs,
+        y=fit_rs,
+        mode="lines",
+        showlegend=showlegend,
+        name=label,
+        line_color=color,
+        line_dash="dot",
+    )
+    return tr_fit
 
-            with col1:
-                smm_name = smm_name_group[0]
+
+def get_ac50_trace(row, label=None, showlegend=False, color=None):
+    rs = row[R_COLS].astype(float).values
+    tr_ac50 = go.Scatter(
+        x=[row["AC50"]] * 2,
+        # y=[min(rs), max(rs)],
+        y=[row["ZERO"], row["INF"]],
+        mode="lines",
+        showlegend=showlegend,
+        name=label,
+        line_color=color,
+    )
+    return tr_ac50
+
+
+def build_grid_options(df):
+    # https://towardsdatascience.com/make-dataframes-interactive-in-streamlit-c3d0c4f84ccb
+    gb = GridOptionsBuilder.from_dataframe(df)
+    #gb.configure_pagination(paginationAutoPageSize=True)
+    gb.configure_side_bar()
+    gb.configure_selection(
+        'single',
+        use_checkbox=False,
+        groupSelectsChildren="Group checkbox select children",
+    )
+    gridOptions = gb.build()
+    return gridOptions
+
+
+
+# Compounds
+#==================================
+
+with st.sidebar:
+
+    st.header("Compounds")
+
+    cmp_grid_response = AgGrid(
+        df_compounds,
+        gridOptions=build_grid_options(df_compounds),
+        data_return_mode='AS_INPUT',
+        update_mode='MODEL_CHANGED',
+        #fit_columns_on_grid_load=True,
+        height=500,
+    #    width='100%',
+    )
+
+    cmp_data = cmp_grid_response['data']
+    cmp_selected = cmp_grid_response['selected_rows']
+
+    st.header("Selected Compound")
+    if cmp_selected:
+        df_compound_selected = pd.DataFrame(cmp_selected)[df_compounds.columns]
+    else:
+        df_compound_selected = df_compounds.iloc[0:1]
+
+    st.dataframe(df_compound_selected)
+    st_ncgc_sid = df_compound_selected.iloc[0]["NCGC SID"]
+
+
+st.header("Single Compound")
+
+
+col1, col2 = st.columns(2)
+
+with col1:
+
+    st.subheader("Dose Response Curves")
+    specimen_ids = df_smm_mrgd.sort_values("disease").index
+    num_cell_lines = len(specimen_ids)
+
+    n_cols = 4
+    n_rows = 3
+    fig = make_subplots(
+        rows=n_rows,
+        cols=n_cols,
+        shared_xaxes="all",
+        shared_yaxes="all",
+        vertical_spacing=0.05,
+        start_cell="top-left",
+        subplot_titles=specimen_ids,
+    )
+
+    i_row = 1
+    i_col = 1
+    i_tot = 0
+
+    df_sctr = {
+        "cell line": [],
+        "ac50": [],
+        "eff": [],
+    }
+    for specimen_id in specimen_ids:
+
+        df = dfs_mrgd[specimen_id]
+
+        row = df[df["NCGC SID"] == st_ncgc_sid].iloc[0]
+        df_sctr["cell line"].append(specimen_id)
+        df_sctr["ac50"].append(row["AC50"])
+        df_sctr["eff"].append(row["ZERO"] - row["INF"])
+
+        i_color = i_tot
+        tr_measured = get_measured_trace(row, color=BREWER_12_SET3[i_color])
+        tr_fit = get_fit_trace(row, color=BREWER_12_SET3[i_color])
+        tr_ac50 = get_ac50_trace(row, color=BREWER_12_SET3[i_color])
+        for tr in [tr_measured, tr_fit, tr_ac50]:
+            fig.add_trace(tr, row=i_row, col=i_col)
+
+        i_tot += 1
+        i_col += 1
+        if i_col > n_cols:
+            i_col = 1
+            i_row += 1
+
+    fig.update_xaxes(
+        type="log"
+    )  # , gridwidth=0.1, gridcolor="white") # , title="Dose")
+    fig.update_yaxes(
+        showgrid=True
+    )  # , gridwidth=0.1, gridcolor="white") # title="Response")
+    fig.update_layout(height=800)
+    st.plotly_chart(fig, use_container_width=True)
+
+with col2:
+
+    st.subheader("Effectiveness vs Concentration")
+    df_sctr = pd.DataFrame(df_sctr)
+    fig = px.scatter(
+        df_sctr,
+        x="ac50",
+        y="eff",
+        color="cell line",
+        color_discrete_sequence=BREWER_12_SET3,
+        hover_data=["cell line"],
+        height=800,
+    )
+    fig.update_xaxes(type="log")
+    fig.update_yaxes(range=[-150,250])
+    fig.update_layout(legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ))
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+    )
+
+
+# Cell Lines
+#==================================
+
+with st.sidebar:
+
+    st.header("Cell Lines")
+
+    cl_grid_response = AgGrid(
+        df_smm_mrgdi,
+        gridOptions=build_grid_options(df_smm_mrgdi),
+        data_return_mode='AS_INPUT',
+        update_mode='MODEL_CHANGED',
+        #fit_columns_on_grid_load=True,
+        width='100%',
+    )
+
+    cl_data = cl_grid_response['data']
+    cl_selected = cl_grid_response['selected_rows']
+
+    st.header("Selected Cell Line")
+    if cl_selected:
+        df_smm_mrgd_selected = pd.DataFrame(cl_selected)[df_smm_mrgdi.columns]
+    else:
+        df_smm_mrgd_selected = df_smm_mrgdi.iloc[0:1]
+
+    st.dataframe(df_smm_mrgd_selected)
+    st_specimen_id = df_smm_mrgd_selected.iloc[0]["specimenID"]
+
+
+# one cell line
+#---------------------------------
+st.header("Single Cell Line")
+
+
+df_sctr = {
+    "NCGC SID": [],
+    "compound": [],
+    "AC50": [],
+    "eff": [],
+    "target": [],
+}
+
+df = dfs_mrgd[st_specimen_id]
+for indx, row in df.iterrows():
+
+    df_sctr["NCGC SID"].append(row["NCGC SID"])
+    df_sctr["compound"].append(row["name"])
+    df_sctr["AC50"].append(row["AC50"])
+    df_sctr["eff"].append(row["ZERO"] - row["INF"])
+    df_sctr["target"].append(row["target"])
+
+df_sctr = pd.DataFrame(df_sctr)
+df_sctr = pd.merge(df_sctr, df_compounds[["NCGC SID", "MoA"]], on="NCGC SID")
+fig = px.scatter(
+    df_sctr,
+    x="AC50",
+    y="eff",
+    hover_data=["compound", "target", "MoA"],
+    height=600,
+)
+fig.update_xaxes(type="log")
+st.plotly_chart(
+    fig,
+    use_container_width=True,
+)
+
+
+# all cell lines
+#---------------------------------
+st.header("All Cell Lines")
+
+
+df_sctr = {
+    "NCGC SID": [],
+    "compound": [],
+    "AC50": [],
+    "eff": [],
+    "target": [],
+    "cell line": [],
+}
+
+for specimen_id, df in dfs_mrgd.items():
+
+    for indx, row in df.iterrows():
+
+        df_sctr["NCGC SID"].append(row["NCGC SID"])
+        df_sctr["compound"].append(row["name"])
+        df_sctr["AC50"].append(row["AC50"])
+        df_sctr["eff"].append(row["ZERO"] - row["INF"])
+        df_sctr["target"].append(row["target"])
+        df_sctr["cell line"].append(specimen_id)
+
+df_sctr = pd.DataFrame(df_sctr)
+df_sctr = pd.merge(df_sctr, df_compounds[["NCGC SID", "MoA"]], on="NCGC SID")
+fig = px.scatter(
+    df_sctr,
+    x="AC50",
+    y="eff",
+    hover_data=["compound", "target", "MoA"],
+    height=600,
+    color="cell line",
+#    color_discrete_sequence=BREWER_12_SET3,
+)
+fig.update_xaxes(type="log")
+st.plotly_chart(
+    fig,
+    use_container_width=True,
+)
+
+
+
+
+
+
+# Raw Data
+#==================================
+
+def show_raw_data(drcs):
+    for smm_name_group in SMM_NAME_GROUPS:
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            smm_name = smm_name_group[0]
+            drc = drcs[smm_name]
+
+            st.header(smm_name)
+            st.write(f"df_raw.shape: {drc.df_raw.shape}")
+            st.write(drc.smm_hts)
+            st.write(drc.df_raw.head(10))
+
+            fig = px.histogram(drc.df["LAC50"])
+            c_min = np.log10(drc.df_raw[drc.raw_cols_conc[0]].min())
+            c_max = np.log10(drc.df_raw[drc.raw_cols_conc[-1]].max())
+
+            fig.add_vline(x=c_min, line_color=IBM_COLORS[1])
+            fig.add_vline(x=c_max, line_color=IBM_COLORS[1])
+            st.plotly_chart(fig, use_container_width=True)
+
+        with col2:
+            if len(smm_name_group) > 1:
+                smm_name = smm_name_group[1]
                 drc = drcs[smm_name]
 
                 st.header(smm_name)
@@ -529,282 +830,10 @@ if check_password():
                 fig.add_vline(x=c_max, line_color=IBM_COLORS[1])
                 st.plotly_chart(fig, use_container_width=True)
 
-            with col2:
-                if len(smm_name_group) > 1:
-                    smm_name = smm_name_group[1]
-                    drc = drcs[smm_name]
-
-                    st.header(smm_name)
-                    st.write(f"df_raw.shape: {drc.df_raw.shape}")
-                    st.write(drc.smm_hts)
-                    st.write(drc.df_raw.head(10))
-
-                    fig = px.histogram(drc.df["LAC50"])
-                    c_min = np.log10(drc.df_raw[drc.raw_cols_conc[0]].min())
-                    c_max = np.log10(drc.df_raw[drc.raw_cols_conc[-1]].max())
-
-                    fig.add_vline(x=c_min, line_color=IBM_COLORS[1])
-                    fig.add_vline(x=c_max, line_color=IBM_COLORS[1])
-                    st.plotly_chart(fig, use_container_width=True)
-
-
-    with tab1:
-        st.header("SYNAPSE_METADATA_MANIFEST.csv")
-        st.dataframe(df_smm_hts[smm_show_cols])
-        st.header("Merged Cell Line Metadata")
-        st.dataframe(df_smm_mrgd)
-        AgGrid(df_smm_mrgd.reset_index())
-        show_raw_data(drcs)
-
-
-    def get_measured_trace(row, label=None, showlegend=False, color=None):
-        cs = row[C_COLS].astype(float).values
-        rs = row[R_COLS].astype(float).values
-        tr_measured = go.Scatter(
-            x=cs,
-            y=rs,
-            mode="markers",
-            name=label,
-            showlegend=showlegend,
-            marker_color=color,
-        )
-        return tr_measured
-
-
-    def get_fit_trace(row, label=None, showlegend=False, color=None):
-        cs = row[C_COLS].astype(float).values
-        fit_rs = ll4(
-            cs,
-            row["HILL"],
-            row["INF"],
-            row["ZERO"],
-            row["AC50"],
-        )
-        tr_fit = go.Scatter(
-            x=cs,
-            y=fit_rs,
-            mode="lines",
-            showlegend=showlegend,
-            name=label,
-            line_color=color,
-            line_dash="dot",
-        )
-        return tr_fit
-
-
-    def get_ac50_trace(row, label=None, showlegend=False, color=None):
-        rs = row[R_COLS].astype(float).values
-        tr_ac50 = go.Scatter(
-            x=[row["AC50"]] * 2,
-            # y=[min(rs), max(rs)],
-            y=[row["ZERO"], row["INF"]],
-            mode="lines",
-            showlegend=showlegend,
-            name=label,
-            line_color=color,
-        )
-        return tr_ac50
-
-
-    def build_grid_options(df):
-        # https://towardsdatascience.com/make-dataframes-interactive-in-streamlit-c3d0c4f84ccb
-        gb = GridOptionsBuilder.from_dataframe(df)
-        gb.configure_pagination(paginationAutoPageSize=True)
-        gb.configure_side_bar()
-        gb.configure_selection(
-            'single',
-            use_checkbox=True,
-            groupSelectsChildren="Group checkbox select children",
-        )
-        gridOptions = gb.build()
-        return gridOptions
-
-
-    with tab2:
-
-        st.header("All Compounds")
-        #st.dataframe(df_compounds)
-        #AgGrid(df_compounds)
-
-        cmp_gridOptions = build_grid_options(df_compounds)
-        cmp_grid_response = AgGrid(
-            df_compounds,
-            gridOptions=cmp_gridOptions,
-            data_return_mode='AS_INPUT',
-            update_mode='MODEL_CHANGED',
-            fit_columns_on_grid_load=True,
-    #        theme='blue', #Add theme color to the table
-    #        enable_enterprise_modules=True,
-            height=500,
-            width='100%',
-    #        reload_data=True
-        )
-
-        cmp_data = cmp_grid_response['data']
-        cmp_selected = cmp_grid_response['selected_rows']
-
-        st.header("Selected Compound")
-        if cmp_selected:
-            df_compound_selected = pd.DataFrame(cmp_selected)[df_compounds.columns]
-        else:
-            df_compound_selected = df_compounds.iloc[0:1]
-
-        st.dataframe(df_compound_selected)
-        st_ncgc_sid = df_compound_selected.iloc[0]["NCGC SID"]
-
-        st.header("Dose Response Curves")
-        # specimen_ids = list(dfs_mrgd.keys())
-        specimen_ids = df_smm_mrgd.sort_values("disease").index
-        num_cell_lines = len(specimen_ids)
-
-        n_cols = 4
-        n_rows = 3
-        fig = make_subplots(
-            rows=n_rows,
-            cols=n_cols,
-            shared_xaxes="all",
-            shared_yaxes="all",
-            vertical_spacing=0.05,
-            start_cell="top-left",
-            subplot_titles=specimen_ids,
-        )
-
-        i_row = 1
-        i_col = 1
-        i_tot = 0
-
-        df_sctr = {
-            "cell line": [],
-            "ac50": [],
-            "eff": [],
-        }
-        for specimen_id in specimen_ids:
-
-            df = dfs_mrgd[specimen_id]
-
-            row = df[df["NCGC SID"] == st_ncgc_sid].iloc[0]
-            df_sctr["cell line"].append(specimen_id)
-            df_sctr["ac50"].append(row["AC50"])
-            df_sctr["eff"].append(row["ZERO"] - row["INF"])
-
-            i_color = i_tot
-            tr_measured = get_measured_trace(row, color=BREWER_12_SET3[i_color])
-            tr_fit = get_fit_trace(row, color=BREWER_12_SET3[i_color])
-            tr_ac50 = get_ac50_trace(row, color=BREWER_12_SET3[i_color])
-            for tr in [tr_measured, tr_fit, tr_ac50]:
-                fig.add_trace(tr, row=i_row, col=i_col)
-
-            i_tot += 1
-            i_col += 1
-            if i_col > n_cols:
-                i_col = 1
-                i_row += 1
-
-        fig.update_xaxes(
-            type="log"
-        )  # , gridwidth=0.1, gridcolor="white") # , title="Dose")
-        fig.update_yaxes(
-            showgrid=True
-        )  # , gridwidth=0.1, gridcolor="white") # title="Response")
-        fig.update_layout(height=800)
-        st.plotly_chart(fig, use_container_width=True)
-
-        st.header("Effectiveness vs Potentcy")
-        df_sctr = pd.DataFrame(df_sctr)
-        fig = px.scatter(
-            df_sctr,
-            x="ac50",
-            y="eff",
-            color="cell line",
-            hover_data=["cell line"],
-            height=600,
-        )
-        fig.update_xaxes(type="log")
-        st.plotly_chart(
-            fig,
-            use_container_width=True,
-        )
-
-    with tab3:
-
-        st.header("Cell Lines")
-    #    st.dataframe(df_smm_mrgd)
-
-
-        cl_gridOptions = build_grid_options(df_smm_mrgd.reset_index())
-        cl_grid_response = AgGrid(
-            df_smm_mrgd.reset_index(),
-            gridOptions=cl_gridOptions,
-            data_return_mode='AS_INPUT',
-            update_mode='MODEL_CHANGED',
-            fit_columns_on_grid_load=True,
-            width='100%',
-            #reload_data=True
-        )
-
-        cl_data = cl_grid_response['data']
-        cl_selected = cl_grid_response['selected_rows']
-
-        st.header("Selected Cell Line")
-        if cl_selected:
-            df_smm_mrgd_selected = pd.DataFrame(cl_selected)[df_smm_mrgd.reset_index().columns]
-        else:
-            df_smm_mrgd_selected = df_smm_mrgd.reset_index().iloc[0:1]
-
-        st.dataframe(df_smm_mrgd_selected)
-        st_specimen_id = df_smm_mrgd_selected.iloc[0]["specimenID"]
-
-        df_sctr = {
-            "NCGC SID": [],
-            "compound": [],
-            "AC50": [],
-            "eff": [],
-            "target": [],
-            #"MoA": [],
-        }
-
-        df = dfs_mrgd[st_specimen_id]
-        for indx, row in df.iterrows():
-
-            df_sctr["NCGC SID"].append(row["NCGC SID"])
-            df_sctr["compound"].append(row["name"])
-            df_sctr["AC50"].append(row["AC50"])
-            df_sctr["eff"].append(row["ZERO"] - row["INF"])
-            df_sctr["target"].append(row["target"])
-            #df_sctr["MoA"].append(row["MoA"])
-
-        df_sctr = pd.DataFrame(df_sctr)
-        df_sctr = pd.merge(df_sctr, df_compounds[["NCGC SID", "MoA"]], on="NCGC SID")
-        fig = px.scatter(
-            df_sctr,
-            x="AC50",
-            y="eff",
-            hover_data=["compound", "target", "MoA"],
-            height=600,
-            #color="MoA",
-        )
-        fig.update_xaxes(type="log")
-        st.plotly_chart(
-            fig,
-            use_container_width=True,
-        )
-
-
-
-        st.header(st_specimen_id)
-        st.write(dfs_mrgd[st_specimen_id].head(10))
-
-
-
-
-        iloc = st.number_input(
-            "sample index",
-            min_value=0,
-            max_value=dfs_mrgd[specimen_id].shape[0] - 1,
-            value=0,
-        )
-
-        row = dfs_mrgd[specimen_id].iloc[iloc][
-            [col for col in dfs_mrgd[specimen_id].columns if col not in C_COLS + R_COLS]
-        ]
-        st.write(row.to_dict())
+show_raw_data_flag = st.checkbox("Show Raw Data", value=False)
+if show_raw_data_flag:
+    st.header("SYNAPSE_METADATA_MANIFEST.csv")
+    st.dataframe(df_smm_hts[smm_show_cols])
+    st.header("Merged Cell Line Metadata")
+    AgGrid(df_smm_mrgdi)
+    show_raw_data(drcs)
