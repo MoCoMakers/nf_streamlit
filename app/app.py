@@ -458,7 +458,7 @@ if check_password():
         return dfs_mrgd
 
 
-    data_path = Path("/home/galtay/data/hack4nf-2022/synapse/syn5522627")
+    data_path = Path("syn5522627")
     (
         df_qhts_pdh,
         df_ssm,
