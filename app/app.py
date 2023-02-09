@@ -458,7 +458,7 @@ if check_password():
         return dfs_mrgd
 
 
-    data_path = Path("syn5522627")
+    data_path = Path("/home/galtay/data/hack4nf-2022/synapse/syn5522627")
     (
         df_qhts_pdh,
         df_ssm,
@@ -553,10 +553,13 @@ if check_password():
 
 
 
-    # Compounds
+    # Sidebar
     #==================================
 
     with st.sidebar:
+
+        # Compound selector
+        #----------------------------------
 
         st.header("Compounds")
 
@@ -573,17 +576,49 @@ if check_password():
         cmp_data = cmp_grid_response['data']
         cmp_selected = cmp_grid_response['selected_rows']
 
-        st.header("Selected Compound")
         if cmp_selected:
             df_compound_selected = pd.DataFrame(cmp_selected)[df_compounds.columns]
         else:
             df_compound_selected = df_compounds.iloc[0:1]
 
-        st.dataframe(df_compound_selected)
         st_ncgc_sid = df_compound_selected.iloc[0]["NCGC SID"]
 
+        # Cell Line selector
+        #----------------------------------
 
-    st.header("Single Compound")
+        st.header("Cell Lines")
+
+        cl_grid_response = AgGrid(
+            df_smm_mrgdi,
+            gridOptions=build_grid_options(df_smm_mrgdi),
+            data_return_mode='AS_INPUT',
+            update_mode='MODEL_CHANGED',
+            #fit_columns_on_grid_load=True,
+            width='100%',
+        )
+
+        cl_data = cl_grid_response['data']
+        cl_selected = cl_grid_response['selected_rows']
+
+        if cl_selected:
+            df_smm_mrgd_selected = pd.DataFrame(cl_selected)[df_smm_mrgdi.columns]
+        else:
+            df_smm_mrgd_selected = df_smm_mrgdi.iloc[0:1]
+
+        st_specimen_id = df_smm_mrgd_selected.iloc[0]["specimenID"]
+
+        # Thresholds
+        #----------------------------------
+        st.header("Thresholds")
+
+        st_r2 = st.slider('R2 Threshold', 0.5, 1.0, 0.5)
+
+
+    # Compounds
+    #==================================
+
+    st.header("Selected Compound")
+    st.dataframe(df_compound_selected)
 
 
     col1, col2 = st.columns(2)
@@ -648,7 +683,7 @@ if check_password():
 
     with col2:
 
-        st.subheader("Effectiveness vs Concentration")
+        st.subheader("Effectiveness vs AC50")
         df_sctr = pd.DataFrame(df_sctr)
         fig = px.scatter(
             df_sctr,
@@ -677,36 +712,10 @@ if check_password():
     # Cell Lines
     #==================================
 
-    with st.sidebar:
-
-        st.header("Cell Lines")
-
-        cl_grid_response = AgGrid(
-            df_smm_mrgdi,
-            gridOptions=build_grid_options(df_smm_mrgdi),
-            data_return_mode='AS_INPUT',
-            update_mode='MODEL_CHANGED',
-            #fit_columns_on_grid_load=True,
-            width='100%',
-        )
-
-        cl_data = cl_grid_response['data']
-        cl_selected = cl_grid_response['selected_rows']
-
-        st.header("Selected Cell Line")
-        if cl_selected:
-            df_smm_mrgd_selected = pd.DataFrame(cl_selected)[df_smm_mrgdi.columns]
-        else:
-            df_smm_mrgd_selected = df_smm_mrgdi.iloc[0:1]
-
-        st.dataframe(df_smm_mrgd_selected)
-        st_specimen_id = df_smm_mrgd_selected.iloc[0]["specimenID"]
-
-
     # one cell line
     #---------------------------------
-    st.header("Single Cell Line")
-
+    st.header("Selected Cell Line")
+    st.dataframe(df_smm_mrgd_selected)
 
     df_sctr = {
         "NCGC SID": [],
@@ -753,10 +762,11 @@ if check_password():
         "eff": [],
         "target": [],
         "cell line": [],
+    #    "R2": [],
     }
 
     for specimen_id, df in dfs_mrgd.items():
-
+        st.write(specimen_id)
         for indx, row in df.iterrows():
 
             df_sctr["NCGC SID"].append(row["NCGC SID"])
@@ -765,6 +775,7 @@ if check_password():
             df_sctr["eff"].append(row["ZERO"] - row["INF"])
             df_sctr["target"].append(row["target"])
             df_sctr["cell line"].append(specimen_id)
+    #        df_sctr["R2"].append(row["R2"])
 
     df_sctr = pd.DataFrame(df_sctr)
     df_sctr = pd.merge(df_sctr, df_compounds[["NCGC SID", "MoA"]], on="NCGC SID")
