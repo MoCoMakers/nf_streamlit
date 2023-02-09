@@ -766,7 +766,6 @@ if check_password():
     }
 
     for specimen_id, df in dfs_mrgd.items():
-        st.write(specimen_id)
         for indx, row in df.iterrows():
 
             df_sctr["NCGC SID"].append(row["NCGC SID"])
