@@ -124,7 +124,7 @@ if check_password():
     file_show_cols = [col for col in df_files.columns if col not in FILE_HIDE_COLS]
 
     # raw dose-response curve dataframes
-    dfs_drc_raw = read_raw_drc(df_files)
+    dfs_drc_raw = read_raw_drc(df_files, data_path)
 
     # create dose-response curve objects
     drcs = {}

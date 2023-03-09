@@ -389,7 +389,7 @@ def read_metadata(data_path):
     return df_files, df_clines, file_name_to_specimen_id
 
 
-def read_raw_drc(df_files):
+def read_raw_drc(df_files, data_path):
     """Read all dose response curve files"""
     dfs = {}
     for file_name, row in df_files.iterrows():
