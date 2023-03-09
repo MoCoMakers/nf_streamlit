@@ -464,58 +464,60 @@ def calculate_fit_ratios(df_compounds, dfs_drc_in):
     return df_ratios
 
 
-data_path = Path("/home/galtay/data/hack4nf-2022/synapse/syn5522627")
-df_files, df_clines, file_name_to_specimen_id = read_metadata(data_path)
-file_show_cols = [col for col in df_files.columns if col not in FILE_HIDE_COLS]
+if __name__ == "__main__":
 
-# raw dose-response curve dataframes
-dfs_drc_raw = read_raw_drc(df_files)
+    data_path = Path("/home/galtay/data/hack4nf-2022/synapse/syn5522627")
+    df_files, df_clines, file_name_to_specimen_id = read_metadata(data_path)
+    file_show_cols = [col for col in df_files.columns if col not in FILE_HIDE_COLS]
 
-# create dose-response curve objects
-drcs = {}
-for file_name, df_drc_raw in dfs_drc_raw.items():
-    file_row = df_files.loc[file_name][file_show_cols]
-    drc = DoseResponseCurve(file_row.to_dict(), df_drc_raw)
-    drcs[file_name] = drc
+    # raw dose-response curve dataframes
+    dfs_drc_raw = read_raw_drc(df_files)
 
-dfs_drc = make_mrgd_drc(drcs, file_name_to_specimen_id)
+    # create dose-response curve objects
+    drcs = {}
+    for file_name, df_drc_raw in dfs_drc_raw.items():
+        file_row = df_files.loc[file_name][file_show_cols]
+        drc = DoseResponseCurve(file_row.to_dict(), df_drc_raw)
+        drcs[file_name] = drc
 
-# make one dataframe
-df_drc = pd.DataFrame()
-for si, df1 in dfs_drc.items():
-    df1['cell_line'] = si
-    df_drc = pd.concat([df_drc, df1])
-df_drc['eff'] = df_drc["ZERO"] - df_drc["INF"]
+    dfs_drc = make_mrgd_drc(drcs, file_name_to_specimen_id)
+
+    # make one dataframe
+    df_drc = pd.DataFrame()
+    for si, df1 in dfs_drc.items():
+        df1['cell_line'] = si
+        df_drc = pd.concat([df_drc, df1])
+    df_drc['eff'] = df_drc["ZERO"] - df_drc["INF"]
 
 
-# all dose response curves have the same compounds so we just take one
-one_specimen_id = next(iter(dfs_drc.keys()))
-df_compounds = dfs_drc[one_specimen_id]
-df_compounds = df_compounds[["NCGC SID", "name", "target", "MoA", "SMILES"]]
+    # all dose response curves have the same compounds so we just take one
+    one_specimen_id = next(iter(dfs_drc.keys()))
+    df_compounds = dfs_drc[one_specimen_id]
+    df_compounds = df_compounds[["NCGC SID", "name", "target", "MoA", "SMILES"]]
 
-df_ratios = calculate_fit_ratios(df_compounds, dfs_drc)
+    df_ratios = calculate_fit_ratios(df_compounds, dfs_drc)
 
-st_th_r2 = 0.85
-df_plt_ratios = df_ratios[
-    (df_ratios['num_R2'] >= st_th_r2)
-    & (df_ratios['den_R2'] >= st_th_r2)
-    & (df_ratios['num_eff'] > 0)
-    & (df_ratios['den_eff'] > 0)
-]
+    st_th_r2 = 0.85
+    df_plt_ratios = df_ratios[
+        (df_ratios['num_R2'] >= st_th_r2)
+        & (df_ratios['den_R2'] >= st_th_r2)
+        & (df_ratios['num_eff'] > 0)
+        & (df_ratios['den_eff'] > 0)
+    ]
 
-st_th_ac50_ratio = 1.5
-st_th_lac50_ratio = np.log10(st_th_ac50_ratio)
-df_good_ratios = df_plt_ratios[df_plt_ratios["Log10 (AC50 ratio)"] > st_th_lac50_ratio]
+    st_th_ac50_ratio = 1.5
+    st_th_lac50_ratio = np.log10(st_th_ac50_ratio)
+    df_good_ratios = df_plt_ratios[df_plt_ratios["Log10 (AC50 ratio)"] > st_th_lac50_ratio]
 
-df_ranked = (
-    df_good_ratios
-    .groupby(['den_si', 'NCGC SID'])['score']
-    .agg(['size', 'mean', lambda x: list(x)])
-    .reset_index()
-)
-st_th_num_clines = 3
-df_ranked = df_ranked[df_ranked['size']>=st_th_num_clines]
-df_ranked = pd.merge(df_ranked, df_compounds, on='NCGC SID')
-df_ranked = df_ranked.drop(columns='SMILES').sort_values(
-    ['size', 'mean'], ascending=[False, False],
-)
+    df_ranked = (
+        df_good_ratios
+        .groupby(['den_si', 'NCGC SID'])['score']
+        .agg(['size', 'mean', lambda x: list(x)])
+        .reset_index()
+    )
+    st_th_num_clines = 3
+    df_ranked = df_ranked[df_ranked['size']>=st_th_num_clines]
+    df_ranked = pd.merge(df_ranked, df_compounds, on='NCGC SID')
+    df_ranked = df_ranked.drop(columns='SMILES').sort_values(
+        ['size', 'mean'], ascending=[False, False],
+    )
