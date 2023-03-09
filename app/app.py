@@ -121,11 +121,10 @@ if check_password():
 
 
     df_files, df_clines, file_name_to_specimen_id = read_metadata(data_path)
-    df_clines_i = df_clines.reset_index()
     file_show_cols = [col for col in df_files.columns if col not in FILE_HIDE_COLS]
 
     # raw dose-response curve dataframes
-    dfs_drc_raw = read_raw_drc(df_files, data_path)
+    dfs_drc_raw = read_raw_drc(df_files)
 
     # create dose-response curve objects
     drcs = {}
@@ -135,6 +134,15 @@ if check_password():
         drcs[file_name] = drc
 
     dfs_drc = make_mrgd_drc(drcs, file_name_to_specimen_id)
+
+    # make one dataframe
+    df_drc = pd.DataFrame()
+    for si, df1 in dfs_drc.items():
+        df1['cell_line'] = si
+        df_drc = pd.concat([df_drc, df1])
+    df_drc['eff'] = df_drc["ZERO"] - df_drc["INF"]
+
+
 
     # all dose response curves have the same compounds so we just take one
     one_specimen_id = next(iter(dfs_drc.keys()))
@@ -244,8 +252,8 @@ if check_password():
         st.header("Cell Lines")
 
         cl_grid_response = AgGrid(
-            df_clines_i,
-            gridOptions=build_grid_options(df_clines_i),
+            df_clines,
+            gridOptions=build_grid_options(df_clines),
             data_return_mode="AS_INPUT",
             update_mode="MODEL_CHANGED",
             # fit_columns_on_grid_load=True,
@@ -256,9 +264,9 @@ if check_password():
         cl_selected = cl_grid_response["selected_rows"]
 
         if cl_selected:
-            df_clines_selected = pd.DataFrame(cl_selected)[df_clines_i.columns]
+            df_clines_selected = pd.DataFrame(cl_selected)[df_clines.columns]
         else:
-            df_clines_selected = df_clines_i.iloc[0:1]
+            df_clines_selected = df_clines.iloc[0:1]
 
         st_specimen_id = df_clines_selected.iloc[0]["specimenID"]
 
@@ -266,15 +274,39 @@ if check_password():
         # ----------------------------------
         st.header("Thresholds")
 
-        st_th_r2 = st.slider("R2", 0.5, 1.0, 0.5)
-        st_th_ac50_ratio = st.slider(
-            "AC50 Ratio",
-            min_value=1.0,
-            max_value=50.0,
-            value=1.5,
+        fig = px.histogram(
+            df_drc,
+            x="R2",
+            nbins=50,
+            log_x=False,
+            height=300,
         )
-        st_th_num_clines = st.slider(
-            "Number of Cell Lines",
+        st.plotly_chart(fig, use_container_width=True)
+
+
+        st_min_r2 = st.slider(
+            "Min R2",
+            min_value=0.5,
+            max_value=1.0,
+            value=0.85,
+            step=0.01,
+        )
+        st_min_lac50_ratio = st.slider(
+            "Min Log10(AC50 Ratio)",
+            min_value=-4.0,
+            max_value=4.0,
+            value=0.2,
+            step=0.1,
+        )
+        st_max_lac50_ratio = st.slider(
+            "Max Log10(AC50 Ratio)",
+            min_value=-4.0,
+            max_value=4.0,
+            value=4.0,
+            step=0.1,
+        )
+        st_min_num_clines = st.slider(
+            "Min Number of Test (tumor) Cell Lines",
             min_value=1,
             max_value=6,
             value=3,
@@ -287,7 +319,7 @@ if check_password():
     st.header("Selected Compound")
     st.dataframe(df_compound_selected)
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([2,2])
 
     # Dose Response Curves
     # ----------------------------------
@@ -295,7 +327,7 @@ if check_password():
     with col1:
 
         st.subheader("Dose Response Curves")
-        specimen_ids = df_clines.sort_values("disease").index
+        specimen_ids = df_clines.sort_values("disease")['specimenID']
         num_cell_lines = len(specimen_ids)
 
         r2s = {}
@@ -372,7 +404,7 @@ if check_password():
         st.subheader("Effectiveness vs AC50")
         df_sctr = pd.DataFrame(df_sctr)
         df_sctr["color"] = COLORS[: df_sctr.shape[0]]
-        df_sctr = df_sctr[df_sctr["R2"] >= st_th_r2].reset_index()
+        df_sctr = df_sctr[df_sctr["R2"] >= st_min_r2].reset_index()
         fig = px.scatter(
             df_sctr,
             x="ac50",
@@ -420,7 +452,7 @@ if check_password():
     df = dfs_drc[st_specimen_id]
     for indx, row in df.iterrows():
 
-        if row["R2"] < st_th_r2:
+        if row["R2"] < st_min_r2:
             continue
 
         df_sctr["NCGC SID"].append(row["NCGC SID"])
@@ -468,7 +500,7 @@ if check_password():
 
         for indx, row in df.iterrows():
 
-            if row["R2"] < st_th_r2:
+            if row["R2"] < st_min_r2:
                 continue
 
             df_sctr["NCGC SID"].append(row["NCGC SID"])
@@ -498,44 +530,83 @@ if check_password():
     )
 
 
-    # Scores
+    # Distributions
     # ==================================
 
+    df_plt_drc = df_drc[df_drc["R2"] >= st_min_r2]
+
+    # AC50
+    # ----------------------------------
+
+    st.header("Log10 AC50 Distribution")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        fig = px.histogram(
+            df_plt_drc,
+            x="LAC50",
+            nbins=50,
+            log_x=False,
+            height=600,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        fig = px.histogram(
+            df_plt_drc,
+            x="LAC50",
+            nbins=50,
+            log_x=False,
+            facet_col='cell_line',
+            facet_col_wrap=3,
+            height=600,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    # eff
+    # ----------------------------------
+
+    st.header("eff = Effectiveness = (ZERO - INF) Distribution")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        fig = px.histogram(
+            df_plt_drc,
+            x="eff",
+            nbins=50,
+            log_x=False,
+            height=600,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    with col2:
+        fig = px.histogram(
+            df_plt_drc,
+            x="eff",
+            nbins=50,
+            log_x=False,
+            facet_col='cell_line',
+            facet_col_wrap=3,
+            height=600,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+
+    # AC50 ratios
+    # ----------------------------------
+
     df_plt_ratios = df_ratios[
-        (df_ratios['num_R2'] >= st_th_r2)
-        & (df_ratios['den_R2'] >= st_th_r2)
-        & (df_ratios['num_eff'] > 0)
-        & (df_ratios['den_eff'] > 0)
+        (df_ratios['num_R2'] >= st_min_r2)
+        & (df_ratios['den_R2'] >= st_min_r2)
     ]
 
-    df_good_ratios = df_plt_ratios[
-        df_plt_ratios["LAC50"] > np.log10(st_th_ac50_ratio)
-    ]
-
-    df_ranked = (
-        df_good_ratios
-        .groupby(['den_si', 'NCGC SID'])['score']
-        .agg(['size', 'mean', lambda x: list(x)])
-        .reset_index()
-    )
-
-    #df_ranked = (
-    #    df_good_ratios
-    #    .groupby(['den_si', 'NCGC SID'])['LAC50']
-    #    .agg(['size', 'mean'])
-    #    .reset_index()
-    #)
-    df_ranked = df_ranked[df_ranked['size'] >= st_th_num_clines]
-    df_ranked = pd.merge(df_ranked, df_compounds, on='NCGC SID')
-    df_ranked = df_ranked.drop(columns='SMILES').sort_values(
-        ['size', 'mean'], ascending=[False, False],
-    )
-
-    st.header("AC50 Ratios")
+    st.header("Log10 (AC50_num / AC50_den) Distribution")
 
     fig = px.histogram(
-        df_good_ratios,
-        x="LAC50",
+        df_plt_ratios,
+        x="Log10 (AC50 ratio)",
         nbins=50,
         facet_row='den_si',
         facet_col='num_si',
@@ -543,18 +614,112 @@ if check_password():
         height=800,
     )
 
-    st.plotly_chart(
-        fig,
-        use_container_width=True,
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Eff ratios
+    # ----------------------------------
+
+    st.header("(eff_num / eff_den) Distribution")
+
+    fig = px.histogram(
+        df_plt_ratios,
+        x="eff ratio",
+        nbins=50,
+        facet_row='den_si',
+        facet_col='num_si',
+        log_x=False,
+        height=800,
     )
 
+    st.plotly_chart(fig, use_container_width=True)
 
-    st.header("Ranked Compounds")
+
+    # Scores
+    # ----------------------------------
+
+    st.header("eff ratio / AC50 ratio Distribution")
+
+    fig = px.histogram(
+        df_plt_ratios[df_plt_ratios['score']>0],
+        x="Log10 score",
+        nbins=50,
+        facet_row='den_si',
+        facet_col='num_si',
+        log_x=False,
+        height=800,
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+    # Scores
+    # ==================================
+
+    def agg_to_list(x):
+        return [f"{el:.3f}" for el in list(x)]
+
+    st.header("Compounds ranked by AC50 ratios")
+
+    df_rank_ratios = df_plt_ratios[
+        (df_plt_ratios["Log10 (AC50 ratio)"] > st_min_lac50_ratio)
+        & (df_plt_ratios["Log10 (AC50 ratio)"] < st_max_lac50_ratio)
+    ]
+
+    df_ranked = (
+        df_rank_ratios
+        .groupby(['den_si', 'NCGC SID'])['Log10 (AC50 ratio)']
+        .agg(['size', 'mean', 'var', agg_to_list])
+        .reset_index()
+    )
+
+    df_ranked = df_ranked[df_ranked['size'] >= st_min_num_clines]
+    df_ranked = pd.merge(df_compounds, df_ranked, on='NCGC SID')
+    df_ranked = df_ranked.drop(columns='SMILES').sort_values(
+        ['mean'], ascending=[False],
+    )
+
+    df_ranked = df_ranked.rename(columns={
+        'size': 'N Cell Lines',
+        'mean': 'mean Log10 AC50 ratios',
+        'var': 'variance Log10 AC50 ratios',
+        'agg_to_list': 'Log10 AC50 ratios',
+    })
 
     for den_si, df_ranked_den in df_ranked.groupby('den_si'):
         st.subheader(den_si)
         st.write(df_ranked_den)
 
+
+    st.header("Compounds ranked by (eff ratio) / (AC50 ratio)")
+
+    df_rank_ratios = df_plt_ratios[
+        (df_plt_ratios["Log10 (AC50 ratio)"] > st_min_lac50_ratio)
+        & (df_plt_ratios["Log10 (AC50 ratio)"] < st_max_lac50_ratio)
+    ]
+
+    df_ranked = (
+        df_rank_ratios
+        .groupby(['den_si', 'NCGC SID'])['Log10 score']
+        .agg(['size', 'mean', 'var', agg_to_list])
+        .reset_index()
+    )
+
+    df_ranked = df_ranked[df_ranked['size'] >= st_min_num_clines]
+    df_ranked = pd.merge(df_compounds, df_ranked, on='NCGC SID')
+    df_ranked = df_ranked.drop(columns='SMILES').sort_values(
+        ['mean'], ascending=[False],
+    )
+
+    df_ranked = df_ranked.rename(columns={
+        'size': 'N Cell Lines',
+        'mean': 'mean Log10 score',
+        'var': 'variance Log10 score',
+        'agg_to_list': 'Log10 scores',
+    })
+
+    for den_si, df_ranked_den in df_ranked.groupby('den_si'):
+        st.subheader(den_si)
+        st.write(df_ranked_den)
 
 
 
@@ -610,5 +775,5 @@ if check_password():
         st.header("SYNAPSE_METADATA_MANIFEST.csv")
         st.dataframe(df_smm_hts[smm_show_cols])
         st.header("Merged Cell Line Metadata")
-        AgGrid(df_clines_i)
+        AgGrid(df_clines)
         show_raw_data(drcs)
