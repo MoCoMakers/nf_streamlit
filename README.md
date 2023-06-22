@@ -1,3 +1,11 @@
+# About this project:
+This code hosts a web tool (DREA web tool) for exploring NF1 quantitative High Throughput Screening (qHTS) data.
+
+Please visit this tool live here:
+[http://nf.mocomakers.com:8501/](http://nf.mocomakers.com:8501/) - Request a password from matt@mocomakers.com
+
+A sister repo to this project is: [https://github.com/MoCoMakers/hack4nf-2022](https://github.com/MoCoMakers/hack4nf-2022)
+
 # Getting Started
 Log into the server<br>
 Clone the docker repo, and change into it:<br>
