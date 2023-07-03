@@ -28,3 +28,20 @@ docker run -p 8501:8501 -v ~/nf_streamlit/app:/app streamlit_app
 ```
 <br>
 The first command only needs to be run one time. To run the server using the second command, chaging `~/docker_streamlit/app` for the location of the `app` directory in this repo.
+
+## Local Development (Developers Only)
+Clone repo, then copy `secrets.toml.example` to `secrets.toml` and update the values
+
+Change to `app/` directory<br>
+Install Python requirements `pip install -r requirments.txt`<br>
+### Get the data
+<br>You will need a valid synapse.org account and approved
+<br>access (portal request) to syn5522627 - which you can search for on synapse.org   
+
+```
+pip install synapseclient[pandas,pysftp]
+mkdir syn5522627
+cd syn5522627
+synapse get -r syn5522627
+```
+Start the app `streamlit run .\app.py`
