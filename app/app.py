@@ -246,29 +246,22 @@ if check_password():
 
         st_ncgc_sid = df_compound_selected.iloc[0]["NCGC SID"]
 
-        # Cell Line selector
+        # Used Cell Lines
         # ----------------------------------
+        specimen_ids = df_clines.sort_values("disease")['specimenID']
 
-        st.header("Cell Lines")
+        st.header("Available Cell Lines - Dose Response Curves")
+        # create a checkbox for each category
+        val = [None] * len(specimen_ids)  # this list will store info about which category is selected
+        for i, cat in enumerate(specimen_ids):
+            # set defaults:
+            exclude_list = ["HFF", "ipNF05.5 (mixed clone)"]
+            if cat in exclude_list:
+                val[i] = st.sidebar.checkbox(cat, value=False)  # value is the preselect value for first render
+            else:
+                val[i] = st.sidebar.checkbox(cat, value=True)
 
-        cl_grid_response = AgGrid(
-            df_clines,
-            gridOptions=build_grid_options(df_clines),
-            data_return_mode="AS_INPUT",
-            update_mode="MODEL_CHANGED",
-            # fit_columns_on_grid_load=True,
-            width="100%",
-        )
-
-        cl_data = cl_grid_response["data"]
-        cl_selected = cl_grid_response["selected_rows"]
-
-        if cl_selected:
-            df_clines_selected = pd.DataFrame(cl_selected)[df_clines.columns]
-        else:
-            df_clines_selected = df_clines.iloc[0:1]
-
-        st_specimen_id = df_clines_selected.iloc[0]["specimenID"]
+        specimen_ids = specimen_ids[specimen_ids.isin(specimen_ids[val])].reset_index(drop=True)
 
         # Thresholds
         # ----------------------------------
@@ -327,7 +320,7 @@ if check_password():
     with col1:
 
         st.subheader("Dose Response Curves")
-        specimen_ids = df_clines.sort_values("disease")['specimenID']
+
         num_cell_lines = len(specimen_ids)
 
         r2s = {}
@@ -434,6 +427,30 @@ if check_password():
 
     # Cell Lines
     # ==================================
+
+    # Cell Line selector
+    # ----------------------------------
+
+    st.header("Pick a Cell Line")
+
+    cl_grid_response = AgGrid(
+        df_clines,
+        gridOptions=build_grid_options(df_clines),
+        data_return_mode="AS_INPUT",
+        update_mode="MODEL_CHANGED",
+        # fit_columns_on_grid_load=True,
+        width="100%",
+    )
+
+    cl_data = cl_grid_response["data"]
+    cl_selected = cl_grid_response["selected_rows"]
+
+    if cl_selected:
+        df_clines_selected = pd.DataFrame(cl_selected)[df_clines.columns]
+    else:
+        df_clines_selected = df_clines.iloc[0:1]
+
+    st_specimen_id = df_clines_selected.iloc[0]["specimenID"]
 
     # one cell line
     # ---------------------------------
