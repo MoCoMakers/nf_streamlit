@@ -49,7 +49,6 @@ import pandas as pd
 R_COLS = [f"DATA{ii}" for ii in range(11)]
 C_COLS = [f"CONC{ii}" for ii in range(11)]
 
-
 # pairs of files that represent the same cell line
 # the top member is from the top level of the synapse dataset
 # the bottom member is from the matrix portal raw data folder
@@ -134,6 +133,16 @@ FILE_HIDE_COLS = [
     "reporterSubstance",
     "dataType",
     "drugScreenType",
+]
+
+# Non-dynamic version of this function
+den_sis = ["ipn02.3", "ipn02.8", "HFF", "ipnNF95.11c"]
+num_sis = [
+    "ipNF05.5",
+    "ipNF05.5 (mixed clone)",
+    "ipNF06.2A",
+    "ipNF95.6",
+    "ipNF95.11bC_T",
 ]
 
 
@@ -296,7 +305,6 @@ class DoseResponseCurve:
 
 
 def read_metadata(data_path):
-
     # data manifest for all files
     # might only be present when syncing with python client
     # this is the main metadata file we use
@@ -419,22 +427,29 @@ def make_mrgd_drc(drcs, file_name_to_specimen_id):
     return dfs
 
 
-def calculate_fit_ratios(df_compounds, dfs_drc_in):
-    dfs_drc = {si: df.set_index("NCGC SID") for si, df in dfs_drc_in.items()}
-
+def calculate_fit_ratios(df_compounds, dfs_drc_in, den_sis, num_sis):
+    """
+    Parameters:
     den_sis = ["ipn02.3", "ipn02.8", "HFF", "ipnNF95.11c"]
     num_sis = [
-        "ipNF05.5",
-        "ipNF05.5 (mixed clone)",
-        "ipNF06.2A",
-        "ipNF95.6",
-        "ipNF95.11bC_T",
-    ]
+            "ipNF05.5",
+            "ipNF05.5 (mixed clone)",
+            "ipNF06.2A",
+            "ipNF95.6",
+            "ipNF95.11bC_T",
+        ]
+
+    The denominitor list includes the list of reference cell lines. Above are the full set,
+    but this list is dynamically filterable by the user.
+
+    The numerator list includes all the experimental cell lines to use.
+    """
+    dfs_drc = {si: df.set_index("NCGC SID") for si, df in dfs_drc_in.items()}
+
     df_ratios = pd.DataFrame()
 
     for num_si in num_sis:
         for den_si in den_sis:
-
             df = df_compounds.copy().set_index("NCGC SID")
             df["num_si"] = num_si
             df["den_si"] = den_si
@@ -455,7 +470,8 @@ def calculate_fit_ratios(df_compounds, dfs_drc_in):
             df["eff ratio"] = num_eff / den_eff
 
             # score = (num_eff/den_eff) / (num_AC50/den_AC50)
-            df['score'] = df['eff ratio'] / df['AC50 ratio']
+            # Swapped direction of ratio to fix integer
+            df['score'] =  df['AC50 ratio'] /df['eff ratio']
             df['Log10 score'] = np.log10(df['score'])
 
             df_ratios = pd.concat([df_ratios, df])
@@ -489,13 +505,12 @@ if __name__ == "__main__":
         df_drc = pd.concat([df_drc, df1])
     df_drc['eff'] = df_drc["ZERO"] - df_drc["INF"]
 
-
     # all dose response curves have the same compounds so we just take one
     one_specimen_id = next(iter(dfs_drc.keys()))
     df_compounds = dfs_drc[one_specimen_id]
     df_compounds = df_compounds[["NCGC SID", "name", "target", "MoA", "SMILES"]]
 
-    df_ratios = calculate_fit_ratios(df_compounds, dfs_drc)
+    df_ratios = calculate_fit_ratios(df_compounds, dfs_drc, den_sis, num_sis)
 
     st_th_r2 = 0.85
     df_plt_ratios = df_ratios[
@@ -503,7 +518,7 @@ if __name__ == "__main__":
         & (df_ratios['den_R2'] >= st_th_r2)
         & (df_ratios['num_eff'] > 0)
         & (df_ratios['den_eff'] > 0)
-    ]
+        ]
 
     st_th_ac50_ratio = 1.5
     st_th_lac50_ratio = np.log10(st_th_ac50_ratio)
@@ -516,7 +531,7 @@ if __name__ == "__main__":
         .reset_index()
     )
     st_th_num_clines = 3
-    df_ranked = df_ranked[df_ranked['size']>=st_th_num_clines]
+    df_ranked = df_ranked[df_ranked['size'] >= st_th_num_clines]
     df_ranked = pd.merge(df_ranked, df_compounds, on='NCGC SID')
     df_ranked = df_ranked.drop(columns='SMILES').sort_values(
         ['size', 'mean'], ascending=[False, False],
