@@ -10,7 +10,7 @@ import plotly.tools
 from plotly.subplots import make_subplots
 import streamlit as st
 from st_aggrid import AgGrid
-from st_aggrid import GridOptionsBuilder, GridUpdateMode, DataReturnMode
+from st_aggrid import GridOptionsBuilder
 
 from syn5522627 import R_COLS, C_COLS, FILE_HIDE_COLS
 from syn5522627 import DoseResponseCurve
@@ -216,7 +216,7 @@ if check_password():
         gb.configure_selection(
             "single",
             use_checkbox=False,
-            groupSelectsChildren="Group checkbox select children",
+            groupSelectsChildren=True,
         )
         gridOptions = gb.build()
         return gridOptions
@@ -287,23 +287,23 @@ if check_password():
             "Min R2",
             min_value=0.5,
             max_value=1.0,
-            value=0.85,
+            value=0.80,
             step=0.01,
         )
-        st_min_lac50_ratio = st.slider(
-            "Min Log10(AC50 Ratio)",
-            min_value=-4.0,
-            max_value=4.0,
-            value=0.2,
-            step=0.1,
-        )
-        st_max_lac50_ratio = st.slider(
-            "Max Log10(AC50 Ratio)",
-            min_value=-4.0,
-            max_value=4.0,
-            value=4.0,
-            step=0.1,
-        )
+        # st_min_lac50_ratio = st.slider(
+        #     "Min Log10(AC50 Ratio)",
+        #     min_value=-4.0,
+        #     max_value=4.0,
+        #     value=0.2,
+        #     step=0.1,
+        # )
+        # st_max_lac50_ratio = st.slider(
+        #     "Max Log10(AC50 Ratio)",
+        #     min_value=-4.0,
+        #     max_value=4.0,
+        #     value=4.0,
+        #     step=0.1,
+        # )
         st_min_num_clines = st.slider(
             "Min Number of Test (tumor) Cell Lines To Appear in Score List",
             min_value=1,
@@ -332,7 +332,6 @@ if check_password():
                                              'den_sis': den_sis,
                                              'num_sis': num_sis
                                          })
-
         den_sis = den_sis_df[den_sis_df.isin(den_sis_df[val])].reset_index(drop=True).dropna().values.flatten()
         den_sis = list(den_sis)
 
@@ -536,7 +535,6 @@ if check_password():
                 i_color = 0
                 ac50_color = 1
         tr_measured = get_measured_trace(row, color=COLORS[i_color])
-        print(i_color)
         tr_fit = get_fit_trace(row, label=specimen_id, color=EXTENDED_COLORS[i_color], showlegend=True, line_type="solid")
         tr_ac50 = get_ac50_trace(row, color=EXTENDED_COLORS[ac50_color])
         for tr in [tr_fit, tr_ac50]:
@@ -812,10 +810,11 @@ if check_password():
 
     st.header("Compounds ranked by AC50 ratios")
 
-    df_rank_ratios = df_plt_ratios[
-        (df_plt_ratios["Log10 (AC50 ratio)"] > st_min_lac50_ratio)
-        & (df_plt_ratios["Log10 (AC50 ratio)"] < st_max_lac50_ratio)
-        ]
+    df_rank_ratios = df_plt_ratios
+    # df_rank_ratios = df_plt_ratios[
+    #     (df_plt_ratios["Log10 (AC50 ratio)"] >= st_min_lac50_ratio)
+    #     & (df_plt_ratios["Log10 (AC50 ratio)"] <= st_max_lac50_ratio)
+    #     ]
 
     df_ranked = (
         df_rank_ratios
@@ -879,13 +878,11 @@ if check_password():
 
     st.header("Compounds ranked by (eff ratio) / (AC50 ratio)")
 
-    df_rank_ratios = df_plt_ratios[
-        (df_plt_ratios["Log10 (AC50 ratio)"] > st_min_lac50_ratio)
-        & (df_plt_ratios["Log10 (AC50 ratio)"] < st_max_lac50_ratio)
-        ]
-
-    st.write("I'm here 2")
-    st.write(df_rank_ratios)
+    df_rank_ratios = df_plt_ratios
+    # df_rank_ratios = df_plt_ratios[
+    #     (df_plt_ratios["Log10 (AC50 ratio)"] > st_min_lac50_ratio)
+    #     & (df_plt_ratios["Log10 (AC50 ratio)"] < st_max_lac50_ratio)
+    #     ]
 
     st.download_button(
         label="Download data as CSV",
@@ -959,51 +956,51 @@ if check_password():
     # Raw Data
     # ==================================
 
-    def show_raw_data(drcs):
-        for smm_name_group in SMM_NAME_GROUPS:
-
-            col1, col2 = st.columns(2)
-
-            with col1:
-                smm_name = smm_name_group[0]
-                drc = drcs[smm_name]
-
-                st.header(smm_name)
-                st.write(f"df_raw.shape: {drc.df_raw.shape}")
-                st.write(drc.smm_hts)
-                st.write(drc.df_raw.head(10))
-
-                fig = px.histogram(drc.df["LAC50"])
-                c_min = np.log10(drc.df_raw[drc.raw_cols_conc[0]].min())
-                c_max = np.log10(drc.df_raw[drc.raw_cols_conc[-1]].max())
-
-                fig.add_vline(x=c_min, line_color=IBM_COLORS[1])
-                fig.add_vline(x=c_max, line_color=IBM_COLORS[1])
-                st.plotly_chart(fig, use_container_width=True)
-
-            with col2:
-                if len(smm_name_group) > 1:
-                    smm_name = smm_name_group[1]
-                    drc = drcs[smm_name]
-
-                    st.header(smm_name)
-                    st.write(f"df_raw.shape: {drc.df_raw.shape}")
-                    st.write(drc.smm_hts)
-                    st.write(drc.df_raw.head(10))
-
-                    fig = px.histogram(drc.df["LAC50"])
-                    c_min = np.log10(drc.df_raw[drc.raw_cols_conc[0]].min())
-                    c_max = np.log10(drc.df_raw[drc.raw_cols_conc[-1]].max())
-
-                    fig.add_vline(x=c_min, line_color=IBM_COLORS[1])
-                    fig.add_vline(x=c_max, line_color=IBM_COLORS[1])
-                    st.plotly_chart(fig, use_container_width=True)
-
-
-    show_raw_data_flag = st.checkbox("Show Raw Data", value=False)
-    if show_raw_data_flag:
-        st.header("SYNAPSE_METADATA_MANIFEST.csv")
-        st.dataframe(df_smm_hts[smm_show_cols])
-        st.header("Merged Cell Line Metadata")
-        AgGrid(df_clines)
-        show_raw_data(drcs)
+    # def show_raw_data(drcs):
+    #     for smm_name_group in SMM_NAME_GROUPS:
+    #
+    #         col1, col2 = st.columns(2)
+    #
+    #         with col1:
+    #             smm_name = smm_name_group[0]
+    #             drc = drcs[smm_name]
+    #
+    #             st.header(smm_name)
+    #             st.write(f"df_raw.shape: {drc.df_raw.shape}")
+    #             st.write(drc.smm_hts)
+    #             st.write(drc.df_raw.head(10))
+    #
+    #             fig = px.histogram(drc.df["LAC50"])
+    #             c_min = np.log10(drc.df_raw[drc.raw_cols_conc[0]].min())
+    #             c_max = np.log10(drc.df_raw[drc.raw_cols_conc[-1]].max())
+    #
+    #             fig.add_vline(x=c_min, line_color=IBM_COLORS[1])
+    #             fig.add_vline(x=c_max, line_color=IBM_COLORS[1])
+    #             st.plotly_chart(fig, use_container_width=True)
+    #
+    #         with col2:
+    #             if len(smm_name_group) > 1:
+    #                 smm_name = smm_name_group[1]
+    #                 drc = drcs[smm_name]
+    #
+    #                 st.header(smm_name)
+    #                 st.write(f"df_raw.shape: {drc.df_raw.shape}")
+    #                 st.write(drc.smm_hts)
+    #                 st.write(drc.df_raw.head(10))
+    #
+    #                 fig = px.histogram(drc.df["LAC50"])
+    #                 c_min = np.log10(drc.df_raw[drc.raw_cols_conc[0]].min())
+    #                 c_max = np.log10(drc.df_raw[drc.raw_cols_conc[-1]].max())
+    #
+    #                 fig.add_vline(x=c_min, line_color=IBM_COLORS[1])
+    #                 fig.add_vline(x=c_max, line_color=IBM_COLORS[1])
+    #                 st.plotly_chart(fig, use_container_width=True)
+    #
+    #
+    # show_raw_data_flag = st.checkbox("Show Raw Data", value=False)
+    # if show_raw_data_flag:
+    #     st.header("SYNAPSE_METADATA_MANIFEST.csv")
+    #     st.dataframe(df_smm_hts[smm_show_cols])
+    #     st.header("Merged Cell Line Metadata")
+    #     AgGrid(df_clines)
+    #     show_raw_data(drcs)
