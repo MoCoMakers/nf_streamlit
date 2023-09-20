@@ -8,7 +8,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN apt update && apt install -y mariadb-client
+RUN apt update && apt install -y mariadb-client entr
 
 RUN python -m pip install --upgrade pip
 
