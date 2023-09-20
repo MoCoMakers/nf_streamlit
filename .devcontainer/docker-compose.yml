@@ -1,5 +1,7 @@
 version: "3.7"
 
+name: nf_streamlit
+
 services:
   server:
     user: root:$UID
