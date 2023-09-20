@@ -146,7 +146,7 @@ The first command only needs to be run one time. To run the server using the sec
 
 ## **Tech Stack**
 This project uses the following technologies:
-- Visual Studio <small>([download here](https://visualstudio.microsoft.com/downloads/))</small> or similar editor like GitHub's Codespaces <small>([check out here](https://github.com/codespaces) or [try out this codebase here](https://codespaces.new/MoCoMakers/nf_streamlit/tree/developer%2Fenvironment))</small>
+- Visual Studio Code <small>([download here](https://code.visualstudio.com/download/))</small> or similar editor like GitHub's Codespaces <small>([check out here](https://github.com/codespaces) or [try out this codebase here](https://codespaces.new/MoCoMakers/nf_streamlit/tree/developer%2Fenvironment))</small>
 - Git <small>([download here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))</small>
 - Docker <small>([install](https://docs.docker.com/get-docker/) along with [`docker-compose` plugin](https://docs.docker.com/compose/install/))</small>
     - Streamlit <small>([Custom container](https://github.com/MoCoMakers/nf_streamlit/blob/developer/environment/.devcontainer/Dockerfile) built from [Python base](https://hub.docker.com/_/python))</small>
