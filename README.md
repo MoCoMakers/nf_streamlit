@@ -19,6 +19,42 @@ A sister repo to this project is: [https://github.com/MoCoMakers/hack4nf-2022](h
 
 # Getting Started
 ## Local Development (Developers Only)
+### Quick Start with `devcontainers`
+You can setup the project on your browser using your GitHub account by clicking [this Codespaces deeplink](https://codespaces.new/MoCoMakers/nf_streamlit/tree/developer%2Fenvironment).<br/>
+
+Alternatively, install and setup the software listed in the [Tech Stack section](#tech-stack) on your computer. Then take the following steps:
+
+Using a bash terminal, clone the repository:
+```bash
+git clone https://github.com/MoCoMakers/nf_streamlit.git
+```
+Go into the cloned folder:
+```bash
+cd nf_streamlit
+```
+Open the project with Visual Studio code:
+```bash
+code .
+```
+While the project is loading in the editor, watch out for a prompt with a button asking you to "Reopen in Container":
+
+![devcontainer prompt](app/assets/devcontainer_prompt.png)
+
+Click the "Reopen in Container" button and the project would be opened in Devcontainers with the database running in the background.
+
+
+> #### **Run the project after setup**
+> After setting up the project following the instructions above, you can run the project following the following steps:
+> - Make copies of the templates of configuration files ending with the extension `.example` and rename them:
+>> ```bash
+>> find . -name '*.example' -type f -exec bash -c 'cp "$1"  ${1%.example} ' -- {} \;
+>> ```
+> - To run the streamlit server, use the following command (preferably in a new terminal that you can open by using the ``CONTROL + SHIFT + ` ``):
+>> ```bash
+>> streamlit run Home.py --server.fileWatcherType auto --server.headless true
+>> ```
+
+### Local setup without `devcontainers`
 Clone repo, then copy `config.toml.example` to `config.toml`, and `secrets.toml.example` to `secrets.toml` and update the values.
 Note that you will need a remote database connection (MySQL is the default) configured with a users table, for example:
 
@@ -102,6 +138,15 @@ docker run -p 8501:8501 -v ~/nf_streamlit/app:/app streamlit_app
 ```
 <br>
 The first command only needs to be run one time. To run the server using the second command, chaging `~/docker_streamlit/app` for the location of the `app` directory in this repo.
+
+
+## **Tech Stack**
+This project uses the following technologies:
+- Visual Studio <small>([download here](https://visualstudio.microsoft.com/downloads/))</small> or similar editor like GitHub's Codespaces <small>([check out here](https://github.com/codespaces) or [try out this codebase here](https://codespaces.new/MoCoMakers/nf_streamlit/tree/developer%2Fenvironment))</small>
+- Git <small>([download here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))</small>
+- Docker <small>([install](https://docs.docker.com/get-docker/) along with [`docker-compose` plugin](https://docs.docker.com/compose/install/))</small>
+    - Streamlit <small>([Custom container](https://github.com/MoCoMakers/nf_streamlit/blob/developer/environment/.devcontainer/Dockerfile) built from [Python base](https://hub.docker.com/_/python))</small>
+    - MySQL <small>([official image](https://hub.docker.com/_/mysql))</small>
 
 # Troubleshooting for Mac users
 If you face errors upon running the `pip install -r requirements.txt`, the following [link](https://stackoverflow.com/questions/76876823/cannot-install-mysqlclient-on-macos) may be of help.
