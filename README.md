@@ -59,6 +59,10 @@ Click the "Reopen in Container" button and the project would be opened in Devcon
 >> ```bash
 >> streamlit run Home.py --server.fileWatcherType auto --server.headless true
 >> ```
+>>> Alternatively, the project can be run with hot reload where the server refreshes when the `Python` or `TOML` project files are modified:
+>> ```bash
+>> find . -name "*.py" -or -name "*.toml" | entr -r streamlit run Home.py --server.fileWatcherType auto --server.headless true
+>> ```
 >
 > A default credential is setup for developers to log in:
 >> Username: `example`<br/>
