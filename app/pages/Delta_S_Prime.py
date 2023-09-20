@@ -132,28 +132,29 @@ dm_merged = filter_df(active_gene, tissue)
 
 st.write(dm_merged)
 
-st.download_button(
-            label="Download data as CSV",
-            data=dm_merged.to_csv().encode('utf-8'),
-            file_name='s_prime.csv',
-            mime='text/csv'
-        )
+if not dm_merged.empty:
+    st.download_button(
+                label="Download data as CSV",
+                data=dm_merged.to_csv().encode('utf-8'),
+                file_name='s_prime.csv',
+                mime='text/csv'
+            )
 
-st.header("S' for Selected Values")
+    st.header("S' for Selected Values")
 
-@st.cache_data(show_spinner=False)
-def compute_compounds_test_agg(active_gene):
-    df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
+    @st.cache_data(show_spinner=False)
+    def compute_compounds_test_agg(active_gene):
+        df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
 
-    df_test_group = dm_merged.loc[dm_merged[active_gene] == 2]
+        df_test_group = dm_merged.loc[dm_merged[active_gene] == 2]
 
-    compounds_ref_agg = df_ref_group.groupby('name').agg(ref_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
+        compounds_ref_agg = df_ref_group.groupby('name').agg(ref_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
 
-    compounds_test_agg = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
-    return compounds_test_agg
+        compounds_test_agg = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
+        return compounds_test_agg
 
-compounds_test_agg = compute_compounds_test_agg(active_gene)
+    compounds_test_agg = compute_compounds_test_agg(active_gene)
 
-#meta data summary: length of test and reference, length of delta s table
+    #meta data summary: length of test and reference, length of delta s table
 
-st.write(compounds_test_agg)
+    st.write(compounds_test_agg)
