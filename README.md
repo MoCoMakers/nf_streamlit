@@ -49,7 +49,7 @@ Click the "Reopen in Container" button and the project would be opened in Devcon
 >> ```bash
 >> find . -name '*.example' -type f -exec bash -c 'cp "$1"  ${1%.example} ' -- {} \;
 >> ```
-> - To run the streamlit server, use the following command (preferably in a new terminal that you can open by using the ``CONTROL + SHIFT + ` ``):
+> - To run the streamlit server, use the following command (preferably in a new terminal that you can open by using the key combination ``CTRL + SHIFT + ` `` in Windows or ``CMD (⌘) + SHIFT + ` `` in MacOS):
 >> ```bash
 >> streamlit run Home.py --server.fileWatcherType auto --server.headless true
 >> ```
