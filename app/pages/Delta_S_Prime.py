@@ -45,7 +45,7 @@ df["S'"] = np.arcsinh(df['EFF*100'] / df['ec50'])
 
 "## Single test value selected from 'bortezomib'"
 # as a test only write the rows where 'name' is 'bortezomib' adn the EFF*100 is close to 97.9789
-st.write(df[df['name'] == 'bortezomib'][(df['EFF*100'] > 97.9788) & (df['EFF*100'] < 97.9790)])
+st.write(df[df['name'] == 'bortezomib'].query('97.9788 < EFF*100 < 97.9790'))
 
 "## S' Table"
 # Display the table
