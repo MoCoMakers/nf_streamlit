@@ -46,6 +46,11 @@ Click the "Reopen in Container" button and the project would be opened in Devcon
 > #### **Run the project after setup**
 > After setting up the project following the instructions above, you can run the project following the following steps:
 > - (Optional) Change [the values in the cookie dictionary](https://github.com/MoCoMakers/nf_streamlit/blob/03fcbce740253d72b8d88e1cb6deadec8e6dc5f6/app/.streamlit/secrets.toml.example#L19-L21) of the [`secrets.toml.example`](https://github.com/MoCoMakers/nf_streamlit/blob/03fcbce740253d72b8d88e1cb6deadec8e6dc5f6/app/.streamlit/secrets.toml.example) file.
+> - Download the files the project needs (this command has to be run the the `app/` folder):
+>> ```bash
+>> pip install gdown
+>> gdown https://drive.google.com/drive/folders/1C3z88jbjXhffHG1qc6W4ExujADiKUinN -O data --folder
+>> ```
 > - Make copies of the templates of configuration files ending with the extension `.example` and rename them:
 >> ```bash
 >> find . -name '*.example' -type f -exec bash -c 'cp "$1"  ${1%.example} ' -- {} \;
