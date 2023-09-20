@@ -1,0 +1,8 @@
+credentials:
+  usernames:
+cookie:
+  expiry_days: <replace with cookie expiry date>
+  key: <replace with random cookie key>
+  name: <replace with random cookie name>
+preauthorized:
+  emails:

@@ -4,4 +4,5 @@ pandas
 plotly
 streamlit
 streamlit-aggrid
+streamlit-authenticator
 tabulate

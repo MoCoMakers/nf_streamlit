@@ -17,7 +17,8 @@ from syn5522627 import DoseResponseCurve
 from syn5522627 import read_metadata, read_raw_drc, make_mrgd_drc, calculate_fit_ratios, den_sis, num_sis
 
 st.set_page_config(layout="wide")
-
+from views import login
+login.loginapp()
 
 def check_password():
     """Returns `True` if the user had the correct password."""
