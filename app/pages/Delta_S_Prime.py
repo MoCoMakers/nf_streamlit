@@ -81,20 +81,20 @@ AgGrid(df, gridOptions=gridOptions)
 
 st.header("Damaging Mutations")
 
-#drop down menu to choose from different genes (columns of damaging mutations)
-#drop down menu to choose form different tissue (based on depmap data) (sorted alphabetically) (autocomplete search)
 
 df[['ccle', 'tissue']] = df['ccle_name'].str.split('_', n=1, expand=True)
 
-active_gene = 'NF1'
+active_gene = 'NF1 (4763)'
 tissue = 'PANCREAS'
 
 damaging_mutations = pd.read_csv('data/DepMap/Public24Q2/OmicsSomaticMutationsMatrixDamaging.csv')
 
-active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", options=damaging_mutations.columns.tolist()[1:]);
 
-tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", options = df['tissue'].head(100))   
+#drop down menu to choose from different genes (columns of damaging mutations)
+active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", index=damaging_mutations.columns.tolist()[1:].index(active_gene), options=damaging_mutations.columns.tolist()[1:]);
 
+#drop down menu to choose form different tissue (based on depmap data) (sorted alphabetically) (autocomplete search)
+tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", index=df['tissue'].head(100).tolist().index(tissue), options = df['tissue'].head(100))   
 st.header("All S' by Mutation and Tissue")
 
 #Unnamed: 0 is the tissue column name in damaging_mutations file
