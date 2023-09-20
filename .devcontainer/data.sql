@@ -1,4 +1,4 @@
-Enter password: 
+-- Enter password: 
 -- MySQL dump 10.13  Distrib 8.4.0, for Linux (x86_64)
 --
 -- Host: mysql    Database: local_db
