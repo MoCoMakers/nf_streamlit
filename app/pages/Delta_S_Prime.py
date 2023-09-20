@@ -62,13 +62,13 @@ st.write(get_single_testvalue())
 "## S' Table"
 # Display the table
 gb = GridOptionsBuilder.from_dataframe(df)
-gb.configure_pagination()
 gb.configure_side_bar()
 # Freeze the 1st column for scrolling
 column_defs = [{'headerName': col, 'field': col, 'pinned': 'left' if col == 'name' else None} for col in df.columns]
 gridOptions = {
     'columnDefs': column_defs,
     'pagination': True,
+    'paginationPageSize': 20,
     'defaultColDef': {
         'groupable': True, 
         'value': True, 
