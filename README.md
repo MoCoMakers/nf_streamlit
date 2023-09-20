@@ -53,6 +53,10 @@ Click the "Reopen in Container" button and the project would be opened in Devcon
 >> ```bash
 >> streamlit run Home.py --server.fileWatcherType auto --server.headless true
 >> ```
+>
+> A default credential is setup for developers to log in:
+>> Username: `example`<br/>
+>> Password: `Makers`
 
 ### Local setup without `devcontainers`
 Clone repo, then copy `config.toml.example` to `config.toml`, and `secrets.toml.example` to `secrets.toml` and update the values.
