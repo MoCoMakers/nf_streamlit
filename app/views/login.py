@@ -6,9 +6,15 @@ from .data import eda
 with open('./config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
+from db import get_credentials, update_all_users
+import copy
+
+credentials = get_credentials()
+
 def loginapp():
+    global credentials
     authenticator = stauth.Authenticate(
-        config['credentials'],
+        copy.deepcopy(credentials),
         config['cookie']['name'],
         config['cookie']['key'],
         config['cookie']['expiry_days'],
@@ -23,6 +29,11 @@ def loginapp():
     if st.session_state.signup:
         try:
             if authenticator.register_user('Sign Up', 'main', False):
+                update_all_users({ 'usernames': {username: authenticator.credentials['usernames'][username]}
+                                  for username in authenticator.credentials['usernames']
+                                  if username not in credentials['usernames']
+                                })
+                credentials = copy.deepcopy(authenticator.credentials)
                 st.success('User registered successfully')
             st.button(':blue[Log In instead]', on_click=toggle_signup_login)
         except Exception as e:
