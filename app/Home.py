@@ -1,5 +1,4 @@
 import streamlit as st
-from views import login
 
 
 try:
@@ -10,4 +9,5 @@ except st.errors.StreamlitAPIException as e:
         extra_msg = "\n\n...but just keep reloading the page, if it doesn't resolve itself. It should."
     print(f"Error: {e}{extra_msg}")
 
+from views import login
 login.loginapp()
