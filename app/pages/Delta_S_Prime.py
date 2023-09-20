@@ -7,9 +7,6 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import streamlit as st
 
-from st_aggrid import AgGrid
-from st_aggrid import GridOptionsBuilder
-
 from views.signed_in_landing import landing_page
 
 landing_page()
@@ -57,37 +54,11 @@ df = build_df("data/DepMap/Prism19Q4/secondary-screen-dose-response-curve-parame
 @st.cache_data(show_spinner=False)
 def get_single_testvalue():
     return df[df['name'] == 'bortezomib'].query('97.9788 < EFF*100 < 97.9790')
-st.write(get_single_testvalue())
+st.dataframe(get_single_testvalue())
 
 "## S' Table"
 # Display the table
-gb = GridOptionsBuilder.from_dataframe(df)
-gb.configure_side_bar()
-# Freeze the 1st column for scrolling
-column_defs = [{'headerName': col, 'field': col, 'pinned': 'left' if col == 'name' else None} for col in df.columns]
-gridOptions = {
-    'columnDefs': column_defs,
-    'pagination': True,
-    'paginationPageSize': 20,
-    'defaultColDef': {
-        'groupable': True, 
-        'value': True, 
-        'enableRowGroup': True, 
-        'aggFunc': 'sum', 
-        'editable': True,
-        'filter': True,
-        'sortable': True,
-        'resizable': True,
-    },
-    'statusBar': {
-        'statusPanels': [
-            { 'statusPanel': 'agTotalRowCountComponent', 'align': 'left' },
-            { 'statusPanel': 'agSelectedRowCountComponent' },
-            { 'statusPanel': 'agAggregationComponent' }
-        ]
-    },
-}
-AgGrid(df, gridOptions=gridOptions)
+st.dataframe(df)
 
 # Add a filter (dropdown on the column 'name') that updates a dataframe table view.
 
@@ -129,9 +100,7 @@ dm_merged = filter_df(active_gene, tissue)
 # ref_pooled_s_prime: mean of S' for all rows where NF1 is 0
 # test_pooled_s_prime: mean of S' for all rows where NF1 is 2
 # delta_s_prime: delta S' = mean of S' for NF1 = 0 - mean of S' for NF1 = 2
-
-st.write(dm_merged)
-
+st.dataframe(dm_merged)
 if not dm_merged.empty:
     st.download_button(
                 label="Download data as CSV",
