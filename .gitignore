@@ -2,3 +2,4 @@ app/.streamlit/secrets.toml
 .idea/
 __pycache__/
 syn5522627/
+venv/
