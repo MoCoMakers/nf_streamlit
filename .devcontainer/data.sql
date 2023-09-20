@@ -41,7 +41,7 @@ CREATE TABLE `drea_users` (
 
 LOCK TABLES `drea_users` WRITE;
 /*!40000 ALTER TABLE `drea_users` DISABLE KEYS */;
-INSERT INTO `drea_users` VALUES ('example','example@mocomakers.org','Example User','$2b$12$yOB98rGHqyKQXJghZmTrieVkbqwsWdogsfG7bp5Xxgpmkhfz.cPFK',1);
+INSERT INTO `drea_users` VALUES ('example','example@mocomakers.org','Example User','$2b$12$yOB98rGHqyKQXJghZmTrieVkbqwsWdogsfG7bp5Xxgpmkhfz.cPFK', TRUE);
 /*!40000 ALTER TABLE `drea_users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
