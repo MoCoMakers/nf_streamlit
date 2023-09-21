@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
+from .data import eda
 with open('./config.yaml') as file:
     config = yaml.load(file, Loader=SafeLoader)
 
@@ -18,6 +19,7 @@ def loginapp():
     if authentication_status:
         authenticator.logout('Logout', 'main')
         st.write(f'Welcome *{name}*')
+        eda()
     elif authentication_status == False:
         st.error('Username/password is incorrect')
     elif authentication_status == None:
