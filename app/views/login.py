@@ -24,13 +24,13 @@ def loginapp():
         try:
             if authenticator.register_user('Sign Up', 'main'):
                 st.success('User registered successfully')
-            st.button('Log In instead', on_click=click_button)
+            st.button(':blue[Log In instead]', on_click=click_button)
         except Exception as e:
             st.error(e)
     else:
         name, authentication_status, username = authenticator.login('Login', 'main')
         if not authentication_status:
-            st.button('Sign Up instead', on_click=click_button)
+            st.button(':blue[Sign Up instead]', on_click=click_button)
 
     if not st.session_state.signup and "authentication_status" in st.session_state:
         if st.session_state["authentication_status"]:
