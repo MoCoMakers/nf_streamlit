@@ -17,20 +17,20 @@ def loginapp():
     if 'signup' not in st.session_state:
         st.session_state.signup = False
 
-    def click_button():
+    def toggle_signup_login():
         st.session_state.signup = False if st.session_state.signup else True
 
     if st.session_state.signup:
         try:
             if authenticator.register_user('Sign Up', 'main'):
                 st.success('User registered successfully')
-            st.button(':blue[Log In instead]', on_click=click_button)
+            st.button(':blue[Log In instead]', on_click=toggle_signup_login)
         except Exception as e:
             st.error(e)
     else:
         name, authentication_status, username = authenticator.login('Login', 'main')
         if not authentication_status:
-            st.button(':blue[Sign Up instead]', on_click=click_button)
+            st.button(':blue[Sign Up instead]', on_click=toggle_signup_login)
 
     if not st.session_state.signup and "authentication_status" in st.session_state:
         if st.session_state["authentication_status"]:
