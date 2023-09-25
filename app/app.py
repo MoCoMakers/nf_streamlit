@@ -1,4 +1,3 @@
-#Testing changes
 from pathlib import Path
 import re
 
@@ -257,19 +256,19 @@ if check_password():
         # ----------------------------------
         specimen_ids = df_clines.sort_values("disease")['specimenID']
 
-        st.header("Available Cell Lines - Dose Response Curves")
-        # create a checkbox for each category
-        val = [None] * len(specimen_ids)  # this list will store info about which category is selected
-        for i, cat in enumerate(specimen_ids):
-            # set defaults:
-            exclude_list = ["HFF", "ipNF05.5"]
-            if cat in exclude_list:
-                val[i] = st.sidebar.checkbox(cat, value=False, key='curves_cell_line_selector_' + str(
-                    i))  # value is the preselect value for first render
-            else:
-                val[i] = st.sidebar.checkbox(cat, value=True, key='curves_cell_line_selector_' + str(i))
+        # st.header("Available Cell Lines - Dose Response Curves")
+        # # create a checkbox for each category
+        # val = [None] * len(specimen_ids)  # this list will store info about which category is selected
+        # for i, cat in enumerate(specimen_ids):
+        #     # set defaults:
+        #     exclude_list = ["HFF", "ipNF05.5"]
+        #     if cat in exclude_list:
+        #         val[i] = st.sidebar.checkbox(cat, value=False, key='curves_cell_line_selector_' + str(
+        #             i))  # value is the preselect value for first render
+        #     else:
+        #         val[i] = st.sidebar.checkbox(cat, value=True, key='curves_cell_line_selector_' + str(i))
 
-        specimen_ids = specimen_ids[specimen_ids.isin(specimen_ids[val])].reset_index(drop=True)
+        # specimen_ids = specimen_ids[specimen_ids.isin(specimen_ids[val])].reset_index(drop=True)
 
         # Thresholds
         # ----------------------------------
