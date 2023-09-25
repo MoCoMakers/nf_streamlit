@@ -51,7 +51,7 @@ def check_password():
 
 if check_password():
 
-    data_path = Path("syn5522627")
+    data_path = Path("/Users/varunsrinivasan/NFProject/syn5522627/")
 
     BREWER_9_SET1 = [
         "#e41a1c",
@@ -885,12 +885,12 @@ if check_password():
     #     & (df_plt_ratios["Log10 (AC50 ratio)"] < st_max_lac50_ratio)
     #     ]
 
-    st.download_button(
-        label="Download data as CSV",
-        data=df_rank_ratios.to_csv().encode('utf-8'),
-        file_name='large_df.csv',
-        mime='text/csv',
-    )
+    # st.download_button(
+    #     label="Download data as CSV",
+    #     data=df_rank_ratios.to_csv().encode('utf-8'),
+    #     file_name='large_df.csv',
+    #     mime='text/csv',
+    # )
 
     df_ranked = (
         df_rank_ratios
