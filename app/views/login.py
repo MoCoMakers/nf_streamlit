@@ -9,12 +9,12 @@ with open('./config.yaml') as file:
 from db import get_credentials, update_all_users
 import copy
 
-credentials = get_credentials()
+credentials_in_database = get_credentials()
 
 def loginapp():
-    global credentials
+    global credentials_in_database
     authenticator = stauth.Authenticate(
-        copy.deepcopy(credentials),
+        copy.deepcopy(credentials_in_database),
         config['cookie']['name'],
         config['cookie']['key'],
         config['cookie']['expiry_days'],
@@ -29,11 +29,13 @@ def loginapp():
     if st.session_state.signup:
         try:
             if authenticator.register_user('Sign Up', 'main', False):
-                update_all_users({ 'usernames': {username: authenticator.credentials['usernames'][username]}
-                                  for username in authenticator.credentials['usernames']
-                                  if username not in credentials['usernames']
-                                })
-                credentials = copy.deepcopy(authenticator.credentials)
+                credentials_not_in_database = {
+                    'usernames': {username: authenticator.credentials['usernames'][username]}
+                    for username in authenticator.credentials['usernames']
+                    if username not in credentials_in_database['usernames']
+                }
+                update_all_users(credentials_not_in_database)
+                credentials_in_database = copy.deepcopy(authenticator.credentials)
                 st.success('User registered successfully')
             st.button(':blue[Log In instead]', on_click=toggle_signup_login)
         except Exception as e:
