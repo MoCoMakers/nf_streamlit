@@ -6,8 +6,8 @@ conn = st.experimental_connection('REPLACE-WITH-DATABASE-NAME', type='sql')
 # Retrieve all user's data from database
 def get_all_users():
     with conn.session as s:
-        s.execute(text('CREATE TABLE IF NOT EXISTS drea_users (username varchar(255) PRIMARY KEY, email TEXT, name TEXT, passwordhash TEXT);'))
-    drea_users = conn.query('select * from drea_users')
+        s.execute(text('CREATE TABLE IF NOT EXISTS drea_users (username varchar(255) PRIMARY KEY, email TEXT, name TEXT, passwordhash TEXT, approved BOOLEAN);'))
+    drea_users = conn.query('select * from drea_users where approved = TRUE')
     return drea_users.to_dict('index')
 
 # Update all user's data in database
@@ -16,7 +16,7 @@ def update_all_users(usernames):
     with conn.session as s:
         for username in usernames['usernames']:
             s.execute(
-                text('INSERT INTO drea_users (username, email, name, passwordhash) VALUES (:username, :email, :name, :passwordhash);'),
+                text('INSERT INTO drea_users (username, email, name, passwordhash, approved) VALUES (:username, :email, :name, :passwordhash, TRUE);'),
                 params=flatten(username, usernames)
             )
         s.commit()
