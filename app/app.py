@@ -33,7 +33,7 @@ def check_password():
     if "password_correct" not in st.session_state:
         # First run, show input for password.
         html_string='<h3>To get started, please review details at <a href="https://github.com/MoCoMakers/nf_streamlit/wiki" target="_blank">https://github.com/MoCoMakers/nf_streamlit/wiki</a></h3>'
-        st.markdown(html_string)
+        st.markdown(html_string, unsafe_allow_html=True)
         st.text_input(
             "Password", type="password", on_change=password_entered, key="password"
         )
