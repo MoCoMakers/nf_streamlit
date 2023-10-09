@@ -12,7 +12,7 @@ def loginapp():
         config['cookie']['name'],
         config['cookie']['key'],
         config['cookie']['expiry_days'],
-        config['preauthorized']
+        None
     )
     if 'signup' not in st.session_state:
         st.session_state.signup = False
@@ -22,7 +22,7 @@ def loginapp():
 
     if st.session_state.signup:
         try:
-            if authenticator.register_user('Sign Up', 'main'):
+            if authenticator.register_user('Sign Up', 'main', False):
                 st.success('User registered successfully')
             st.button(':blue[Log In instead]', on_click=toggle_signup_login)
         except Exception as e:
