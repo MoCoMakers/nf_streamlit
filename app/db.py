@@ -1,7 +1,7 @@
 import streamlit as st
 from sqlalchemy.sql import text
 
-conn = st.experimental_connection('REPLACE-WITH-DATABASE-NAME', type='sql')
+conn = st.experimental_connection('REPLACE-WITH-CONNECTIONS-HEADER-VARIABLE-FROM-SECRETS.TOML-FILE', type='sql')
 
 # Retrieve all user's data from database
 def get_all_users():
