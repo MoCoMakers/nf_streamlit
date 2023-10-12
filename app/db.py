@@ -6,7 +6,7 @@ conn = st.experimental_connection('REPLACE-WITH-CONNECTIONS-HEADER-VARIABLE-FROM
 # Retrieve all user's data from database
 def get_all_users():
     with conn.session as s:
-        s.execute(text('CREATE TABLE IF NOT EXISTS drea_users (username varchar(255) PRIMARY KEY, email TEXT, name TEXT, passwordhash TEXT, approved BOOLEAN);'))
+        s.execute(text('CREATE TABLE IF NOT EXISTS drea_users (username varchar(255) NOT NULL PRIMARY KEY, email TEXT NOT NULL, name TEXT NOT NULL, passwordhash TEXT NOT NULL, approved BOOLEAN NOT NULL);'))
     drea_users = conn.query('select * from drea_users where approved = TRUE')
     return drea_users.to_dict('index')
 
