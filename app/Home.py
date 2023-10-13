@@ -2,7 +2,7 @@ import streamlit as st
 
 
 try:
-    st.set_page_config(layout="wide", page_title="Hack4NF Drug Response Data Visualization")    
+    st.set_page_config(layout="wide", page_title="Hack4NF Drug Response Data Visualization", page_icon="assets/favicon.png")
 except st.errors.StreamlitAPIException as e:
     extra_msg = ""
     if "`set_page_config()` can only be called once per app page" in str(e):
