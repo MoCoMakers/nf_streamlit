@@ -26,6 +26,21 @@ def update_all_users(usernames):
             )
         s.commit()
 
+# Update single user's data in database
+def update_user(hashed_password, email, username, name):
+    # Insert some data with conn.session.
+    with conn.session as s:
+        s.execute(
+            text('INSERT INTO drea_users (username, email, name, passwordhash, approved) VALUES (:username, :email, :name, :passwordhash, TRUE);'),
+            params={
+                'username': username,
+                'email': email,
+                'name': name,
+                'passwordhash': hashed_password,
+            }
+        )
+        s.commit()
+
 # Flatten dictionary to database row
 def flatten(username, users):
     print("users::::", users)

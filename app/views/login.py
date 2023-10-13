@@ -5,7 +5,7 @@ import streamlit_authenticator as stauth
 from .signupform import SignUp
 from .signed_in_landing import landing_page
 
-from db import get_credentials, update_all_users
+from db import get_credentials, update_user
 
 credentials_in_database = get_credentials()
 
@@ -35,7 +35,7 @@ def loginapp():
             )
 
             if email_of_registered_user:
-                # TODO: Load data to database
+                update_user(hashed_password, email_of_registered_user, username_of_registered_user, name_of_registered_user)
                 st.success('User registered successfully')
             else:
                 st.button(":blue[Log In instead]", on_click=toggle_signup_login)
