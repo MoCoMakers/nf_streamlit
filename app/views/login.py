@@ -2,9 +2,9 @@ import copy
 
 import streamlit as st
 import streamlit_authenticator as stauth
-from db import get_credentials, update_all_users
-
 from .signed_in_landing import landing_page
+
+from db import get_credentials, update_all_users
 
 credentials_in_database = get_credentials()
 
