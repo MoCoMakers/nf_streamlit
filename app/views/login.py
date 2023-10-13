@@ -1,11 +1,6 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-import yaml
-from yaml.loader import SafeLoader
 from .data import eda
-with open('./config.yaml') as file:
-    config = yaml.load(file, Loader=SafeLoader)
-
 from db import get_credentials, update_all_users
 import copy
 
@@ -15,9 +10,9 @@ def loginapp():
     global credentials_in_database
     authenticator = stauth.Authenticate(
         copy.deepcopy(credentials_in_database),
-        config['cookie']['name'],
-        config['cookie']['key'],
-        config['cookie']['expiry_days'],
+        st.secrets['cookie']['name'],
+        st.secrets['cookie']['key'],
+        st.secrets['cookie']['expiry_days'],
         None
     )
     if 'signup' not in st.session_state:
