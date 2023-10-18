@@ -1,7 +1,10 @@
 funcy
+mysqlclient
 numpy
 pandas
 plotly
+SQLAlchemy==2.0.21
 streamlit
 streamlit-aggrid
+streamlit-authenticator
 tabulate
