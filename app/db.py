@@ -1,7 +1,18 @@
 import streamlit as st
 from sqlalchemy.sql import text
 
-conn = st.experimental_connection('REPLACE-WITH-CONNECTIONS-HEADER-VARIABLE-FROM-SECRETS.TOML-FILE', type='sql')
+if location=="local":
+    conn = st.experimental_connection(st.secrets["connections.local"]["url"]), type='sql')
+else:
+    # e.g. "mysql://jdoe:******@staging.acmecorp.com:3306/staging_db"
+    dialect = st.secrets["connections.users_db"]["dialect"]
+    host = st.secrets["connections.users_db"]["host"]
+    port = st.secrets["connections.users_db"]["port"]
+    database = st.secrets["connections.users_db"]["database"]
+    username = st.secrets["connections.users_db"]["username"]
+    password = st.secrets["connections.users_db"]["password"]
+    connection_string = dialect"://"+username+":"+password+"@"+host+":"+port+"/"+database
+    conn = st.experimental_connection(connection_string, type='sql')
 
 # Retrieve all user's data from database
 def get_all_users():
