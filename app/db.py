@@ -11,7 +11,7 @@ else:
     database = st.secrets["connections.users_db"]["database"]
     username = st.secrets["connections.users_db"]["username"]
     password = st.secrets["connections.users_db"]["password"]
-    connection_string = dialect"://"+username+":"+password+"@"+host+":"+port+"/"+database
+    connection_string = dialect+"://"+username+":"+password+"@"+host+":"+port+"/"+database
     conn = st.experimental_connection(connection_string, type='sql')
 
 # Retrieve all user's data from database
