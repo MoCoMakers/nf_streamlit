@@ -2,7 +2,7 @@ import streamlit as st
 from sqlalchemy.sql import text
 
 if location=="local":
-    conn = st.experimental_connection(st.secrets["connections.local"]["url"]), type='sql')
+    conn = st.experimental_connection(st.secrets["connections.local"]["url"], type='sql')
 else:
     # e.g. "mysql://jdoe:******@staging.acmecorp.com:3306/staging_db"
     dialect = st.secrets["connections.users_db"]["dialect"]
