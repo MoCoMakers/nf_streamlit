@@ -2,9 +2,10 @@ import streamlit as st
 from sqlalchemy.sql import text
 
 if st.secrets["deploy_location"]["location"]=="local":
-    conn = st.experimental_connection(st.secrets["connections_local"]["url"], type='sql')
+    conn = st.experimental_connection('local', type='sql')
 else:
     # e.g. "mysql://jdoe:******@staging.acmecorp.com:3306/staging_db"
+    """
     dialect = st.secrets["connections_users_db"]["dialect"]
     host = st.secrets["connections_users_db"]["host"]
     port = st.secrets["connections_users_db"]["port"]
@@ -13,6 +14,8 @@ else:
     password = st.secrets["connections_users_db"]["password"]
     connection_string = dialect+"://"+username+":"+password+"@"+host+":"+port+"/"+database
     conn = st.experimental_connection(connection_string, type='sql')
+    """
+    conn = st.experimental_connection('users_db', type='sql')
 
 # Retrieve all user's data from database
 def get_all_users():
