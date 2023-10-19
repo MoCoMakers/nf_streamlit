@@ -1,16 +1,16 @@
 import streamlit as st
 from sqlalchemy.sql import text
 
-if st.secrets["deploy.location"]["location"]=="local":
-    conn = st.experimental_connection(st.secrets["connections.local"]["url"], type='sql')
+if st.secrets["deploy_location"]["location"]=="local":
+    conn = st.experimental_connection(st.secrets["connections_local"]["url"], type='sql')
 else:
     # e.g. "mysql://jdoe:******@staging.acmecorp.com:3306/staging_db"
-    dialect = st.secrets["connections.users_db"]["dialect"]
-    host = st.secrets["connections.users_db"]["host"]
-    port = st.secrets["connections.users_db"]["port"]
-    database = st.secrets["connections.users_db"]["database"]
-    username = st.secrets["connections.users_db"]["username"]
-    password = st.secrets["connections.users_db"]["password"]
+    dialect = st.secrets["connections_users_db"]["dialect"]
+    host = st.secrets["connections_users_db"]["host"]
+    port = st.secrets["connections_users_db"]["port"]
+    database = st.secrets["connections_users_db"]["database"]
+    username = st.secrets["connections_users_db"]["username"]
+    password = st.secrets["connections_users_db"]["password"]
     connection_string = dialect+"://"+username+":"+password+"@"+host+":"+port+"/"+database
     conn = st.experimental_connection(connection_string, type='sql')
 
