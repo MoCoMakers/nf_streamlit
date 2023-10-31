@@ -16,7 +16,10 @@ else:
     connection_string = dialect+"://"+username+":"+password+"@"+host+":"+port+"/"+database
     conn = st.experimental_connection(connection_string, type='sql')
     """
-    conn = st.experimental_connection('users_db', type='sql')
+    print("Before connection")
+    conn = st.connection('users_db', type='sql')
+    print(conn)
+    print("After connection")
 
 # Retrieve all user's data from database
 def get_all_users():
