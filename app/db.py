@@ -2,7 +2,8 @@ import streamlit as st
 from sqlalchemy.sql import text
 
 if st.secrets["deploy_location"]["location"]=="local":
-    conn = st.experimental_connection('local', type='sql')
+    conn = st.connection('local', type='sql')
+
 else:
     # e.g. "mysql://jdoe:******@staging.acmecorp.com:3306/staging_db"
     """
