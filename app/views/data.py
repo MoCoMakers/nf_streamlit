@@ -9,12 +9,100 @@ from st_aggrid import AgGrid
 from st_aggrid import GridOptionsBuilder
 
 import sys
+
 sys.path.append('../')
 
 import syn5522627 as syn
 
-def eda():
 
+def ll4(c, h, inf, zero, ec50):
+    """A copy of the LL.4 function from the R drc package with,
+    https://doseresponse.github.io/drc/reference/LL.4.html
+
+     - c: concentration
+     - h: hill slope
+     - inf: asymptote at max concentration
+     - zero: asymptote at zero concentration
+     - ec50: EC50
+    """
+    num = zero - inf
+    den = 1 + np.exp(h * (np.log(c) - np.log(ec50)))
+    response = inf + num / den
+    return response
+
+
+def update_df_rank(st=None, df_compounds=None, dfs_drc=None, den_sis=None, num_sis=None):
+    if not den_sis:
+        den_sis = syn.den_sis
+    if not num_sis:
+        num_sis = syn.num_sis
+    st.session_state['df_ratios'] = syn.calculate_fit_ratios(df_compounds, dfs_drc, den_sis, num_sis)
+
+
+def get_measured_trace(row, label=None, showlegend=False, color=None):
+    cs = row[syn.C_COLS].astype(float).values
+    rs = row[syn.R_COLS].astype(float).values
+    tr_measured = go.Scatter(
+        x=cs,
+        y=rs,
+        mode="markers",
+        name=label,
+        showlegend=showlegend,
+        marker_color=color,
+    )
+    return tr_measured
+
+
+def get_fit_trace(row, label=None, showlegend=False, color=None, line_type="dot"):
+    cs = row[syn.C_COLS].astype(float).values
+    fit_rs = ll4(
+        cs,
+        row["HILL"],
+        row["INF"],
+        row["ZERO"],
+        row["AC50"],
+    )
+    tr_fit = go.Scatter(
+        x=cs,
+        y=fit_rs,
+        mode="lines",
+        showlegend=showlegend,
+        name=label,
+        line_color=color,
+        line_dash=line_type
+    )
+    return tr_fit
+
+
+def get_ac50_trace(row, label=None, showlegend=False, color=None):
+    rs = row[syn.R_COLS].astype(float).values
+    tr_ac50 = go.Scatter(
+        x=[row["AC50"]] * 2,
+        # y=[min(rs), max(rs)],
+        y=[row["ZERO"], row["INF"]],
+        mode="lines",
+        showlegend=showlegend,
+        name=label,
+        line_color=color,
+    )
+    return tr_ac50
+
+
+def build_grid_options(df):
+    # https://towardsdatascience.com/make-dataframes-interactive-in-streamlit-c3d0c4f84ccb
+    gb = GridOptionsBuilder.from_dataframe(df)
+    # gb.configure_pagination(paginationAutoPageSize=True)
+    gb.configure_side_bar()
+    gb.configure_selection(
+        "single",
+        use_checkbox=False,
+        groupSelectsChildren=True,
+    )
+    gridOptions = gb.build()
+    return gridOptions
+
+
+def eda():
     data_path = Path("syn5522627")
 
     BREWER_9_SET1 = [
@@ -71,23 +159,6 @@ def eda():
 
     COLORS = BREWER_9_SET1
 
-
-    def ll4(c, h, inf, zero, ec50):
-        """A copy of the LL.4 function from the R drc package with,
-        https://doseresponse.github.io/drc/reference/LL.4.html
-
-         - c: concentration
-         - h: hill slope
-         - inf: asymptote at max concentration
-         - zero: asymptote at zero concentration
-         - ec50: EC50
-        """
-        num = zero - inf
-        den = 1 + np.exp(h * (np.log(c) - np.log(ec50)))
-        response = inf + num / den
-        return response
-
-
     df_files, df_clines, file_name_to_specimen_id = syn.read_metadata(data_path)
     file_show_cols = [col for col in df_files.columns if col not in syn.FILE_HIDE_COLS]
 
@@ -118,74 +189,6 @@ def eda():
     # calculate all ratios
     df_ratios = syn.calculate_fit_ratios(df_compounds, dfs_drc, syn.den_sis, syn.num_sis)
     st.session_state['df_ratios'] = df_ratios
-
-
-    def update_df_rank(st=None, df_compounds=None, dfs_drc=None, den_sis=None, num_sis=None):
-        st.session_state['df_ratios'] = syn.calculate_fit_ratios(df_compounds, dfs_drc, syn.den_sis, syn.num_sis)
-
-
-    def get_measured_trace(row, label=None, showlegend=False, color=None):
-        cs = row[syn.C_COLS].astype(float).values
-        rs = row[syn.R_COLS].astype(float).values
-        tr_measured = go.Scatter(
-            x=cs,
-            y=rs,
-            mode="markers",
-            name=label,
-            showlegend=showlegend,
-            marker_color=color,
-        )
-        return tr_measured
-
-
-    def get_fit_trace(row, label=None, showlegend=False, color=None, line_type="dot"):
-        cs = row[syn.C_COLS].astype(float).values
-        fit_rs = ll4(
-            cs,
-            row["HILL"],
-            row["INF"],
-            row["ZERO"],
-            row["AC50"],
-        )
-        tr_fit = go.Scatter(
-            x=cs,
-            y=fit_rs,
-            mode="lines",
-            showlegend=showlegend,
-            name=label,
-            line_color=color,
-            line_dash=line_type
-        )
-        return tr_fit
-
-
-    def get_ac50_trace(row, label=None, showlegend=False, color=None):
-        rs = row[syn.R_COLS].astype(float).values
-        tr_ac50 = go.Scatter(
-            x=[row["AC50"]] * 2,
-            # y=[min(rs), max(rs)],
-            y=[row["ZERO"], row["INF"]],
-            mode="lines",
-            showlegend=showlegend,
-            name=label,
-            line_color=color,
-        )
-        return tr_ac50
-
-
-    def build_grid_options(df):
-        # https://towardsdatascience.com/make-dataframes-interactive-in-streamlit-c3d0c4f84ccb
-        gb = GridOptionsBuilder.from_dataframe(df)
-        # gb.configure_pagination(paginationAutoPageSize=True)
-        gb.configure_side_bar()
-        gb.configure_selection(
-            "single",
-            use_checkbox=False,
-            groupSelectsChildren=True,
-        )
-        gridOptions = gb.build()
-        return gridOptions
-
 
     # Sidebar
     # ==================================
@@ -273,7 +276,7 @@ def eda():
             "Min Number of Test (tumor) Cell Lines To Appear in Score List",
             min_value=1,
             max_value=6,
-            value=3,
+            value=4,
             step=1,
         )
 
@@ -284,20 +287,27 @@ def eda():
         st.header("Cell Lines used as Reference")
         # create a checkbox for each category
         val = [None] * len(syn.den_sis_df)  # this list will store info about which category is selected
-        for i, cat in enumerate(syn.den_sis):
+        i = 0
+        for cat in list(syn.den_sis_primary):
+            # print(cat)
+            # print(syn.den_sis)
+            # print(syn.den_sis_primary)
+            # raise Exception(cat)
             default_value = True
             if cat in ['HFF', 'ipn02.8', 'ipn02.3']:
-                default_value = False
+                default_value = True
             val[i] = st.sidebar.checkbox(cat, value=default_value, key='syn.den_sis_selector_' + str(i),
                                          on_change=update_df_rank,
                                          kwargs={
                                              'st': st,
                                              'df_compounds': df_compounds,
                                              'dfs_drc': dfs_drc,
-                                             'syn.den_sis': syn.den_sis,
-                                             'syn.num_sis': syn.num_sis
+                                             'den_sis': syn.den_sis_primary,
+                                             'num_sis': syn.num_sis_primary
                                          })
-        syn.den_sis = syn.den_sis_df[syn.den_sis_df.isin(syn.den_sis_df[val])].reset_index(drop=True).dropna().values.flatten()
+            i = i + 1
+        syn.den_sis = syn.den_sis_df[syn.den_sis_df.isin(syn.den_sis_df[val])].reset_index(
+            drop=True).dropna().values.flatten()
         syn.den_sis = list(syn.den_sis)
 
         # Used Test Cell Lines
@@ -317,11 +327,12 @@ def eda():
                                              'st': st,
                                              'df_compounds': df_compounds,
                                              'dfs_drc': dfs_drc,
-                                             'syn.den_sis': syn.den_sis,
-                                             'syn.num_sis': syn.num_sis
+                                             'den_sis': syn.den_sis,
+                                             'num_sis': syn.num_sis
                                          })
 
-        syn.num_sis = syn.num_sis_df[syn.num_sis_df.isin(syn.num_sis_df[val])].reset_index(drop=True).dropna().values.flatten()
+        syn.num_sis = syn.num_sis_df[syn.num_sis_df.isin(syn.num_sis_df[val])].reset_index(
+            drop=True).dropna().values.flatten()
         syn.num_sis = list(syn.num_sis)
 
     # Compounds
@@ -489,7 +500,7 @@ def eda():
         df_sctr["eff"].append(row["ZERO"] - row["INF"])
         df_sctr["R2"].append(row["R2"])
 
-        if use_full_colors=="Yes":
+        if use_full_colors == "Yes":
             i_color = i_tot
             ac50_color = i_tot
         else:
@@ -500,7 +511,8 @@ def eda():
                 i_color = 0
                 ac50_color = 1
         tr_measured = get_measured_trace(row, color=COLORS[i_color])
-        tr_fit = get_fit_trace(row, label=specimen_id, color=EXTENDED_COLORS[i_color], showlegend=True, line_type="solid")
+        tr_fit = get_fit_trace(row, label=specimen_id, color=EXTENDED_COLORS[i_color], showlegend=True,
+                               line_type="solid")
         tr_ac50 = get_ac50_trace(row, color=EXTENDED_COLORS[ac50_color])
         for tr in [tr_fit, tr_ac50]:
             fig.add_trace(tr, row=1, col=1)
@@ -763,7 +775,6 @@ def eda():
 
     st.plotly_chart(fig, use_container_width=True)
 
-
     # Scores
     # ==================================
 
@@ -771,7 +782,6 @@ def eda():
         # print(x.to_markdown())
         # raise
         return [f"{el:.3f}" for el in list(x)]
-
 
     st.header("Compounds ranked by AC50 ratios")
 
@@ -830,6 +840,7 @@ def eda():
 
     df_ranked = df_ranked[df_ranked['N Cell Lines'] >= st_min_num_clines]
 
+    count = 0
     for den_si in syn.den_sis:
         df_ranked_den = df_ranked.loc[df_ranked.den_si == den_si].groupby('NCGC SID').max()
         st.subheader("Reference Line: " + den_si)
@@ -839,7 +850,9 @@ def eda():
             data=df_ranked_den.to_csv().encode('utf-8'),
             file_name='log_ac50_ratio_mean.csv',
             mime='text/csv',
+            key='den_sis_count'+str(count)
         )
+        count = count + 1
 
     st.header("Compounds ranked by (eff ratio) / (AC50 ratio)")
 
@@ -849,21 +862,12 @@ def eda():
     #     & (df_plt_ratios["Log10 (AC50 ratio)"] < st_max_lac50_ratio)
     #     ]
 
-    st.download_button(
-        label="Download data as CSV",
-        data=df_rank_ratios.to_csv().encode('utf-8'),
-        file_name='large_df.csv',
-        mime='text/csv',
-    )
-
     df_ranked = (
         df_rank_ratios
         .groupby(['den_si', 'NCGC SID', 'num_si'])['Log10 score']
         .agg([('Log10 score', lambda x: x)])
         .reset_index()
     )
-
-
 
     df_ranked = df_ranked.loc[df_ranked.den_si.isin(syn.den_sis)]
     df_ranked = df_ranked.loc[df_ranked.num_si.isin(syn.num_sis)]
@@ -906,6 +910,7 @@ def eda():
 
     df_ranked = df_ranked[df_ranked['N Cell Lines'] >= st_min_num_clines]
 
+    count = 0
     for den_si in syn.den_sis:
         df_ranked_den = df_ranked.loc[df_ranked.den_si == den_si].groupby('NCGC SID').max()
         st.subheader("Reference Line: " + den_si)
@@ -915,4 +920,6 @@ def eda():
             data=df_ranked_den.to_csv().encode('utf-8'),
             file_name='large_df.csv',
             mime='text/csv',
+            key='df_count_' + str(count)
         )
+        count = count + 1

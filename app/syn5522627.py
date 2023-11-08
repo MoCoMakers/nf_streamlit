@@ -145,6 +145,15 @@ num_sis = [
     "ipNF95.11bC_T",
 ]
 
+den_sis_primary = ["ipn02.3", "ipn02.8", "HFF", "ipnNF95.11c"]
+num_sis_primary = [
+    "ipNF05.5",
+    "ipNF05.5 (mixed clone)",
+    "ipNF06.2A",
+    "ipNF95.6",
+    "ipNF95.11bC_T",
+]
+
 
 class DoseResponseCurve:
     def __init__(self, smm_hts, df_raw):

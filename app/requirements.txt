@@ -4,7 +4,7 @@ numpy
 pandas
 plotly
 SQLAlchemy==2.0.21
-streamlit
+streamlit>=1.28.0
 streamlit-aggrid
 streamlit-authenticator
 tabulate
