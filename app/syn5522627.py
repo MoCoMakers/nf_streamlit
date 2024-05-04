@@ -37,9 +37,10 @@ files included in the dataset above are,
 └── SYNAPSE_METADATA_MANIFEST.tsv
 
 """
-from pathlib import Path
+
 import re
-from typing import Dict, List, Iterable
+from pathlib import Path
+from typing import Dict, Iterable, List
 
 import funcy
 import numpy as np
@@ -396,7 +397,7 @@ def read_metadata(data_path):
 
     # sort cell lines
     df_clines = df_clines.sort_values(
-        by=['disease', 'nf1Genotype'],
+        by=["disease", "nf1Genotype"],
         ascending=[True, False],
     )
 
@@ -457,7 +458,9 @@ def calculate_fit_ratios(df_compounds, dfs_drc_in, den_sis, num_sis):
 
     df_ratios = pd.DataFrame()
 
+    # numerator cell lines represent the reference cell lines, only one reference is used at a time
     for num_si in num_sis:
+        # denominator cell lines represent the test cell lines
         for den_si in den_sis:
             df = df_compounds.copy().set_index("NCGC SID")
             df["num_si"] = num_si
@@ -480,8 +483,30 @@ def calculate_fit_ratios(df_compounds, dfs_drc_in, den_sis, num_sis):
 
             # score = (num_eff/den_eff) / (num_AC50/den_AC50)
             # Swapped direction of ratio to fix integer
-            df['score'] =  df['AC50 ratio'] /df['eff ratio']
-            df['Log10 score'] = np.log10(df['score'])
+            df["score"] = df["AC50 ratio"] / df["eff ratio"]
+            df["Log10 score"] = np.log10(df["score"])
+            # define s_prime for numerator and denominator
+            # for the numerator, define (A-D)/C, the working ratio, where
+            #   A is dfs_drc[num_si]["INF"],
+            #   D is dfs_drc[num_si]["ZERO"]
+            #   C is dfs_drc[num_si]["AC50"]
+            working_ratio_num = (
+                dfs_drc[num_si]["INF"] - dfs_drc[num_si]["ZERO"]
+            ) / dfs_drc[num_si]["AC50"]
+            df["s_prime_num"] = np.log(
+                working_ratio_num + np.sqrt(working_ratio_num**2 + 1)
+            )
+
+            # for the denominator, define (A-D)/C, the working ratio using den_si
+            working_ratio_den = (
+                dfs_drc[den_si]["INF"] - dfs_drc[den_si]["ZERO"]
+            ) / dfs_drc[den_si]["AC50"]
+            # take the natural log of the sum of the working ratio and the square root of the sum of the working ratio squared and 1
+            df["s_prime_den"] = np.log(
+                working_ratio_den + np.sqrt(working_ratio_den**2 + 1)
+            )
+
+            df["delta_s_prime"] = df["s_prime_num"] - df["s_prime_den"]
 
             df_ratios = pd.concat([df_ratios, df])
 
@@ -510,9 +535,9 @@ if __name__ == "__main__":
     # make one dataframe
     df_drc = pd.DataFrame()
     for si, df1 in dfs_drc.items():
-        df1['cell_line'] = si
+        df1["cell_line"] = si
         df_drc = pd.concat([df_drc, df1])
-    df_drc['eff'] = df_drc["ZERO"] - df_drc["INF"]
+    df_drc["eff"] = df_drc["ZERO"] - df_drc["INF"]
 
     # all dose response curves have the same compounds so we just take one
     one_specimen_id = next(iter(dfs_drc.keys()))
@@ -523,25 +548,27 @@ if __name__ == "__main__":
 
     st_th_r2 = 0.85
     df_plt_ratios = df_ratios[
-        (df_ratios['num_R2'] >= st_th_r2)
-        & (df_ratios['den_R2'] >= st_th_r2)
-        & (df_ratios['num_eff'] > 0)
-        & (df_ratios['den_eff'] > 0)
-        ]
+        (df_ratios["num_R2"] >= st_th_r2)
+        & (df_ratios["den_R2"] >= st_th_r2)
+        & (df_ratios["num_eff"] > 0)
+        & (df_ratios["den_eff"] > 0)
+    ]
 
     st_th_ac50_ratio = 1.5
     st_th_lac50_ratio = np.log10(st_th_ac50_ratio)
-    df_good_ratios = df_plt_ratios[df_plt_ratios["Log10 (AC50 ratio)"] > st_th_lac50_ratio]
+    df_good_ratios = df_plt_ratios[
+        df_plt_ratios["Log10 (AC50 ratio)"] > st_th_lac50_ratio
+    ]
 
     df_ranked = (
-        df_good_ratios
-        .groupby(['den_si', 'NCGC SID'])['score']
-        .agg(['size', 'mean', lambda x: list(x)])
+        df_good_ratios.groupby(["den_si", "NCGC SID"])["score"]
+        .agg(["size", "mean", lambda x: list(x)])
         .reset_index()
     )
     st_th_num_clines = 3
-    df_ranked = df_ranked[df_ranked['size'] >= st_th_num_clines]
-    df_ranked = pd.merge(df_ranked, df_compounds, on='NCGC SID')
-    df_ranked = df_ranked.drop(columns='SMILES').sort_values(
-        ['size', 'mean'], ascending=[False, False],
+    df_ranked = df_ranked[df_ranked["size"] >= st_th_num_clines]
+    df_ranked = pd.merge(df_ranked, df_compounds, on="NCGC SID")
+    df_ranked = df_ranked.drop(columns="SMILES").sort_values(
+        ["size", "mean"],
+        ascending=[False, False],
     )
