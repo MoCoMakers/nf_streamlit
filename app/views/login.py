@@ -51,7 +51,7 @@ def loginapp():
 
     if not st.session_state.signup and "authentication_status" in st.session_state:
         if st.session_state["authentication_status"]:
-            authenticator.logout("sidebar", fields={"Form name": "Logout"})
+            authenticator.logout("Logout", "sidebar")
             st.write(f"Welcome *{name}*")
             eda()
         elif st.session_state["authentication_status"] == False:
