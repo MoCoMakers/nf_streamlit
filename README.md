@@ -18,6 +18,42 @@ Please visit this tool live here:
 A sister repo to this project is: [https://github.com/MoCoMakers/hack4nf-2022](https://github.com/MoCoMakers/hack4nf-2022)
 
 # Getting Started
+## Local Development (Developers Only)
+Clone repo, then copy `secrets.toml.example` to `secrets.toml` and update the values.
+Note that you will need a remote database connection (MySQL is the default) configured with a users table, for example:
+
+table drea_users;
+```
++--------------+--------------+------+-----+---------+-------+
+| Field        | Type         | Null | Key | Default | Extra |
++--------------+--------------+------+-----+---------+-------+
+| username     | varchar(255) | NO   | PRI | NULL    |       |
+| email        | text         | YES  |     | NULL    |       |
+| name         | text         | YES  |     | NULL    |       |
+| passwordhash | text         | YES  |     | NULL    |       |
+| approved     | tinyint(1)   | YES  |     | NULL    |       |
+```
+
+
+### Get the data
+<br>You will need a valid synapse.org account and approved
+<br>access (portal request) to [syn5522627](https://www.synapse.org/#!Synapse:syn5522627) - which you can search for on synapse.org
+
+```
+pip install synapseclient[pandas,pysftp]
+mkdir syn5522627
+cd syn5522627
+synapse get -r syn5522627
+```
+
+### Install depdencies and run
+Change to `app/` directory<br>
+Install Python requirements `pip install -r requirments.txt`<br>
+Start the app `streamlit run .\app.py`
+
+Note that on first run, you may need to do a page reload two times before the site displays a consistant view, or stable error message.
+
+## Deploying to a server
 Log into the server<br>
 Clone the docker repo, and change into it:<br>
 [https://github.com/MocoMakers/docker_streamlit](https://github.com/MocoMakers/docker_streamlit)
@@ -36,20 +72,3 @@ docker run -p 8501:8501 -v ~/nf_streamlit/app:/app streamlit_app
 ```
 <br>
 The first command only needs to be run one time. To run the server using the second command, chaging `~/docker_streamlit/app` for the location of the `app` directory in this repo.
-
-## Local Development (Developers Only)
-Clone repo, then copy `secrets.toml.example` to `secrets.toml` and update the values
-
-Change to `app/` directory<br>
-Install Python requirements `pip install -r requirments.txt`<br>
-### Get the data
-<br>You will need a valid synapse.org account and approved
-<br>access (portal request) to syn5522627 - which you can search for on synapse.org   
-
-```
-pip install synapseclient[pandas,pysftp]
-mkdir syn5522627
-cd syn5522627
-synapse get -r syn5522627
-```
-Start the app `streamlit run .\app.py`
