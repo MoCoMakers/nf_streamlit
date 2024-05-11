@@ -492,20 +492,16 @@ def calculate_fit_ratios(df_compounds, dfs_drc_in, den_sis, num_sis):
             #   C is dfs_drc[num_si]["AC50"]
             working_ratio_num = (
                 dfs_drc[num_si]["INF"] - dfs_drc[num_si]["ZERO"]
-            ) / dfs_drc[num_si]["AC50"]
-            df["s_prime_num"] = np.log(
-                working_ratio_num + np.sqrt(working_ratio_num**2 + 1)
-            )
+            ) / dfs_drc[num_si]["AC50"]            
+            df["s_prime_num"] = np.arcsinh(working_ratio_num)            
 
             # for the denominator, define (A-D)/C, the working ratio using den_si
             working_ratio_den = (
                 dfs_drc[den_si]["INF"] - dfs_drc[den_si]["ZERO"]
             ) / dfs_drc[den_si]["AC50"]
             # take the natural log of the sum of the working ratio and the square root of the sum of the working ratio squared and 1
-            df["s_prime_den"] = np.log(
-                working_ratio_den + np.sqrt(working_ratio_den**2 + 1)
-            )
-
+            df["s_prime_den"] = np.arcsinh(working_ratio_den)
+            
             df["delta_s_prime"] = df["s_prime_num"] - df["s_prime_den"]
 
             df_ratios = pd.concat([df_ratios, df])
