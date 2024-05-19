@@ -4,7 +4,7 @@ import streamlit as st
 import streamlit_authenticator as stauth
 from db import get_credentials, update_all_users
 
-from .data import eda
+from .signed_in_landing import landing_page
 
 credentials_in_database = get_credentials()
 
@@ -53,14 +53,8 @@ def loginapp():
         if st.session_state["authentication_status"]:
             authenticator.logout("Logout", "sidebar")
             st.write(f"Welcome *{name}*")
-            eda()
+            landing_page()
         elif st.session_state["authentication_status"] == False:
             st.error("Username/password is incorrect")
         elif st.session_state["authentication_status"] == None:
             st.warning("Please enter your username and password")
-
-
-
-
-
-
