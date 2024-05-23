@@ -103,7 +103,7 @@ def build_grid_options(df):
 
 
 def eda():
-    data_path = Path("syn5522627")
+    data_path = Path("data/syn5522627")
 
     BREWER_9_SET1 = [
         "#e41a1c",

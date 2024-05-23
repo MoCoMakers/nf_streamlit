@@ -109,7 +109,7 @@ def build_grid_options(df):
     gridOptions = gb.build()
     return gridOptions
 
-data_path = Path("syn5522627")
+data_path = Path("data/syn5522627")
 
 df_files, df_clines, file_name_to_specimen_id = syn.read_metadata(data_path)
 file_show_cols = [col for col in df_files.columns if col not in syn.FILE_HIDE_COLS]

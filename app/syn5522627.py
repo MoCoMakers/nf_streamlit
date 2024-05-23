@@ -46,6 +46,9 @@ import funcy
 import numpy as np
 import pandas as pd
 
+import os 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
 # standardized column names for response and concentration
 R_COLS = [f"DATA{ii}" for ii in range(11)]
 C_COLS = [f"CONC{ii}" for ii in range(11)]
@@ -512,7 +515,7 @@ def calculate_fit_ratios(df_compounds, dfs_drc_in, den_sis, num_sis):
 
 if __name__ == "__main__":
 
-    data_path = Path("/home/galtay/data/hack4nf-2022/synapse/syn5522627")
+    data_path = Path(dir_path, "data/syn5522627")
     df_files, df_clines, file_name_to_specimen_id = read_metadata(data_path)
     file_show_cols = [col for col in df_files.columns if col not in FILE_HIDE_COLS]
 

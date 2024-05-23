@@ -41,9 +41,9 @@ table drea_users;
 
 ```
 pip install synapseclient[pandas,pysftp]
-mkdir syn5522627
-cd syn5522627
-synapse get -r syn5522627
+mkdir -p data/syn5522627
+cd data/syn5522627
+synapse get -r data/syn5522627
 ```
 
 ### Install depdencies and run
