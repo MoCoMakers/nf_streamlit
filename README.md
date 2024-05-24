@@ -36,6 +36,8 @@ table drea_users;
 
 
 ### Get the data
+
+#### Synapse data (MIPE 3.0)
 <br>You will need a valid synapse.org account and approved
 <br>access (portal request) to [syn5522627](https://www.synapse.org/#!Synapse:syn5522627) - which you can search for on synapse.org
 
@@ -45,6 +47,19 @@ mkdir -p data/syn5522627
 cd data/syn5522627
 synapse get -r data/syn5522627
 ```
+
+#### Dep Map data
+
+Download here (if the direct link doesn't work, navigate to Downloads > File Downloads and continue):
+
+https://depmap.org/portal/download/all/ -> Drug Screens -> PRISM Repurposing 19Q4
+
+Dowload the file:
+
+| File | Date | Size | 
+| -------- | ------- | ------- |
+| primary_replicate_collapsed_logfold_change_v2.csv | 07/19 | 39.3 MB |
+
 
 ### Install depdencies and run
 Change to `app/` directory<br>
