@@ -48,13 +48,28 @@ st.write(df[df['name'] == 'bortezomib'][(df['EFF*100'] > 97.9788) & (df['EFF*100
 gb = GridOptionsBuilder.from_dataframe(df)
 gb.configure_pagination()
 gb.configure_side_bar()
-gb.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum', editable=True)
 # Freeze the 1st column for scrolling
 column_defs = [{'headerName': col, 'field': col, 'pinned': 'left' if col == 'name' else None} for col in df.columns]
 gridOptions = {
     'columnDefs': column_defs,
     'pagination': True,
-    'defaultColDef': {'groupable': True, 'value': True, 'enableRowGroup': True, 'aggFunc': 'sum', 'editable': True},
+    'defaultColDef': {
+        'groupable': True, 
+        'value': True, 
+        'enableRowGroup': True, 
+        'aggFunc': 'sum', 
+        'editable': True,
+        'filter': True,
+        'sortable': True,
+        'resizable': True,
+    },
+    'statusBar': {
+        'statusPanels': [
+            { 'statusPanel': 'agTotalRowCountComponent', 'align': 'left' },
+            { 'statusPanel': 'agSelectedRowCountComponent' },
+            { 'statusPanel': 'agAggregationComponent' }
+        ]
+    },
 }
 AgGrid(df, gridOptions=gridOptions)
 
