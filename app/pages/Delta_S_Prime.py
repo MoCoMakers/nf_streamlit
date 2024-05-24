@@ -18,7 +18,7 @@ column_order = ['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50']
 
 # Load the data
 # extracting only columns: 'name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50'
-data_path = Path("data/secondary-screen-dose-response-curve-parameters.csv")
+data_path = Path("data/DepMap/Prism19Q4/secondary-screen-dose-response-curve-parameters.csv")
 df = pd.read_csv(data_path, usecols=['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50'])
 df = df[column_order]
 

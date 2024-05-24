@@ -60,8 +60,10 @@ Dowload the file:
 | -------- | ------- | ------- |
 | primary_replicate_collapsed_logfold_change_v2.csv | 07/19 | 39.3 MB |
 
+Save your csv file in `app/data/DepMap/Prism19Q4/`
 
 ### Install depdencies and run
+
 Change to `app/` directory<br>
 Install Python requirements `pip install -r requirments.txt`<br>
 Start the app on Windows `streamlit run .\Home.py`<br>
@@ -70,6 +72,7 @@ Start the app Linux/MacOS `streamlit run ./Home.py`
 Note that on first run, you may need to do a page reload two times before the site displays a consistant view, or stable error message.
 
 ## Deploying to a server
+
 Log into the server<br>
 Clone the docker repo, and change into it:<br>
 [https://github.com/MocoMakers/docker_streamlit](https://github.com/MocoMakers/docker_streamlit)
