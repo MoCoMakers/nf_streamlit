@@ -1,7 +1,7 @@
 funcy==2.0
 mysqlclient
-numpy==1.23.5
-pandas==1.4.4
+numpy==1.26.0
+pandas==2.2.2
 plotly==5.14.1
 SQLAlchemy==2.0.21
 streamlit>=1.28.0

@@ -48,7 +48,7 @@ synapse get -r syn5522627
 
 ### Install depdencies and run
 Change to `app/` directory<br>
-Install Python requirements `pip install -r requirments.txt`<br>
+Install Python requirements `pip install -r requirements.txt`<br>
 Start the app `streamlit run .\app.py`
 
 Note that on first run, you may need to do a page reload two times before the site displays a consistant view, or stable error message.
