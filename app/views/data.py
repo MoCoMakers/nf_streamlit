@@ -7,7 +7,7 @@ from plotly.subplots import make_subplots
 import streamlit as st
 from st_aggrid import AgGrid
 from st_aggrid import GridOptionsBuilder
-
+from services.csv_manager import loadFromFile
 import sys
 
 sys.path.append('../')
@@ -993,3 +993,29 @@ def eda():
             key='df_s_prime_count_' + str(count)
         )
         count = count + 1
+
+    # Gene Targets with a Manually Grouped Ontology
+    # ----------------------------------
+
+    st.header("Gene Targets with a Manually Grouped Ontology")
+    df_ratios = st.session_state['df_ratios']
+    df_targets = df_ratios.loc[:,"target"]
+    df_targets.unique()
+    # Manually curated ontology by gene target 
+    target = pd.read_csv('Manual_ontology.csv')
+    df_reference_ontolgy = pd.DataFrame ( columns = ["Group", "Sub", "Gene"])
+    Group = None
+    for i in range(len(target)):
+        Current_group = str(target.loc[i,'Group']).strip()
+        if Current_group != "nan": 
+            Group = Current_group 
+        df_reference_ontolgy.loc[i] = [Group, target.loc[i,'Sub'], target.loc[i,'Gene']]
+    df_merging = df_ratios .merge (df_reference_ontolgy, left_on ='target', right_on = 'Gene' )
+    st.write(df_merging)
+    st.download_button(
+        label="Download data as CSV",
+        data=df_merging.to_csv().encode('utf-8'),
+        file_name='large_df.csv',
+        mime='text/csv',
+        key='df_merge'
+    )
