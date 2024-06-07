@@ -14,7 +14,6 @@ sys.path.append('../')
 
 import syn5522627 as syn
 
-
 def ll4(c, h, inf, zero, ec50):
     """A copy of the LL.4 function from the R drc package with,
     https://doseresponse.github.io/drc/reference/LL.4.html
@@ -102,8 +101,82 @@ def build_grid_options(df):
     return gridOptions
 
 
+# Scores
+# ==================================
+
+def agg_to_list(x):
+    # print(x.to_markdown())
+    # raise
+    return [f"{el:.3f}" for el in list(x)]
+
+def compute_ranked_delta_s_prime(df, df_compounds, df_ratio, st_min_num_clines):
+    df_ranked = (
+        df
+        .groupby(['den_si', 'NCGC SID', 'num_si'])['delta_s_prime']
+        .agg([('Delta S_prime', lambda x: x)])
+        .reset_index()
+    )
+
+    df_ranked = df_ranked.loc[df_ranked.den_si.isin(df_ratio.den_sis)]
+    df_ranked = df_ranked.loc[df_ranked.num_si.isin(df_ratio.num_sis)]
+
+    df_ranked = pd.merge(df_compounds, df_ranked, on='NCGC SID')
+    df_ranked = df_ranked.drop(columns='SMILES')
+
+    # Merge sequence for delta_s_prime
+    for num_si in df_ranked['num_si'].unique():
+        df_ranked_by_num_si = df_ranked.loc[df_ranked.num_si == num_si]
+        df_ranked_by_num_si = df_ranked_by_num_si.rename(columns={
+            'Delta S_prime': num_si,
+        })
+
+        merged_columns = ['NCGC SID', 'name', 'target', 'MoA', 'den_si', 'num_si']
+
+        df_ranked = pd.merge(df_ranked, df_ranked_by_num_si, how='left',
+                             on=merged_columns)
+
+    df_ranked_delta_s_prime = (
+        df_ranked
+        .groupby(['den_si', 'NCGC SID'])['Delta S_prime']
+        .agg(['size', 'mean', 'var', agg_to_list])
+        .reset_index()
+    )
+
+    df_ranked.drop(columns=['num_si'])
+    merge_columns = ['NCGC SID', 'den_si']
+    df_ranked = pd.merge(df_ranked_delta_s_prime, df_ranked, how='left', on=merge_columns)
+
+    df_ranked = df_ranked.sort_values(
+        ['mean'], ascending=[False],
+    )
+    df_ranked = df_ranked.rename(columns={
+        'size': 'N Cell Lines',
+        'mean': 'mean delta_S_prime',
+        'var': 'variance delta_S_prime',
+        'agg_to_list': 'delta_S_prime values',
+    })
+
+    df_ranked = df_ranked[df_ranked['N Cell Lines'] >= st_min_num_clines]
+
+    return df_ranked
+
+def display_ranked_delta_s_prime_for_download(df_ranked, df_ratio):
+    count = 0
+    for den_si in df_ratio.den_sis:
+        df_ranked_den = df_ranked.loc[df_ranked.den_si == den_si].groupby('NCGC SID').max()
+        st.subheader("Reference Line: " + den_si)
+        st.write(df_ranked_den)
+        st.download_button(
+            label="Download data as CSV",
+            data=df_ranked_den.to_csv().encode('utf-8'),
+            file_name='large_df.csv',
+            mime='text/csv',
+            key='df_s_prime_count_' + str(count)
+        )
+        count = count + 1
+
 def eda():
-    data_path = Path("syn5522627")
+    data_path = Path("data/syn5522627")
 
     BREWER_9_SET1 = [
         "#e41a1c",
@@ -778,11 +851,6 @@ def eda():
     # Scores
     # ==================================
 
-    def agg_to_list(x):
-        # print(x.to_markdown())
-        # raise
-        return [f"{el:.3f}" for el in list(x)]
-
     st.header("Compounds ranked by AC50 ratios")
 
     df_rank_ratios = df_plt_ratios
@@ -929,72 +997,11 @@ def eda():
     st.header("Compounds ranked by delta S prime")
     # Reset the context of df_rank_ratios
     df_rank_ratios = df_plt_ratios
+   
+    df_ranked = compute_ranked_delta_s_prime(df_rank_ratios, df_compounds, syn, st_min_num_clines)
+    display_ranked_delta_s_prime_for_download(df_ranked, df_ratio=syn)
 
-    df_ranked = (
-        df_rank_ratios
-        .groupby(['den_si', 'NCGC SID', 'num_si'])['delta_s_prime']
-        .agg([('Delta S_prime', lambda x: x)])
-        .reset_index()
-    )
-
-    df_ranked = df_ranked.loc[df_ranked.den_si.isin(syn.den_sis)]
-    df_ranked = df_ranked.loc[df_ranked.num_si.isin(syn.num_sis)]
-
-    df_ranked = pd.merge(df_compounds, df_ranked, on='NCGC SID')
-    df_ranked = df_ranked.drop(columns='SMILES')
-    df_ranked_s_prime_original = df_ranked.copy()
-
-    for num_si in syn.num_sis:
-        # Merge sequence for delta_s_prime
-        df_ranked_by_num_si = df_ranked_s_prime_original.loc[df_ranked_s_prime_original.num_si == num_si]
-        df_ranked_by_num_si = df_ranked_by_num_si.rename(columns={
-            'Delta S_prime': num_si,
-        })
-
-        merged_columns = ['NCGC SID', 'name', 'target', 'MoA', 'den_si', 'num_si']
-
-        df_ranked = pd.merge(df_ranked, df_ranked_by_num_si, how='left',
-                             on=merged_columns)
-
-    df_ranked_delta_s_prime = (
-        df_ranked
-        .groupby(['den_si', 'NCGC SID'])['Delta S_prime']
-        .agg(['size', 'mean', 'var', agg_to_list])
-        .reset_index()
-    )
-
-    df_ranked.drop(columns=['num_si'])
-    merge_columns = ['NCGC SID', 'den_si']
-    df_ranked = pd.merge(df_ranked_delta_s_prime, df_ranked, how='left', on=merge_columns)
-
-    df_ranked = df_ranked.sort_values(
-        ['mean'], ascending=[False],
-    )
-    df_ranked = df_ranked.rename(columns={
-        'size': 'N Cell Lines',
-        'mean': 'mean delta_S_prime',
-        'var': 'variance delta_S_prime',
-        'agg_to_list': 'delta_S_prime values',
-    })
-
-    # TODO: Should this filter be also applied to S_prime? Currently it is.
-    df_ranked = df_ranked[df_ranked['N Cell Lines'] >= st_min_num_clines]
-
-    count = 0
-    for den_si in syn.den_sis:
-        df_ranked_den = df_ranked.loc[df_ranked.den_si == den_si].groupby('NCGC SID').max()
-        st.subheader("Reference Line: " + den_si)
-        st.write(df_ranked_den)
-        st.download_button(
-            label="Download data as CSV",
-            data=df_ranked_den.to_csv().encode('utf-8'),
-            file_name='large_df.csv',
-            mime='text/csv',
-            key='df_s_prime_count_' + str(count)
-        )
-        count = count + 1
-
-    # Gene Targets with a Manually Grouped Ontology
+  # Gene Targets with a Manually Grouped Ontology
     # ----------------------------------
 
     st.header("Gene Targets with a Manually Grouped Ontology")

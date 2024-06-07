@@ -36,24 +36,45 @@ table drea_users;
 
 
 ### Get the data
+
+Put all of the data inside the folder named `app/data`.
+
+#### Synapse data (MIPE 3.0)
 <br>You will need a valid synapse.org account and approved
 <br>access (portal request) to [syn5522627](https://www.synapse.org/#!Synapse:syn5522627) - which you can search for on synapse.org
 
 ```
 pip install synapseclient[pandas,pysftp]
-mkdir syn5522627
-cd syn5522627
-synapse get -r syn5522627
+mkdir -p data/syn5522627
+cd data/syn5522627
+synapse get -r data/syn5522627
 ```
 
+#### Dep Map data
+
+Download here (if the direct link doesn't work, navigate to Downloads > File Downloads and continue):
+
+https://depmap.org/portal/download/all/ -> Drug Screens -> PRISM Repurposing 19Q4
+
+Dowload the file:
+
+| File | Date | Size | 
+| -------- | ------- | ------- |
+| primary_replicate_collapsed_logfold_change_v2.csv | 07/19 | 39.3 MB |
+
+Save your csv file in `app/data/DepMap/Prism19Q4/`
+
 ### Install depdencies and run
+
 Change to `app/` directory<br>
-Install Python requirements `pip install -r requirements.txt`<br>
-Start the app `streamlit run .\app.py`
+Install Python requirements `pip install -r requirments.txt`<br>
+Start the app on Windows `streamlit run .\Home.py`<br>
+Start the app Linux/MacOS `streamlit run ./Home.py`
 
 Note that on first run, you may need to do a page reload two times before the site displays a consistant view, or stable error message.
 
 ## Deploying to a server
+
 Log into the server<br>
 Clone the docker repo, and change into it:<br>
 [https://github.com/MocoMakers/docker_streamlit](https://github.com/MocoMakers/docker_streamlit)
