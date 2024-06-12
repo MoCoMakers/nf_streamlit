@@ -56,11 +56,11 @@ Download here (if the direct link doesn't work, navigate to Downloads > File Dow
 
 https://depmap.org/portal/download/all/ -> Drug Screens -> PRISM Repurposing 19Q4
 
-Dowload the file:
+Download the file:
 
 | File | Date | Size | 
 | -------- | ------- | ------- |
-| primary_replicate_collapsed_logfold_change_v2.csv | 07/19 | 39.3 MB |
+| secondary-screen-dose-response-curve-parameters.csv | 07/19 | 39.3 MB |
 
 Save your csv file in `app/data/DepMap/Prism19Q4/`
 
