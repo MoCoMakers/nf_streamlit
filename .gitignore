@@ -1,5 +1,8 @@
 app/.streamlit/secrets.toml
 .idea/
 __pycache__/
-syn5522627/
+data/
 venv/
+
+# How to check all the files that will be ignored
+# find . -not -path './.git/*' | git check-ignore --stdin -v
