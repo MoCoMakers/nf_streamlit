@@ -14,12 +14,12 @@ from st_aggrid import GridOptionsBuilder
 
 "# ΔS'"
 
-column_order = ['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50']
+column_order = ['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name']
 
 # Load the data
 # extracting only columns: 'name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50'
 data_path = Path("data/DepMap/Prism19Q4/secondary-screen-dose-response-curve-parameters.csv")
-df = pd.read_csv(data_path, usecols=['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50'])
+df = pd.read_csv(data_path, usecols=['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name'])
 df = df[column_order]
 
 # Derive EFF (upper_limit - lower_limit) 
@@ -43,7 +43,7 @@ df["S'"] = np.arcsinh(df['EFF*100'] / df['ec50'])
 # as a test only write the rows where 'name' is 'bortezomib' adn the EFF*100 is close to 97.9789
 st.write(df[df['name'] == 'bortezomib'][(df['EFF*100'] > 97.9788) & (df['EFF*100'] < 97.9790)])
 
-"## ΔS' Table"
+"## S' Table"
 # Display the table
 gb = GridOptionsBuilder.from_dataframe(df)
 gb.configure_pagination()
@@ -74,3 +74,35 @@ gridOptions = {
 AgGrid(df, gridOptions=gridOptions)
 
 # Add a filter (dropdown on the column 'name') that updates a dataframe table view.
+
+st.header("Damaging Mutations")
+# Damaging mutations
+# set of all unique compounds
+target1 = df
+target1[['ccle', 'tissue']] = target1['ccle_name'].str.split('_', n=1, expand=True)
+
+target2 = pd.read_csv('data/Damaging_Mutations.csv')
+active_gene = 'NF1'
+filtered_nf1_values = target2[target2['NF1'].isin([0, 2])][['Unnamed: 0', active_gene]]
+
+dm_merged = (pd.merge(target1, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner'));
+
+dm_merged = dm_merged.loc[dm_merged['tissue'] == 'PANCREAS']
+
+# for each cmopoumd unique by name:
+# name, tissue
+# ref_pooled_s_prime: mean of S' for all rows where NF1 is 0
+# test_pooled_s_prime: mean of S' for all rows where NF1 is 2
+# delta_s_prime: delta S' = mean of S' for NF1 = 0 - mean of S' for NF1 = 2
+
+df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
+
+df_test_group = dm_merged.loc[dm_merged[active_gene] == 2]
+
+ref_pooled_mean = df_ref_group['S\''].mean()
+
+test_pooled_mean = df_test_group['S\''].mean()
+
+delta_s = ref_pooled_mean - test_pooled_mean
+
+st.write(dm_merged)
