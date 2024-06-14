@@ -43,11 +43,13 @@ Put all of the data inside the folder named `app/data`.
 <br>You will need a valid synapse.org account and approved
 <br>access (portal request) to [syn5522627](https://www.synapse.org/#!Synapse:syn5522627) - which you can search for on synapse.org
 
+Run the following inside the `app/data` folder
+
 ```
 pip install synapseclient[pandas,pysftp]
-mkdir -p data/syn5522627
-cd data/syn5522627
-synapse get -r data/syn5522627
+mkdir syn5522627
+cd syn5522627
+synapse get -r syn5522627
 ```
 
 #### Dep Map data
