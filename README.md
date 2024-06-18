@@ -66,6 +66,10 @@ Download the file:
 
 Save your csv file in `app/data/DepMap/Prism19Q4/`
 
+And also download the latest mutation data from Downloads -> -> Current Release \(tab\) -> Mutations \(tab\) -> OmicsSomaticMutationsMatrixDamaging.csv 
+
+Save your csv file in `app/data/DepMap/Public24Q4/`
+
 ### Install depdencies and run
 
 Change to `app/` directory<br>
