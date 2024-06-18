@@ -76,18 +76,27 @@ AgGrid(df, gridOptions=gridOptions)
 # Add a filter (dropdown on the column 'name') that updates a dataframe table view.
 
 st.header("Damaging Mutations")
-# Damaging mutations
-# set of all unique compounds
-target1 = df
-target1[['ccle', 'tissue']] = target1['ccle_name'].str.split('_', n=1, expand=True)
 
-target2 = pd.read_csv('data/Damaging_Mutations.csv')
+#drop down menu to choose from different genes (columns of damaging mutations)
+#drop down menu to choose form different tissue (based on depmap data) (sorted alphabetically) (autocomplete search)
+
+df[['ccle', 'tissue']] = df['ccle_name'].str.split('_', n=1, expand=True)
+
 active_gene = 'NF1'
-filtered_nf1_values = target2[target2['NF1'].isin([0, 2])][['Unnamed: 0', active_gene]]
+tissue = 'PANCREAS'
 
-dm_merged = (pd.merge(target1, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner'));
+damaging_mutations = pd.read_csv('data/Damaging_Mutations.csv')
 
-dm_merged = dm_merged.loc[dm_merged['tissue'] == 'PANCREAS']
+active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", options=damaging_mutations.columns.tolist()[1:]);
+
+tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", options = df['tissue'].head(100))   
+
+#Unnamed: 0 is the tissue column name in damaging_mutations file
+filtered_nf1_values = damaging_mutations[damaging_mutations[active_gene].isin([0, 2])][['Unnamed: 0', active_gene]]
+
+dm_merged = pd.merge(df, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner');
+
+dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue]
 
 # for each cmopoumd unique by name:
 # name, tissue
@@ -99,10 +108,8 @@ df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
 
 df_test_group = dm_merged.loc[dm_merged[active_gene] == 2]
 
-ref_pooled_mean = df_ref_group['S\''].mean()
+compounds_ref_agg = df_ref_group.groupby('name').agg(ref_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
 
-test_pooled_mean = df_test_group['S\''].mean()
+compounds_test_agg = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
 
-delta_s = ref_pooled_mean - test_pooled_mean
-
-st.write(dm_merged)
+st.write(compounds_ref_agg)
