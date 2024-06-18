@@ -85,7 +85,7 @@ df[['ccle', 'tissue']] = df['ccle_name'].str.split('_', n=1, expand=True)
 active_gene = 'NF1'
 tissue = 'PANCREAS'
 
-damaging_mutations = pd.read_csv('data/Damaging_Mutations.csv')
+damaging_mutations = pd.read_csv('data/DepMap/Public24Q2/OmicsSomaticMutationsMatrixDamaging.csv')
 
 active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", options=damaging_mutations.columns.tolist()[1:]);
 
@@ -127,4 +127,4 @@ compounds_test_agg = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.Na
 
 #meta data summary: length of test and reference, length of delta s table
 
-#st.write(agg_merge)
+st.write(compounds_test_agg)
