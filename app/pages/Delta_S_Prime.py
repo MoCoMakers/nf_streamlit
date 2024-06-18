@@ -14,12 +14,12 @@ from st_aggrid import GridOptionsBuilder
 
 "# ΔS'"
 
-column_order = ['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50']
+column_order = ['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name']
 
 # Load the data
 # extracting only columns: 'name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50'
 data_path = Path("data/DepMap/Prism19Q4/secondary-screen-dose-response-curve-parameters.csv")
-df = pd.read_csv(data_path, usecols=['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50'])
+df = pd.read_csv(data_path, usecols=['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name'])
 df = df[column_order]
 
 # Derive EFF (upper_limit - lower_limit) 
@@ -43,7 +43,7 @@ df["S'"] = np.arcsinh(df['EFF*100'] / df['ec50'])
 # as a test only write the rows where 'name' is 'bortezomib' adn the EFF*100 is close to 97.9789
 st.write(df[df['name'] == 'bortezomib'][(df['EFF*100'] > 97.9788) & (df['EFF*100'] < 97.9790)])
 
-"## ΔS' Table"
+"## S' Table"
 # Display the table
 gb = GridOptionsBuilder.from_dataframe(df)
 gb.configure_pagination()
@@ -74,3 +74,57 @@ gridOptions = {
 AgGrid(df, gridOptions=gridOptions)
 
 # Add a filter (dropdown on the column 'name') that updates a dataframe table view.
+
+st.header("Damaging Mutations")
+
+#drop down menu to choose from different genes (columns of damaging mutations)
+#drop down menu to choose form different tissue (based on depmap data) (sorted alphabetically) (autocomplete search)
+
+df[['ccle', 'tissue']] = df['ccle_name'].str.split('_', n=1, expand=True)
+
+active_gene = 'NF1'
+tissue = 'PANCREAS'
+
+damaging_mutations = pd.read_csv('data/Damaging_Mutations.csv')
+
+active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", options=damaging_mutations.columns.tolist()[1:]);
+
+tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", options = df['tissue'].head(100))   
+
+st.header("All S' by Mutation and Tissue")
+
+#Unnamed: 0 is the tissue column name in damaging_mutations file
+filtered_nf1_values = damaging_mutations[damaging_mutations[active_gene].isin([0, 2])][['Unnamed: 0', active_gene]]
+
+dm_merged = pd.merge(df, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner');
+
+dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue]
+
+# for each cmopoumd unique by name:
+# name, tissue
+# ref_pooled_s_prime: mean of S' for all rows where NF1 is 0
+# test_pooled_s_prime: mean of S' for all rows where NF1 is 2
+# delta_s_prime: delta S' = mean of S' for NF1 = 0 - mean of S' for NF1 = 2
+
+st.write(dm_merged)
+
+st.download_button(
+            label="Download data as CSV",
+            data=dm_merged.to_csv().encode('utf-8'),
+            file_name='s_prime.csv',
+            mime='text/csv'
+        )
+
+st.header("S' for Selected Values")
+
+df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
+
+df_test_group = dm_merged.loc[dm_merged[active_gene] == 2]
+
+compounds_ref_agg = df_ref_group.groupby('name').agg(ref_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
+
+compounds_test_agg = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
+
+#meta data summary: length of test and reference, length of delta s table
+
+#st.write(agg_merge)
