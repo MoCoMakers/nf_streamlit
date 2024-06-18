@@ -91,6 +91,8 @@ active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", options=
 
 tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", options = df['tissue'].head(100))   
 
+st.header("All S' by Mutation and Tissue")
+
 #Unnamed: 0 is the tissue column name in damaging_mutations file
 filtered_nf1_values = damaging_mutations[damaging_mutations[active_gene].isin([0, 2])][['Unnamed: 0', active_gene]]
 
@@ -104,6 +106,17 @@ dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue]
 # test_pooled_s_prime: mean of S' for all rows where NF1 is 2
 # delta_s_prime: delta S' = mean of S' for NF1 = 0 - mean of S' for NF1 = 2
 
+st.write(dm_merged)
+
+st.download_button(
+            label="Download data as CSV",
+            data=dm_merged.to_csv().encode('utf-8'),
+            file_name='s_prime.csv',
+            mime='text/csv'
+        )
+
+st.header("S' for Selected Values")
+
 df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
 
 df_test_group = dm_merged.loc[dm_merged[active_gene] == 2]
@@ -112,4 +125,6 @@ compounds_ref_agg = df_ref_group.groupby('name').agg(ref_pooled_s_prime=pd.Named
 
 compounds_test_agg = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
 
-st.write(compounds_ref_agg)
+#meta data summary: length of test and reference, length of delta s table
+
+#st.write(agg_merge)
