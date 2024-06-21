@@ -15,7 +15,7 @@ def get_all_users():
     drea_users = conn.query('select * from drea_users where approved = TRUE')
     return drea_users.to_dict('index')
 
-# Update all user's data in database
+# Update all users' data in database
 def update_all_users(usernames):
     # Insert some data with conn.session.
     with conn.session as s:
