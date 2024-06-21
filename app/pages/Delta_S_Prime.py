@@ -41,7 +41,7 @@ df["S'"] = np.arcsinh(df['EFF*100'] / df['ec50'])
 
 "## Single test value selected from 'bortezomib'"
 # as a test only write the rows where 'name' is 'bortezomib' adn the EFF*100 is close to 97.9789
-st.write(df[df['name'] == 'bortezomib'][(df['EFF*100'] > 97.9788) & (df['EFF*100'] < 97.9790)])
+#st.write(df[df['name'] == 'bortezomib'][(df['EFF*100'] > 97.9788) & (df['EFF*100'] < 97.9790)])
 
 "## S' Table"
 # Display the table
@@ -82,14 +82,16 @@ st.header("Damaging Mutations")
 
 df[['ccle', 'tissue']] = df['ccle_name'].str.split('_', n=1, expand=True)
 
-active_gene = 'NF1'
-tissue = 'PANCREAS'
+active_gene = None
+tissue = None
 
 damaging_mutations = pd.read_csv('data/DepMap/Public24Q2/OmicsSomaticMutationsMatrixDamaging.csv')
 
-active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", options=damaging_mutations.columns.tolist()[1:]);
+active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", options=damaging_mutations.columns.tolist()[1:], index = damaging_mutations.columns.tolist()[1:].index("NF1 (4763)"));
 
-tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", options = df['tissue'].head(100))   
+#TODO: display unique values
+#TODO: not use .head()
+tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", options = df['tissue'].head(100).unique())   
 
 st.header("All S' by Mutation and Tissue")
 
@@ -121,10 +123,24 @@ df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
 
 df_test_group = dm_merged.loc[dm_merged[active_gene] == 2]
 
-compounds_ref_agg = df_ref_group.groupby('name').agg(ref_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
+compounds_ref_agg_mean = df_ref_group.groupby('name').agg(ref_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
+compounds_ref_agg_sum   = df_ref_group.groupby('name').agg(num_ref_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
+compounds_ref_merge = pd.merge(compounds_ref_agg_mean, compounds_ref_agg_sum, on='name', how='inner')
 
-compounds_test_agg = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
+compounds_test_agg_mean = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
+compunds_test_agg_sum =  df_test_group.groupby('name').agg(num_test_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
+compounds_test_merge = pd.merge(compounds_test_agg_mean, compunds_test_agg_sum, on='name', how='inner')
 
-#meta data summary: length of test and reference, length of delta s table
+compounds_merge = pd.merge(compounds_ref_merge, compounds_test_merge, on='name', how='inner')
 
-st.write(compounds_test_agg)
+compounds_merge['delta_s_prime'] = compounds_merge['ref_pooled_s_prime'] - compounds_merge['test_pooled_s_prime']
+
+#add moa and target columns, variance
+st.write(compounds_merge)
+
+#add feature to subset data by study
+#radio buttons for studies
+
+#add screen_id column for s_delta_prime
+#every table should have a downlaod button
+# the checkbozes for different studies should be above delta s prime table
