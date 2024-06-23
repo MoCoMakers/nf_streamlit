@@ -2,6 +2,7 @@ import copy
 
 import streamlit as st
 import streamlit_authenticator as stauth
+from .signupform import SignUp
 from .signed_in_landing import landing_page
 
 from db import get_credentials, update_all_users
@@ -18,6 +19,13 @@ def loginapp():
         st.secrets["cookie"]["expiry_days"],
         None,
     )
+    newauthenticator = SignUp(
+        copy.deepcopy(credentials_in_database),
+        st.secrets["cookie"]["name"],
+        st.secrets["cookie"]["key"],
+        st.secrets["cookie"]["expiry_days"],
+        None,
+    )
     if "signup" not in st.session_state:
         st.session_state.signup = False
 
@@ -26,20 +34,15 @@ def loginapp():
 
     if st.session_state.signup:
         try:
-            if authenticator.register_user(
+            hashed_password, email_of_registered_user, username_of_registered_user, name_of_registered_user = newauthenticator.register_user(
                 "main", pre_authorization=False, fields={"Form name": "Sign Up"}
-            ):
-                credentials_not_in_database = {
-                    "usernames": {
-                        username: authenticator.credentials["usernames"][username]
-                    }
-                    for username in authenticator.credentials["usernames"]
-                    if username not in credentials_in_database["usernames"]
-                }
-                update_all_users(credentials_not_in_database)
-                credentials_in_database = copy.deepcopy(authenticator.credentials)
-                st.success("User registered successfully")
-            st.button(":blue[Log In instead]", on_click=toggle_signup_login)
+            )
+
+            if email_of_registered_user:
+                # TODO: Load data to database
+                st.success('User registered successfully')
+            else:
+                st.button(":blue[Log In instead]", on_click=toggle_signup_login)
         except Exception as e:
             st.error(e)
     else:
