@@ -13,6 +13,7 @@ def loginapp():
         st.session_state.signup = False if st.session_state.signup else True
 
     if  st.session_state.signup:
+
         newauthenticator = SignUp(
             get_credentials(),
             st.secrets["cookie"]["name"],
@@ -52,9 +53,10 @@ def loginapp():
 
     if not st.session_state.signup and "authentication_status" in st.session_state:
         if st.session_state["authentication_status"]:
-            authenticator.logout("Logout", "sidebar")
+            st.session_state.logged_in = True
             st.write(f"Welcome *{name}*")
             landing_page()
+            authenticator.logout("Log out", "sidebar")
         elif st.session_state["authentication_status"] == False:
             st.error("Username/password is incorrect")
         elif st.session_state["authentication_status"] == None:

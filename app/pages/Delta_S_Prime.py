@@ -10,6 +10,10 @@ import streamlit as st
 from st_aggrid import AgGrid
 from st_aggrid import GridOptionsBuilder
 
+from views.signed_in_landing import landing_page
+
+landing_page()
+
 # from views.data import compute_ranked_delta_s_prime, display_ranked_delta_s_prime_for_download
 
 "# ΔS'"
