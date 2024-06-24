@@ -7,11 +7,8 @@ from .signed_in_landing import landing_page
 
 from db import get_credentials, update_user
 
-credentials_in_database = get_credentials()
-
-
 def loginapp():
-    global credentials_in_database
+    credentials_in_database = get_credentials()
     
     
     if "signup" not in st.session_state:
@@ -43,8 +40,10 @@ def loginapp():
             st.error(e)
         
     else:
+        new_credentials_in_database = get_credentials()
+        
         authenticator = stauth.Authenticate(
-            copy.deepcopy(credentials_in_database),
+            copy.deepcopy(new_credentials_in_database),
             st.secrets["cookie"]["name"],
             st.secrets["cookie"]["key"],
             st.secrets["cookie"]["expiry_days"],
