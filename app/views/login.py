@@ -1,5 +1,3 @@
-import copy
-
 import streamlit as st
 import streamlit_authenticator as stauth
 from .signupform import SignUp
@@ -8,9 +6,6 @@ from .signed_in_landing import landing_page
 from db import get_credentials, update_user
 
 def loginapp():
-    credentials_in_database = get_credentials()
-    
-    
     if "signup" not in st.session_state:
         st.session_state.signup = False
 
@@ -19,7 +14,7 @@ def loginapp():
 
     if  st.session_state.signup:
         newauthenticator = SignUp(
-            copy.deepcopy(credentials_in_database),
+            get_credentials(),
             st.secrets["cookie"]["name"],
             st.secrets["cookie"]["key"],
             st.secrets["cookie"]["expiry_days"],
@@ -40,10 +35,9 @@ def loginapp():
             st.error(e)
         
     else:
-        new_credentials_in_database = get_credentials()
         
         authenticator = stauth.Authenticate(
-            copy.deepcopy(new_credentials_in_database),
+            get_credentials(),
             st.secrets["cookie"]["name"],
             st.secrets["cookie"]["key"],
             st.secrets["cookie"]["expiry_days"],
