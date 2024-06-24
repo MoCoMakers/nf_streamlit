@@ -4,6 +4,7 @@ numpy==1.26.4
 pandas==2.2.2
 plotly==5.14.1
 SQLAlchemy==2.0.21
+st-pages==0.4.5
 streamlit>=1.28.0
 streamlit-aggrid==0.3.4.post3
 streamlit-authenticator==0.3.2
