@@ -35,7 +35,8 @@ def loginapp():
             st.error(e)
         
     else:
-        
+        st.cache_data.clear()
+
         authenticator = stauth.Authenticate(
             get_credentials(),
             st.secrets["cookie"]["name"],
