@@ -116,7 +116,7 @@ st.download_button(
             mime='text/csv'
         )
 
-st.header("S' for Selected Values")
+st.header("Delata S' for Selected Values")
 
 df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
 
@@ -134,18 +134,20 @@ compounds_merge = pd.merge(compounds_ref_merge, compounds_test_merge, on='name',
 
 compounds_merge['delta_s_prime'] = compounds_merge['ref_pooled_s_prime'] - compounds_merge['test_pooled_s_prime']
 
-compounds_merge = compounds_merge.merge(df, left_on='name', right_on='name', how='inner')
+#compounds_merge = compounds_merge.merge(df, left_on='name', right_on='name', how='inner')
 
 studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010'])
 
-compounds_merge = compounds_merge[compounds_merge['screen_id'].isin(studies)].drop(columns=['ccle_name', 'row_name', 'EFF', 'EFF*100', 'EFF/EC50', 'lower_limit', 'upper_limit', 'ec50'])
+#compounds_merge = compounds_merge[compounds_merge['screen_id'].isin(studies)].drop(columns=['ccle_name', 'row_name', 'EFF', 'EFF*100', 'EFF/EC50', 'lower_limit', 'upper_limit', 'ec50'])
+
+#move multiselect for studies above the s' table
 
 st.write(compounds_merge)
 
-variance = compounds_merge['delta_s_prime'].var()
+#test variannce and ref variance 
 
-if len(studies) > 0:
-    st.write(f"Variance of Delta S\': {variance}")
+#if len(studies) > 0:
+#   st.write(f"Variance of Delta S\': {variance}")
 
 st.download_button(
             label="Download data as CSV",
