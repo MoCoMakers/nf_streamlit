@@ -14,12 +14,12 @@ from st_aggrid import GridOptionsBuilder
 
 "# ΔS'"
 
-column_order = ['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name']
+column_order = ['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name', 'screen_id']
 
 # Load the data
 # extracting only columns: 'name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50'
 data_path = Path("data/DepMap/Prism19Q4/secondary-screen-dose-response-curve-parameters.csv")
-df = pd.read_csv(data_path, usecols=['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name'])
+df = pd.read_csv(data_path, usecols=['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name', 'screen_id'])
 df = df[column_order]
 
 # Derive EFF (upper_limit - lower_limit) 
@@ -89,9 +89,8 @@ damaging_mutations = pd.read_csv('data/DepMap/Public24Q2/OmicsSomaticMutationsMa
 
 active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", options=damaging_mutations.columns.tolist()[1:], index = damaging_mutations.columns.tolist()[1:].index("NF1 (4763)"));
 
-#TODO: display unique values
 #TODO: not use .head()
-tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", options = df['tissue'].head(100).unique())   
+tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", options = df['tissue'].head(100).unique(), index=df['tissue'].head(100).unique().tolist().index("LUNG") )  
 
 st.header("All S' by Mutation and Tissue")
 
@@ -100,7 +99,7 @@ filtered_nf1_values = damaging_mutations[damaging_mutations[active_gene].isin([0
 
 dm_merged = pd.merge(df, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner');
 
-dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue]
+dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue].drop(columns=['Unnamed: 0', 'ccle_name'])
 
 # for each cmopoumd unique by name:
 # name, tissue
@@ -135,12 +134,22 @@ compounds_merge = pd.merge(compounds_ref_merge, compounds_test_merge, on='name',
 
 compounds_merge['delta_s_prime'] = compounds_merge['ref_pooled_s_prime'] - compounds_merge['test_pooled_s_prime']
 
-#add moa and target columns, variance
+compounds_merge = compounds_merge.merge(df, left_on='name', right_on='name', how='inner')
+
+studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010'])
+
+compounds_merge = compounds_merge[compounds_merge['screen_id'].isin(studies)].drop(columns=['ccle_name', 'row_name', 'EFF', 'EFF*100', 'EFF/EC50', 'lower_limit', 'upper_limit', 'ec50'])
+
 st.write(compounds_merge)
 
-#add feature to subset data by study
-#radio buttons for studies
+variance = compounds_merge['delta_s_prime'].var()
 
-#add screen_id column for s_delta_prime
-#every table should have a downlaod button
-# the checkbozes for different studies should be above delta s prime table
+if len(studies) > 0:
+    st.write(f"Variance of Delta S\': {variance}")
+
+st.download_button(
+            label="Download data as CSV",
+            data=compounds_merge.to_csv().encode('utf-8'),
+            file_name='delta_s_prime.csv',
+            mime='text/csv'
+        )
