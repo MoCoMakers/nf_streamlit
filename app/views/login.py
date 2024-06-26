@@ -4,6 +4,7 @@ from .signupform import SignUp
 from .signed_in_landing import landing_page
 
 from db import get_credentials, update_user
+from time import sleep
 
 def loginapp():
     if "signup" not in st.session_state:
@@ -30,6 +31,9 @@ def loginapp():
             if email_of_registered_user:
                 update_user(hashed_password, email_of_registered_user, username_of_registered_user, name_of_registered_user)
                 st.success('User registered successfully')
+                sleep(0.5)
+                st.session_state.signup = False
+                st.switch_page("Home.py")
             else:
                 st.button(":blue[Log In instead]", on_click=toggle_signup_login)
         except Exception as e:
