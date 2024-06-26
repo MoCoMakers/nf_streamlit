@@ -118,7 +118,7 @@ st.download_button(
             mime='text/csv'
         )
 
-st.header("Delata S' for Selected Values")
+st.header("Delta S' for Selected Values")
 
 df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
 
