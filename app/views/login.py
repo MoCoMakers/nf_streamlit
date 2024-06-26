@@ -55,6 +55,7 @@ def loginapp():
         if st.session_state["authentication_status"]:
             st.session_state.logged_in = True
             st.write(f"Welcome *{name}*")
+            st.write("Click any one of the sidebar items to get view the visualizations 😁")
             landing_page()
             authenticator.logout("Log out", "sidebar")
         elif st.session_state["authentication_status"] == False:
