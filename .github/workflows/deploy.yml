@@ -1,5 +1,11 @@
 name: deploy-to-server
-on: [push]
+on:
+  pull_request:
+    types:
+      - closed
+  push:
+    branches:
+      - main
       
 jobs:
   build:
