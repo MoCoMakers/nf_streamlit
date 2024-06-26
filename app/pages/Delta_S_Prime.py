@@ -80,6 +80,8 @@ st.header("Damaging Mutations")
 #drop down menu to choose from different genes (columns of damaging mutations)
 #drop down menu to choose form different tissue (based on depmap data) (sorted alphabetically) (autocomplete search)
 
+studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010'])
+
 df[['ccle', 'tissue']] = df['ccle_name'].str.split('_', n=1, expand=True)
 
 active_gene = None
@@ -99,7 +101,7 @@ filtered_nf1_values = damaging_mutations[damaging_mutations[active_gene].isin([0
 
 dm_merged = pd.merge(df, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner');
 
-dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue].drop(columns=['Unnamed: 0', 'ccle_name'])
+dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue][dm_merged['screen_id'].isin(studies)].drop(columns=['Unnamed: 0', 'ccle_name'])
 
 # for each cmopoumd unique by name:
 # name, tissue
@@ -124,30 +126,19 @@ df_test_group = dm_merged.loc[dm_merged[active_gene] == 2]
 
 compounds_ref_agg_mean = df_ref_group.groupby('name').agg(ref_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
 compounds_ref_agg_sum   = df_ref_group.groupby('name').agg(num_ref_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
-compounds_ref_merge = pd.merge(compounds_ref_agg_mean, compounds_ref_agg_sum, on='name', how='inner')
+compounds_ref_var = df_ref_group.groupby('name').agg(ref_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')).reset_index()
+compounds_ref_merge = pd.merge(pd.merge(compounds_ref_agg_mean, compounds_ref_var, on='name', how='inner'), compounds_ref_agg_sum, on='name', how='inner')
 
 compounds_test_agg_mean = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
 compunds_test_agg_sum =  df_test_group.groupby('name').agg(num_test_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
-compounds_test_merge = pd.merge(compounds_test_agg_mean, compunds_test_agg_sum, on='name', how='inner')
+compounds_test_agg_var = df_test_group.groupby('name').agg(test_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')).reset_index()
+compounds_test_merge = pd.merge(pd.merge(compounds_test_agg_mean, compounds_test_agg_var, on='name', how='inner'), compunds_test_agg_sum, on='name', how='inner')
 
 compounds_merge = pd.merge(compounds_ref_merge, compounds_test_merge, on='name', how='inner')
 
 compounds_merge['delta_s_prime'] = compounds_merge['ref_pooled_s_prime'] - compounds_merge['test_pooled_s_prime']
 
-#compounds_merge = compounds_merge.merge(df, left_on='name', right_on='name', how='inner')
-
-studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010'])
-
-#compounds_merge = compounds_merge[compounds_merge['screen_id'].isin(studies)].drop(columns=['ccle_name', 'row_name', 'EFF', 'EFF*100', 'EFF/EC50', 'lower_limit', 'upper_limit', 'ec50'])
-
-#move multiselect for studies above the s' table
-
 st.write(compounds_merge)
-
-#test variannce and ref variance 
-
-#if len(studies) > 0:
-#   st.write(f"Variance of Delta S\': {variance}")
 
 st.download_button(
             label="Download data as CSV",
