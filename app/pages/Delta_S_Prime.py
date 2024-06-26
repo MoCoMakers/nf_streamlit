@@ -14,12 +14,12 @@ from st_aggrid import GridOptionsBuilder
 
 "# ΔS'"
 
-column_order = ['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name']
+column_order = ['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name', 'screen_id']
 
 # Load the data
 # extracting only columns: 'name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50'
 data_path = Path("data/DepMap/Prism19Q4/secondary-screen-dose-response-curve-parameters.csv")
-df = pd.read_csv(data_path, usecols=['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name'])
+df = pd.read_csv(data_path, usecols=['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name', 'screen_id'])
 df = df[column_order]
 
 # Derive EFF (upper_limit - lower_limit) 
@@ -80,6 +80,8 @@ st.header("Damaging Mutations")
 #drop down menu to choose from different genes (columns of damaging mutations)
 #drop down menu to choose form different tissue (based on depmap data) (sorted alphabetically) (autocomplete search)
 
+studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010'])
+
 df[['ccle', 'tissue']] = df['ccle_name'].str.split('_', n=1, expand=True)
 
 active_gene = None
@@ -89,9 +91,8 @@ damaging_mutations = pd.read_csv('data/DepMap/Public24Q2/OmicsSomaticMutationsMa
 
 active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", options=damaging_mutations.columns.tolist()[1:], index = damaging_mutations.columns.tolist()[1:].index("NF1 (4763)"));
 
-#TODO: display unique values
 #TODO: not use .head()
-tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", options = df['tissue'].head(100).unique())   
+tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", options = df['tissue'].head(100).unique(), index=df['tissue'].head(100).unique().tolist().index("LUNG") )  
 
 st.header("All S' by Mutation and Tissue")
 
@@ -100,7 +101,7 @@ filtered_nf1_values = damaging_mutations[damaging_mutations[active_gene].isin([0
 
 dm_merged = pd.merge(df, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner');
 
-dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue]
+dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue][dm_merged['screen_id'].isin(studies)].drop(columns=['Unnamed: 0', 'ccle_name'])
 
 # for each cmopoumd unique by name:
 # name, tissue
@@ -117,7 +118,7 @@ st.download_button(
             mime='text/csv'
         )
 
-st.header("S' for Selected Values")
+st.header("Delta S' for Selected Values")
 
 df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
 
@@ -125,22 +126,23 @@ df_test_group = dm_merged.loc[dm_merged[active_gene] == 2]
 
 compounds_ref_agg_mean = df_ref_group.groupby('name').agg(ref_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
 compounds_ref_agg_sum   = df_ref_group.groupby('name').agg(num_ref_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
-compounds_ref_merge = pd.merge(compounds_ref_agg_mean, compounds_ref_agg_sum, on='name', how='inner')
+compounds_ref_var = df_ref_group.groupby('name').agg(ref_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')).reset_index()
+compounds_ref_merge = pd.merge(pd.merge(compounds_ref_agg_mean, compounds_ref_var, on='name', how='inner'), compounds_ref_agg_sum, on='name', how='inner')
 
 compounds_test_agg_mean = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
 compunds_test_agg_sum =  df_test_group.groupby('name').agg(num_test_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
-compounds_test_merge = pd.merge(compounds_test_agg_mean, compunds_test_agg_sum, on='name', how='inner')
+compounds_test_agg_var = df_test_group.groupby('name').agg(test_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')).reset_index()
+compounds_test_merge = pd.merge(pd.merge(compounds_test_agg_mean, compounds_test_agg_var, on='name', how='inner'), compunds_test_agg_sum, on='name', how='inner')
 
 compounds_merge = pd.merge(compounds_ref_merge, compounds_test_merge, on='name', how='inner')
 
 compounds_merge['delta_s_prime'] = compounds_merge['ref_pooled_s_prime'] - compounds_merge['test_pooled_s_prime']
 
-#add moa and target columns, variance
 st.write(compounds_merge)
 
-#add feature to subset data by study
-#radio buttons for studies
-
-#add screen_id column for s_delta_prime
-#every table should have a downlaod button
-# the checkbozes for different studies should be above delta s prime table
+st.download_button(
+            label="Download data as CSV",
+            data=compounds_merge.to_csv().encode('utf-8'),
+            file_name='delta_s_prime.csv',
+            mime='text/csv'
+        )
