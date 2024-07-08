@@ -71,7 +71,8 @@ gridOptions = {
         ]
     },
 }
-AgGrid(df, gridOptions=gridOptions)
+# TODO: Refactor to not be over size limits
+# AgGrid(df, gridOptions=gridOptions)
 
 # Add a filter (dropdown on the column 'name') that updates a dataframe table view.
 
@@ -145,6 +146,8 @@ compounds_merge['Sensitivity'] = np.where(compounds_merge['delta_s_prime'] < -0.
                                           np.where(compounds_merge['delta_s_prime'] > 0.5, 'Resistent', 'Equivocal'))
 
 #how do i include -0.5 and 0.5?
+df_drug_moa = dm_merged[["name","moa","target"]]
+compounds_merge = pd.merge(compounds_merge, df_drug_moa, on='name', how='left')
 
 st.write(compounds_merge)
 
