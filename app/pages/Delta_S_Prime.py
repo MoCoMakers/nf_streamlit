@@ -99,7 +99,7 @@ st.header("All S' by Mutation and Tissue")
 #Unnamed: 0 is the tissue column name in damaging_mutations file
 filtered_nf1_values = damaging_mutations[damaging_mutations[active_gene].isin([0, 2])][['Unnamed: 0', active_gene]]
 
-dm_merged = pd.merge(df, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner');
+dm_merged = pd.merge(df, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner')
 
 dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue][dm_merged['screen_id'].isin(studies)].drop(columns=['Unnamed: 0', 'ccle_name'])
 
@@ -137,6 +137,14 @@ compounds_test_merge = pd.merge(pd.merge(compounds_test_agg_mean, compounds_test
 compounds_merge = pd.merge(compounds_ref_merge, compounds_test_merge, on='name', how='inner')
 
 compounds_merge['delta_s_prime'] = compounds_merge['ref_pooled_s_prime'] - compounds_merge['test_pooled_s_prime']
+
+compounds_merge['Sensitivity Score'] = np.where(compounds_merge['delta_s_prime'] < -0.5, -1,
+                                          np.where(compounds_merge['delta_s_prime'] > 0.5, 1, 0))
+
+compounds_merge['Sensitivity'] = np.where(compounds_merge['delta_s_prime'] < -0.5, 'Sensitive',
+                                          np.where(compounds_merge['delta_s_prime'] > 0.5, 'Resistent', 'Equivocal'))
+
+#how do i include -0.5 and 0.5?
 
 st.write(compounds_merge)
 
