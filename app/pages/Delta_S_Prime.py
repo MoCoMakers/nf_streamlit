@@ -110,6 +110,14 @@ dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue][dm_merged['screen_id'].
 # test_pooled_s_prime: mean of S' for all rows where NF1 is 2
 # delta_s_prime: delta S' = mean of S' for NF1 = 0 - mean of S' for NF1 = 2
 
+def format_target(row):
+    if isinstance(row, str):  
+        return [item.strip() for item in row.split(",")]
+    else:
+        return [] 
+    
+dm_merged['target'] = dm_merged['target'].apply(format_target)
+
 st.write(dm_merged)
 
 st.download_button(
@@ -145,7 +153,6 @@ compounds_merge['Sensitivity Score'] = np.where(compounds_merge['delta_s_prime']
 compounds_merge['Sensitivity'] = np.where(compounds_merge['delta_s_prime'] < -0.5, 'Sensitive',
                                           np.where(compounds_merge['delta_s_prime'] > 0.5, 'Resistent', 'Equivocal'))
 
-#how do i include -0.5 and 0.5?
 df_drug_moa = dm_merged[["name","moa","target"]]
 compounds_merge = pd.merge(compounds_merge, df_drug_moa, on='name', how='left')
 
@@ -157,3 +164,32 @@ st.download_button(
             file_name='delta_s_prime.csv',
             mime='text/csv'
         )
+
+target = pd.read_csv('Manual_ontology.csv')
+df_reference_ontolgy = pd.DataFrame ( columns = ["Group", "Sub", "Gene"])
+Group = None
+for i in range(len(target)):
+    Current_group = str(target.loc[i,'Group']).strip()
+    if Current_group != "nan": 
+        Group = Current_group 
+    df_reference_ontolgy.loc[i] = [Group, target.loc[i,'Sub'], target.loc[i,'Gene']]
+
+rows_to_append = []
+genes_not_in_manual_ontology = []
+
+for i, row in dm_merged.iterrows():
+    for gene in row['target']:
+        if gene in df_reference_ontolgy['Gene'].values:
+            rows_to_append.append({'Compound': row['name'], 'Group': df_reference_ontolgy.loc[df_reference_ontolgy['Gene'] == gene, 'Group'].values[0], 'Sub': df_reference_ontolgy.loc[df_reference_ontolgy['Gene'] == gene, 'Sub'].values[0], 'Gene': gene})
+        else:
+            if gene not in genes_not_in_manual_ontology:
+                genes_not_in_manual_ontology.append(gene)
+
+st.header("Target Grouping")
+cmp_trgt_grp = pd.DataFrame(rows_to_append)
+st.write(cmp_trgt_grp)
+
+st.header("Genes not in Manual Ontology")
+genes_not_in_manual_ontology = pd.DataFrame(genes_not_in_manual_ontology)
+st.write(genes_not_in_manual_ontology)
+st.markdown("Number of genes not in Manual Ontology: " + str(len(genes_not_in_manual_ontology)))
