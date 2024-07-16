@@ -140,7 +140,7 @@ for i, row in dm_merged.iterrows():
         if gene in df_reference_ontolgy['Gene'].values:
             group = df_reference_ontolgy.loc[df_reference_ontolgy['Gene'] == gene, 'Group'].values[0]
             sub = df_reference_ontolgy.loc[df_reference_ontolgy['Gene'] == gene, 'Sub'].values[0]
-            group_sub_string = f"{{{group}}} | {{{sub}}}"
+            group_sub_string = f"{group} | {sub}"
             if group_sub_string not in group_sub_list:
                 group_sub_list.append(group_sub_string)
             
@@ -156,7 +156,7 @@ for i, row in dm_merged.iterrows():
                 genes_not_in_manual_ontology.append(gene)
     
     # Join all group_sub strings for the current row and update dm_merged
-    dm_merged.at[i, 'group_sub'] = ', '.join(group_sub_list)
+    dm_merged.at[i, 'group_sub'] = group_sub_list
 
 # Convert rows_to_append to DataFrame
 cmp_trgt_grp = pd.DataFrame(rows_to_append)
