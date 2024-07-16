@@ -118,6 +118,51 @@ def format_target(row):
     
 dm_merged['target'] = dm_merged['target'].apply(format_target)
 
+########################################################################
+target = pd.read_csv('Manual_ontology.csv')
+df_reference_ontolgy = pd.DataFrame ( columns = ["Group", "Sub", "Gene"])
+Group = None
+for i in range(len(target)):
+    Current_group = str(target.loc[i,'Group']).strip()
+    if Current_group != "nan": 
+        Group = Current_group 
+    df_reference_ontolgy.loc[i] = [Group, target.loc[i,'Sub'], target.loc[i,'Gene']]
+
+rows_to_append = []
+genes_not_in_manual_ontology = []
+# Add a new column to dm_merged to hold the group and sub strings
+dm_merged['group_sub'] = ''
+
+# Iterate through dm_merged and update rows_to_append and dm_merged
+for i, row in dm_merged.iterrows():
+    group_sub_list = []  # Temporary list to hold group_sub strings for current row
+    for gene in row['target']:
+        if gene in df_reference_ontolgy['Gene'].values:
+            group = df_reference_ontolgy.loc[df_reference_ontolgy['Gene'] == gene, 'Group'].values[0]
+            sub = df_reference_ontolgy.loc[df_reference_ontolgy['Gene'] == gene, 'Sub'].values[0]
+            group_sub_string = f"{{{group}}} | {{{sub}}}"
+            if group_sub_string not in group_sub_list:
+                group_sub_list.append(group_sub_string)
+            
+            # Append to rows_to_append
+            rows_to_append.append({
+                'Compound': row['name'],
+                'Group': group,
+                'Sub': sub,
+                'Gene': gene
+            })
+        else:
+            if gene not in genes_not_in_manual_ontology:
+                genes_not_in_manual_ontology.append(gene)
+    
+    # Join all group_sub strings for the current row and update dm_merged
+    dm_merged.at[i, 'group_sub'] = ', '.join(group_sub_list)
+
+# Convert rows_to_append to DataFrame
+cmp_trgt_grp = pd.DataFrame(rows_to_append)
+
+##########################################################################
+
 st.write(dm_merged)
 
 st.download_button(
@@ -165,28 +210,7 @@ st.download_button(
             mime='text/csv'
         )
 
-target = pd.read_csv('Manual_ontology.csv')
-df_reference_ontolgy = pd.DataFrame ( columns = ["Group", "Sub", "Gene"])
-Group = None
-for i in range(len(target)):
-    Current_group = str(target.loc[i,'Group']).strip()
-    if Current_group != "nan": 
-        Group = Current_group 
-    df_reference_ontolgy.loc[i] = [Group, target.loc[i,'Sub'], target.loc[i,'Gene']]
-
-rows_to_append = []
-genes_not_in_manual_ontology = []
-
-for i, row in dm_merged.iterrows():
-    for gene in row['target']:
-        if gene in df_reference_ontolgy['Gene'].values:
-            rows_to_append.append({'Compound': row['name'], 'Group': df_reference_ontolgy.loc[df_reference_ontolgy['Gene'] == gene, 'Group'].values[0], 'Sub': df_reference_ontolgy.loc[df_reference_ontolgy['Gene'] == gene, 'Sub'].values[0], 'Gene': gene})
-        else:
-            if gene not in genes_not_in_manual_ontology:
-                genes_not_in_manual_ontology.append(gene)
-
 st.header("Target Grouping")
-cmp_trgt_grp = pd.DataFrame(rows_to_append)
 st.write(cmp_trgt_grp)
 
 st.header("Genes not in Manual Ontology")
