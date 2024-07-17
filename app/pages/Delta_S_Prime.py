@@ -198,7 +198,7 @@ compounds_merge['Sensitivity Score'] = np.where(compounds_merge['delta_s_prime']
 compounds_merge['Sensitivity'] = np.where(compounds_merge['delta_s_prime'] < -0.5, 'Sensitive',
                                           np.where(compounds_merge['delta_s_prime'] > 0.5, 'Resistent', 'Equivocal'))
 
-df_drug_moa = dm_merged[["name","moa","target"]]
+df_drug_moa = dm_merged[["name","moa","target", "group_sub"]]
 df_drug_moa_unique = df_drug_moa.drop_duplicates(subset=['name'])
 compounds_merge = pd.merge(compounds_merge, df_drug_moa_unique, on='name', how='left')
 
