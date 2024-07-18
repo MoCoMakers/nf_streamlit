@@ -202,6 +202,13 @@ df_drug_moa = dm_merged[["name","moa","target", "group_sub"]]
 df_drug_moa_unique = df_drug_moa.drop_duplicates(subset=['name'])
 compounds_merge = pd.merge(compounds_merge, df_drug_moa_unique, on='name', how='left')
 
+def format_to_array(x):
+    if isinstance(x, str):
+        return x.split(",")
+    return [str(x)]
+
+compounds_merge['moa'] = compounds_merge['moa'].apply(format_to_array)
+
 st.write(compounds_merge)
 
 st.download_button(
@@ -211,10 +218,10 @@ st.download_button(
             mime='text/csv'
         )
 
-st.header("Target Grouping")
-st.write(cmp_trgt_grp)
+with st.expander("Target Grouping"):
+    st.write(cmp_trgt_grp)
 
-st.header("Genes not in Manual Ontology")
-genes_not_in_manual_ontology = pd.DataFrame(genes_not_in_manual_ontology)
-st.write(genes_not_in_manual_ontology)
-st.markdown("Number of genes not in Manual Ontology: " + str(len(genes_not_in_manual_ontology)))
+with st.expander("Genes not in Manual Ontology"):
+    genes_not_in_manual_ontology = pd.DataFrame(genes_not_in_manual_ontology)
+    st.write(genes_not_in_manual_ontology)
+    st.markdown("Number of genes not in Manual Ontology: " + str(len(genes_not_in_manual_ontology)))
