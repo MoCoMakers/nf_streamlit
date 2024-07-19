@@ -1,5 +1,6 @@
 app/.streamlit/secrets.toml
 .idea/
+.DS_Store
 __pycache__/
 data/
 venv/
