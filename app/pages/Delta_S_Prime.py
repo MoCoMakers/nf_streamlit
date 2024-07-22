@@ -81,7 +81,7 @@ st.header("Damaging Mutations")
 #drop down menu to choose from different genes (columns of damaging mutations)
 #drop down menu to choose form different tissue (based on depmap data) (sorted alphabetically) (autocomplete search)
 
-studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010'])
+studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010'], default=['HTS002', 'MTS005', 'MTS006', 'MTS010'])
 
 df[['ccle', 'tissue']] = df['ccle_name'].str.split('_', n=1, expand=True)
 
@@ -103,12 +103,6 @@ filtered_nf1_values = damaging_mutations[damaging_mutations[active_gene].isin([0
 dm_merged = pd.merge(df, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner')
 
 dm_merged = dm_merged.loc[dm_merged['tissue'] == tissue][dm_merged['screen_id'].isin(studies)].drop(columns=['Unnamed: 0', 'ccle_name'])
-
-# for each cmopoumd unique by name:
-# name, tissue
-# ref_pooled_s_prime: mean of S' for all rows where NF1 is 0
-# test_pooled_s_prime: mean of S' for all rows where NF1 is 2
-# delta_s_prime: delta S' = mean of S' for NF1 = 0 - mean of S' for NF1 = 2
 
 def format_target(row):
     if isinstance(row, str):  
@@ -225,3 +219,17 @@ with st.expander("Genes not in Manual Ontology"):
     genes_not_in_manual_ontology = pd.DataFrame(genes_not_in_manual_ontology)
     st.write(genes_not_in_manual_ontology)
     st.markdown("Number of genes not in Manual Ontology: " + str(len(genes_not_in_manual_ontology)))
+
+st.header("Pooled Delta S' for Compounds By \"Group | Subgroup\" Combination")
+
+target = pd.read_csv('Manual_ontology.csv')
+target['Group'] = target['Group'].fillna(method='ffill')
+target['Group_Subgroup'] = target['Group'] + ' | ' + target['Sub']
+unique_combinations = target['Group_Subgroup'].unique()
+
+selected_combinations = st.multiselect(label='Choose Group | Subgroup combinations', options=unique_combinations)
+
+filtered_compounds = compounds_merge[compounds_merge['group_sub'].apply(lambda x: all(elem in x for elem in selected_combinations))][["name", "delta_s_prime"]]
+
+if len(filtered_compounds) > 0:
+    st.write(filtered_compounds)
