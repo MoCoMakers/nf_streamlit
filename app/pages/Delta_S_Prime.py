@@ -228,6 +228,7 @@ target['Group_Subgroup'] = target['Group'] + ' | ' + target['Sub']
 unique_combinations = target['Group_Subgroup'].unique()
 
 selected_combinations = st.multiselect(label='Choose Group | Subgroup combinations', options=unique_combinations)
+st.markdown("Selecting multiple combinations means that the compound must have all the selected values to be included in the result.")
 
 filtered_compounds = compounds_merge[compounds_merge['group_sub'].apply(lambda x: all(elem in x for elem in selected_combinations))][["name", "delta_s_prime"]]
 
