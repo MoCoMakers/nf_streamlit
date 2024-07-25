@@ -230,7 +230,24 @@ unique_combinations = target['Group_Subgroup'].unique()
 selected_combinations = st.multiselect(label='Choose Group | Subgroup combinations', options=unique_combinations)
 st.markdown("Selecting multiple combinations means that the compound must have all the selected values to be included in the result.")
 
-filtered_compounds = compounds_merge[compounds_merge['group_sub'].apply(lambda x: all(elem in x for elem in selected_combinations))][["name", "delta_s_prime"]]
+filtered_compounds_by_class = compounds_merge[compounds_merge['group_sub'].apply(lambda x: all(elem in x for elem in selected_combinations))][["name", "delta_s_prime"]]
 
-if len(filtered_compounds) > 0:
-    st.write(filtered_compounds)
+if len(filtered_compounds_by_class) > 0:
+    st.write(filtered_compounds_by_class)
+
+st.header("Pooled Delta S' for Compounds By MOA")
+
+def get_unique_moas(dataframe, column):
+    all_moas = set()
+    for row in dataframe[column]:
+        all_moas.update(row)
+    return all_moas
+
+unique_moas = get_unique_moas(compounds_merge, 'moa')
+
+selected_moas = st.multiselect(label='Choose MOA\'s', options=unique_moas)
+st.markdown("Selecting multiple MOA\'s means that the compound must have all the selected values to be included in the result.")
+
+filtered_compounds_by_moa = compounds_merge[compounds_merge['moa'].apply(lambda x: all(elem in x for elem in selected_moas))][["name", "delta_s_prime"]]
+
+st.write(filtered_compounds_by_moa)
