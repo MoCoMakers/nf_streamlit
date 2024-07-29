@@ -19,7 +19,7 @@ A sister repo to this project is: [https://github.com/MoCoMakers/hack4nf-2022](h
 
 # Getting Started
 ## Local Development (Developers Only)
-Clone repo, then copy `secrets.toml.example` to `secrets.toml` and update the values.
+Clone repo, then copy `config.toml.example` to `config.toml`, and `secrets.toml.example` to `secrets.toml` and update the values.
 Note that you will need a remote database connection (MySQL is the default) configured with a users table, for example:
 
 table drea_users;
@@ -32,6 +32,7 @@ table drea_users;
 | name         | text         | YES  |     | NULL    |       |
 | passwordhash | text         | YES  |     | NULL    |       |
 | approved     | tinyint(1)   | YES  |     | NULL    |       |
++--------------+--------------+------+-----+---------+-------+
 ```
 
 
@@ -91,6 +92,8 @@ docker build . -t streamlit_app
 ```
 <br>
 Clone this repo.<br>
+
+Copy `app/.streamlit/config.toml.example` to be just `config.toml`.<br>
 Copy `app/.streamlit/secrets.toml.example` to be just `secrets.toml` and fill in the desired password.
 
 Then run:<br>
