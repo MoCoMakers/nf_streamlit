@@ -32,6 +32,7 @@ table drea_users;
 | name         | text         | YES  |     | NULL    |       |
 | passwordhash | text         | YES  |     | NULL    |       |
 | approved     | tinyint(1)   | YES  |     | NULL    |       |
++--------------+--------------+------+-----+---------+-------+
 ```
 
 
@@ -73,7 +74,7 @@ Save your csv file in `app/data/DepMap/Public24Q4/`
 ### Install depdencies and run
 
 Change to `app/` directory<br>
-Install Python requirements `pip install -r requirments.txt`<br>
+Install Python requirements `pip install -r requirements.txt`<br>
 Start the app on Windows `streamlit run .\Home.py`<br>
 Start the app Linux/MacOS `streamlit run ./Home.py`
 
@@ -101,3 +102,6 @@ docker run -p 8501:8501 -v ~/nf_streamlit/app:/app streamlit_app
 ```
 <br>
 The first command only needs to be run one time. To run the server using the second command, chaging `~/docker_streamlit/app` for the location of the `app` directory in this repo.
+
+# Troubleshooting for Mac users
+If you face errors upon running the `pip install -r requirements.txt`, the following [link](https://stackoverflow.com/questions/76876823/cannot-install-mysqlclient-on-macos) may be of help.
