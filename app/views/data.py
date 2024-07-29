@@ -262,6 +262,7 @@ def eda():
     # calculate all ratios
     df_ratios = syn.calculate_fit_ratios(df_compounds, dfs_drc, syn.den_sis, syn.num_sis)
     st.session_state['df_ratios'] = df_ratios
+    s_values = df_ratios
 
     # Sidebar
     # ==================================
@@ -966,7 +967,6 @@ def eda():
     merge_columns = ['NCGC SID', 'den_si']
     df_ranked = pd.merge(df_ranked_delta_s, df_ranked, how='left', on=merge_columns)
 
-
     df_ranked = df_ranked.sort_values(
         ['mean'], ascending=[False],
     )
@@ -1027,3 +1027,5 @@ def eda():
         key='df_merge'
     )
 
+    st.write('here')
+    st.write(s_values)

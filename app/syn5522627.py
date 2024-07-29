@@ -483,7 +483,9 @@ def calculate_fit_ratios(df_compounds, dfs_drc_in, den_sis, num_sis):
             df["num_eff"] = num_eff
             df["den_eff"] = den_eff
             df["eff ratio"] = num_eff / den_eff
-
+            # S = log(EFF/AC50)
+            df["s_num"] = np.log10(num_eff/num_ac50)
+            df["s_den"] = np.log10(den_eff/den_ac50)
             # score = (num_eff/den_eff) / (num_AC50/den_AC50)
             # Swapped direction of ratio to fix integer
             df["score"] = df["AC50 ratio"] / df["eff ratio"]
