@@ -24,6 +24,10 @@ services:
     volumes:
        - dbdata:/var/lib/mysql
        - ./data.sql:/docker-entrypoint-initdb.d/data.sql
+    environment:
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_DATABASE=local_db
+      - MYSQL_ROOT_PASSWORD=toor
 
 volumes:
   dbdata:
