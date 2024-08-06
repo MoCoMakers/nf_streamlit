@@ -1,0 +1,29 @@
+version: "3.7"
+
+services:
+  server:
+    user: root:$UID
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    working_dir: /app/nf_streamlit/app
+    volumes:
+      - "..:/app/nf_streamlit"
+    ports:
+      - 8501:8501
+    command: sleep infinity
+    depends_on:
+      - mysql
+  
+  mysql:
+    image: mysql
+    container_name: mysql_store
+    ports:
+      - "3306:3306"
+    restart: on-failure
+    volumes:
+       - dbdata:/var/lib/mysql
+       - ./data.sql:/docker-entrypoint-initdb.d/data.sql
+
+volumes:
+  dbdata:
