@@ -6,6 +6,8 @@ COPY . .
 
 WORKDIR /app/nf_streamlit/app
 
+RUN apt update && apt install -y mariadb-client
+
 RUN python -m pip install --upgrade pip
 RUN python -m pip install -r requirements.txt
 
