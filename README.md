@@ -105,3 +105,4 @@ The first command only needs to be run one time. To run the server using the sec
 
 # Troubleshooting for Mac users
 If you face errors upon running the `pip install -r requirements.txt`, the following [link](https://stackoverflow.com/questions/76876823/cannot-install-mysqlclient-on-macos) may be of help.
+
