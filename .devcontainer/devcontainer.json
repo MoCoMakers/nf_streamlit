@@ -1,0 +1,31 @@
+{
+    "name": "nf_streamlit_devcontainer",
+    "forwardPorts": [8501],
+    
+    "dockerComposeFile": [
+        "./docker-compose.yml"
+    ],
+    "service": "server",
+    "workspaceFolder": "/app/nf_streamlit/app",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "ms-python.python",
+                "josefpihrt-vscode.roslynator",
+                "fernandoescolar.vscode-solution-explorer",
+                "eamodio.gitlens",
+                "ms-vscode.powershell",
+                "pucelle.vscode-css-navigation",
+                "shd101wyy.markdown-preview-enhanced",
+                "kahole.magit",
+                "ms-vsliveshare.vsliveshare"
+            ]
+        }
+    },
+    "containerEnv": {
+        "GIT_EDITOR": "code --wait",
+        "GIT_DISCOVERY_ACROSS_FILESYSTEM": "1"
+    },
+	"shutdownAction": "stopCompose"
+}
