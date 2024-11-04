@@ -1,2 +1,6 @@
 [client]
 showSidebarNavigation = false
+
+
+[server]
+maxMessageSize = 600

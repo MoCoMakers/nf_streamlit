@@ -64,7 +64,7 @@ st.dataframe(df)
 
 st.header("Damaging Mutations")
 
-studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010'], default=['HTS002', 'MTS005', 'MTS006', 'MTS010'])
+studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010',  'HTSwithMTS010_Overlayed'], default=['HTS002', 'MTS005', 'MTS006', 'MTS010','HTSwithMTS010_Overlayed'])
 
 @st.cache_data(show_spinner=False)
 def modify_df(df):
@@ -80,9 +80,9 @@ damaging_mutations = fetch_df('data/DepMap/Public24Q2/OmicsSomaticMutationsMatri
 
 #drop down menu to choose from different genes (columns of damaging mutations)
 active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", index=damaging_mutations.columns.tolist()[1:].index(active_gene), options=damaging_mutations.columns.tolist()[1:]);
-
+q
 #drop down menu to choose form different tissue (based on depmap data) (sorted alphabetically) (autocomplete search)
-tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", index=df['tissue'].head(100).tolist().index(tissue), options = df['tissue'].head(100))   
+tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", index=None, options = df['tissue'].unique())   
 
 st.header("All S' by Mutation and Tissue")
 
