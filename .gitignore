@@ -1,4 +1,5 @@
 app/.streamlit/secrets.toml
+app/.streamlit/config.toml
 .idea/
 .DS_Store
 __pycache__/
