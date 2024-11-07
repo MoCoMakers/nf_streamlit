@@ -179,14 +179,14 @@ if not dm_merged.empty:
         compounds_ref_agg_sum   = df_ref_group.groupby('name').agg(num_ref_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
         compounds_ref_var = df_ref_group.groupby('name').agg(ref_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')).reset_index()
         compounds_ref_agg_mean_auc = df_ref_group.groupby('name').agg(ref_pooled_auc=pd.NamedAgg(column='auc', aggfunc='mean')).reset_index()
-        compounds_ref_agg_mean_ec50 = df_ref_group.groupby('name').agg(ref_pooled_ec50=pd.NamedAgg(column='auc', aggfunc='mean')).reset_index()
+        compounds_ref_agg_mean_ec50 = df_ref_group.groupby('name').agg(ref_pooled_ec50=pd.NamedAgg(column='ec50', aggfunc='mean')).reset_index()
         compounds_ref_merge = pd.merge(pd.merge(pd.merge(pd.merge(compounds_ref_agg_mean, compounds_ref_var, on='name', how='inner'), compounds_ref_agg_sum, on='name', how='inner'), compounds_ref_agg_mean_auc, on='name', how='inner'), compounds_ref_agg_mean_ec50, on='name', how='inner')
 
         compounds_test_agg_mean = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
         compunds_test_agg_sum =  df_test_group.groupby('name').agg(num_test_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
         compounds_test_agg_var = df_test_group.groupby('name').agg(test_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')).reset_index()
         compounds_test_agg_mean_auc = df_test_group.groupby('name').agg(test_pooled_auc=pd.NamedAgg(column='auc', aggfunc='mean')).reset_index()
-        compounds_test_agg_mean_ec50 = df_test_group.groupby('name').agg(test_pooled_ec50=pd.NamedAgg(column='auc', aggfunc='mean')).reset_index()
+        compounds_test_agg_mean_ec50 = df_test_group.groupby('name').agg(test_pooled_ec50=pd.NamedAgg(column='ec50', aggfunc='mean')).reset_index()
         compounds_test_merge = pd.merge(pd.merge(pd.merge(pd.merge(compounds_test_agg_mean, compounds_test_agg_var, on='name', how='inner'), compunds_test_agg_sum, on='name', how='inner'), compounds_test_agg_mean_auc, on='name', how='inner'), compounds_test_agg_mean_ec50, on='name', how='inner')
 
         compounds_merge = pd.merge(compounds_ref_merge, compounds_test_merge, on='name', how='inner')
