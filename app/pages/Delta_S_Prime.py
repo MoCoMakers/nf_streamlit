@@ -25,7 +25,7 @@ def fetch_df(file, **kwargs):
 def build_df(*args, **kwargs):
     # Load the data
     # extracting only columns: 'name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50'
-    column_order = ['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name', 'screen_id']
+    column_order = ['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'auc', 'ccle_name', 'row_name', 'screen_id']
     df = fetch_df(*args, **kwargs)
     df = df[column_order]
 
@@ -43,7 +43,7 @@ def build_df(*args, **kwargs):
     df["S'"] = np.arcsinh(df['EFF*100'] / df['ec50'])
     return df
 
-df = build_df("data/DepMap/Prism19Q4/secondary-screen-dose-response-curve-parameters.csv", usecols=['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50', 'ccle_name', 'row_name', 'screen_id'])
+df = build_df("data/DepMap/Prism19Q4/secondary-screen-dose-response-curve-parameters.csv", usecols=['name', 'moa', 'target', 'lower_limit', 'upper_limit', 'auc', 'ec50', 'ccle_name', 'row_name', 'screen_id'])
 
 # Future: use same calculations as data.py
 # df_ranked = compute_ranked_delta_s_prime(df)
@@ -64,7 +64,7 @@ st.dataframe(df)
 
 st.header("Damaging Mutations")
 
-studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010',  'HTSwithMTS010_Overlayed'], default=['HTS002', 'MTS005', 'MTS006', 'MTS010','HTSwithMTS010_Overlayed'])
+studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010',  'HTSwithMTS010_Overlayed'], default=['HTSwithMTS010_Overlayed'])
 
 @st.cache_data(show_spinner=False)
 def modify_df(df):
@@ -89,9 +89,9 @@ st.header("All S' by Mutation and Tissue")
 @st.cache_data(show_spinner=False)
 def filter_df(active_gene, tissue):
     #Unnamed: 0 is the tissue column name in damaging_mutations file
-    filtered_nf1_values = damaging_mutations[damaging_mutations[active_gene].isin([0, 2])][['Unnamed: 0', active_gene]]
+    filtered_gene_values = damaging_mutations[damaging_mutations[active_gene].isin([0, 2])][['Unnamed: 0', active_gene]]
 
-    dm_merged = pd.merge(df, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner')
+    dm_merged = pd.merge(df, filtered_gene_values, left_on='row_name', right_on='Unnamed: 0', how='inner')
     dm_merged = dm_merged.loc[dm_merged['screen_id'].isin(studies) & (dm_merged['tissue'] == tissue)].drop(columns=['Unnamed: 0', 'ccle_name'])
 
     def format_target(row):
@@ -146,7 +146,7 @@ def filter_df(active_gene, tissue):
     cmp_trgt_grp = pd.DataFrame(rows_to_append)
 
 ##########################################################################
-    # dm_merged = pd.merge(df, filtered_nf1_values, left_on='row_name', right_on='Unnamed: 0', how='inner');
+    # dm_merged = pd.merge(df, filtered_gene_values, left_on='row_name', right_on='Unnamed: 0', how='inner');
 
     return dm_merged.loc[dm_merged['tissue'] == tissue], cmp_trgt_grp, genes_not_in_manual_ontology
 
@@ -178,16 +178,22 @@ if not dm_merged.empty:
         compounds_ref_agg_mean = df_ref_group.groupby('name').agg(ref_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
         compounds_ref_agg_sum   = df_ref_group.groupby('name').agg(num_ref_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
         compounds_ref_var = df_ref_group.groupby('name').agg(ref_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')).reset_index()
-        compounds_ref_merge = pd.merge(pd.merge(compounds_ref_agg_mean, compounds_ref_var, on='name', how='inner'), compounds_ref_agg_sum, on='name', how='inner')
+        compounds_ref_agg_mean_auc = df_ref_group.groupby('name').agg(ref_pooled_auc=pd.NamedAgg(column='auc', aggfunc='mean')).reset_index()
+        compounds_ref_agg_mean_ec50 = df_ref_group.groupby('name').agg(ref_pooled_ec50=pd.NamedAgg(column='auc', aggfunc='mean')).reset_index()
+        compounds_ref_merge = pd.merge(pd.merge(pd.merge(pd.merge(compounds_ref_agg_mean, compounds_ref_var, on='name', how='inner'), compounds_ref_agg_sum, on='name', how='inner'), compounds_ref_agg_mean_auc, on='name', how='inner'), compounds_ref_agg_mean_ec50, on='name', how='inner')
 
         compounds_test_agg_mean = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
         compunds_test_agg_sum =  df_test_group.groupby('name').agg(num_test_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
         compounds_test_agg_var = df_test_group.groupby('name').agg(test_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')).reset_index()
-        compounds_test_merge = pd.merge(pd.merge(compounds_test_agg_mean, compounds_test_agg_var, on='name', how='inner'), compunds_test_agg_sum, on='name', how='inner')
+        compounds_test_agg_mean_auc = df_test_group.groupby('name').agg(test_pooled_auc=pd.NamedAgg(column='auc', aggfunc='mean')).reset_index()
+        compounds_test_agg_mean_ec50 = df_test_group.groupby('name').agg(test_pooled_ec50=pd.NamedAgg(column='auc', aggfunc='mean')).reset_index()
+        compounds_test_merge = pd.merge(pd.merge(pd.merge(pd.merge(compounds_test_agg_mean, compounds_test_agg_var, on='name', how='inner'), compunds_test_agg_sum, on='name', how='inner'), compounds_test_agg_mean_auc, on='name', how='inner'), compounds_test_agg_mean_ec50, on='name', how='inner')
 
         compounds_merge = pd.merge(compounds_ref_merge, compounds_test_merge, on='name', how='inner')
 
         compounds_merge['delta_s_prime'] = compounds_merge['ref_pooled_s_prime'] - compounds_merge['test_pooled_s_prime']
+        compounds_merge['delta_auc'] = compounds_merge['ref_pooled_auc'] - compounds_merge['test_pooled_auc']
+        compounds_merge['delta_ec50'] = compounds_merge['ref_pooled_ec50'] - compounds_merge['test_pooled_ec50']
 
         compounds_merge['Sensitivity Score'] = np.where(compounds_merge['delta_s_prime'] < -0.5, -1,
                                                 np.where(compounds_merge['delta_s_prime'] > 0.5, 1, 0))
