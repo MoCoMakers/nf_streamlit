@@ -80,7 +80,7 @@ damaging_mutations = fetch_df('data/DepMap/Public24Q2/OmicsSomaticMutationsMatri
 
 #drop down menu to choose from different genes (columns of damaging mutations)
 active_gene = st.selectbox(label="Active Gene", placeholder="e.g. NF1", index=damaging_mutations.columns.tolist()[1:].index(active_gene), options=damaging_mutations.columns.tolist()[1:]);
-q
+
 #drop down menu to choose form different tissue (based on depmap data) (sorted alphabetically) (autocomplete search)
 tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", index=None, options = df['tissue'].unique())   
 
