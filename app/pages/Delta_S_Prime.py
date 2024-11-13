@@ -59,6 +59,12 @@ st.dataframe(get_single_testvalue())
 "## S' Table"
 # Display the table
 st.dataframe(df)
+st.download_button(
+                label="Download data as CSV",
+                data=df.to_csv().encode('utf-8'),
+                file_name='delta_s_prime.csv',
+                mime='text/csv'
+            )
 
 # Add a filter (dropdown on the column 'name') that updates a dataframe table view.
 
@@ -167,7 +173,7 @@ if not dm_merged.empty:
                 mime='text/csv'
             )
 
-    st.header("Delta S' for Selected Values")
+    st.header("Pooled Delta S' for Selected Values")
 
     @st.cache_data(show_spinner=False)
     def compute_compounds_test_agg(active_gene):
