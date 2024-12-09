@@ -30,7 +30,6 @@ def loginapp():
 
             if email_of_registered_user:
                 update_user(hashed_password, email_of_registered_user, username_of_registered_user, name_of_registered_user)
-                st.cache_data.clear()
                 st.success('User registered successfully')
                 sleep(0.5)
                 st.session_state.signup = False
