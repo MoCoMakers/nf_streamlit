@@ -9,19 +9,17 @@ import streamlit as st
 
 from views.signed_in_landing import landing_page
 
-landing_page()
+#landing_page()
 
 # from views.data import compute_ranked_delta_s_prime, display_ranked_delta_s_prime_for_download
 
 "# ΔS'"
 
-@st.cache_data(show_spinner=False)
 def fetch_df(file, **kwargs):
     data_path = Path(file)
     return pd.read_csv(data_path, **kwargs)
 
 
-@st.cache_data(show_spinner=False)
 def build_df(*args, **kwargs):
     # Load the data
     # extracting only columns: 'name', 'moa', 'target', 'lower_limit', 'upper_limit', 'ec50'
@@ -51,7 +49,6 @@ df = build_df("data/DepMap/Prism19Q4/secondary-screen-dose-response-curve-parame
 
 "## Single test value selected from 'bortezomib'"
 # as a test only write the rows where 'name' is 'bortezomib' adn the EFF*100 is close to 97.9789
-@st.cache_data(show_spinner=False)
 def get_single_testvalue():
     return df[df['name'] == 'bortezomib'].query('97.9788 < EFF*100 < 97.9790')
 st.dataframe(get_single_testvalue())
@@ -72,7 +69,6 @@ st.header("Damaging Mutations")
 
 studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010',  'HTSwithMTS010_Overlayed'], default=['HTSwithMTS010_Overlayed'])
 
-@st.cache_data(show_spinner=False)
 def modify_df(df):
     df[['ccle', 'tissue']] = df['ccle_name'].str.split('_', n=1, expand=True)
     return df
@@ -92,7 +88,6 @@ tissue = st.selectbox(label= "Tissue", placeholder="e.g. Pancreas", index=None, 
 
 st.header("All S' by Mutation and Tissue")
 
-@st.cache_data(show_spinner=False)
 def filter_df(active_gene, tissue):
     #Unnamed: 0 is the tissue column name in damaging_mutations file
     filtered_gene_values = damaging_mutations[damaging_mutations[active_gene].isin([0, 2])][['Unnamed: 0', active_gene]]
@@ -175,7 +170,6 @@ if not dm_merged.empty:
 
     st.header("Pooled Delta S' for Selected Values")
 
-    @st.cache_data(show_spinner=False)
     def compute_compounds_test_agg(active_gene):
         df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
 
@@ -240,7 +234,6 @@ if not dm_merged.empty:
 
     st.header("Pooled Delta S' for Compounds By \"Group | Subgroup\" Combination")
 
-    @st.cache_data(show_spinner=False)
     def get_unique_combinations():
         target = fetch_df('Manual_ontology.csv')
         target['Group'] = target['Group'].ffill()
@@ -252,7 +245,6 @@ if not dm_merged.empty:
     selected_combinations = st.multiselect(label='Choose Group | Subgroup combinations', options=unique_combinations)
     st.markdown("Selecting multiple combinations means that the compound must have all the selected values to be included in the result.")
 
-    @st.cache_data(show_spinner=False)
     def filtered_compounds_by_class(selected_combinations):
         return compounds_merge[compounds_merge['group_sub'].apply(lambda x: all(elem in x for elem in selected_combinations))][["name", "delta_s_prime"]]
 
@@ -261,7 +253,6 @@ if not dm_merged.empty:
 
     st.header("Pooled Delta S' for Compounds By MOA")
 
-    @st.cache_data(show_spinner=False)
     def get_unique_moas(dataframe, column):
         all_moas = set()
         for row in dataframe[column]:
