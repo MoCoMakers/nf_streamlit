@@ -1,6 +1,7 @@
 from pathlib import Path
 import numpy as np
 import pandas as pd
+from scipy.stats import mannwhitneyu
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -170,47 +171,127 @@ if not dm_merged.empty:
 
     st.header("Pooled Delta S' for Selected Values")
 
+    def median_absolute_deviation(data):
+        # Calculate the median of the data
+        median = np.median(data)
+        # Calculate the absolute deviations from the median
+        abs_deviation = np.abs(data - median)
+        # Compute the median of the absolute deviations
+        mad = np.median(abs_deviation)
+        return mad
+
+    def calculate_modified_z_score(data: pd.DataFrame, column: str) -> pd.Series:
+        """
+        Calculate the modified z-scores for a specified column in the DataFrame.
+
+        Parameters:
+        data (pd.DataFrame): Input DataFrame.
+        column (str): The name of the column for which to calculate the modified z-scores.
+
+        Returns:
+        pd.Series: A Series of modified z-scores for the specified column.
+        """
+        # Compute the median of the column
+        median = data[column].median()
+        
+        # Compute the Median Absolute Deviation (MAD)
+        mad = np.median(np.abs(data[column] - median))
+        
+        # Handle division by zero (if MAD is zero)
+        if mad == 0:
+            return pd.Series([0] * len(data[column]), index=data.index)
+        
+        # Compute the modified z-scores
+        modified_z_scores = 0.6745 * ((data[column] - median) / mad)
+        
+        return modified_z_scores
+
     def compute_compounds_test_agg(active_gene):
         df_ref_group = dm_merged.loc[dm_merged[active_gene] == 0]
-
         df_test_group = dm_merged.loc[dm_merged[active_gene] == 2]
 
-        compounds_ref_agg_mean = df_ref_group.groupby('name').agg(ref_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
-        compounds_ref_agg_sum   = df_ref_group.groupby('name').agg(num_ref_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
-        compounds_ref_var = df_ref_group.groupby('name').agg(ref_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')).reset_index()
-        compounds_ref_agg_mean_auc = df_ref_group.groupby('name').agg(ref_pooled_auc=pd.NamedAgg(column='auc', aggfunc='mean')).reset_index()
-        compounds_ref_agg_mean_ec50 = df_ref_group.groupby('name').agg(ref_pooled_ec50=pd.NamedAgg(column='ec50', aggfunc='mean')).reset_index()
-        compounds_ref_merge = pd.merge(pd.merge(pd.merge(pd.merge(compounds_ref_agg_mean, compounds_ref_var, on='name', how='inner'), compounds_ref_agg_sum, on='name', how='inner'), compounds_ref_agg_mean_auc, on='name', how='inner'), compounds_ref_agg_mean_ec50, on='name', how='inner')
+        # Reference group calculations
+        compounds_ref_agg_mean = df_ref_group.groupby('name').agg(
+            ref_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean'),
+            ref_median_s_prime=pd.NamedAgg(column='S\'', aggfunc='median'),
+            ref_mad=pd.NamedAgg(column='S\'', aggfunc=median_absolute_deviation),
+            ref_pooled_auc=pd.NamedAgg(column='auc', aggfunc='mean'),
+            ref_pooled_ec50=pd.NamedAgg(column='ec50', aggfunc='mean'),
+            num_ref_lines=pd.NamedAgg(column='row_name', aggfunc='count'),
+            ref_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')
+        ).reset_index()
 
-        compounds_test_agg_mean = df_test_group.groupby('name').agg(test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean')).reset_index()
-        compunds_test_agg_sum =  df_test_group.groupby('name').agg(num_test_lines=pd.NamedAgg(column='row_name', aggfunc='count')).reset_index()
-        compounds_test_agg_var = df_test_group.groupby('name').agg(test_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')).reset_index()
-        compounds_test_agg_mean_auc = df_test_group.groupby('name').agg(test_pooled_auc=pd.NamedAgg(column='auc', aggfunc='mean')).reset_index()
-        compounds_test_agg_mean_ec50 = df_test_group.groupby('name').agg(test_pooled_ec50=pd.NamedAgg(column='ec50', aggfunc='mean')).reset_index()
-        compounds_test_merge = pd.merge(pd.merge(pd.merge(pd.merge(compounds_test_agg_mean, compounds_test_agg_var, on='name', how='inner'), compunds_test_agg_sum, on='name', how='inner'), compounds_test_agg_mean_auc, on='name', how='inner'), compounds_test_agg_mean_ec50, on='name', how='inner')
+        # Test group calculations
+        compounds_test_agg_mean = df_test_group.groupby('name').agg(
+            test_pooled_s_prime=pd.NamedAgg(column='S\'', aggfunc='mean'),
+            test_median_s_prime=pd.NamedAgg(column='S\'', aggfunc='median'),
+            test_mad=pd.NamedAgg(column='S\'', aggfunc=median_absolute_deviation),
+            test_pooled_auc=pd.NamedAgg(column='auc', aggfunc='mean'),
+            test_pooled_ec50=pd.NamedAgg(column='ec50', aggfunc='mean'),
+            num_test_lines=pd.NamedAgg(column='row_name', aggfunc='count'),
+            test_s_prime_variance=pd.NamedAgg(column='S\'', aggfunc='var')
+        ).reset_index()
 
-        compounds_merge = pd.merge(compounds_ref_merge, compounds_test_merge, on='name', how='inner')
+        # Merging reference and test data
+        compounds_merge = pd.merge(compounds_ref_agg_mean, compounds_test_agg_mean, on='name', how='inner')
 
+        # Calculating deltas
         compounds_merge['delta_s_prime'] = compounds_merge['ref_pooled_s_prime'] - compounds_merge['test_pooled_s_prime']
         compounds_merge['delta_auc'] = compounds_merge['ref_pooled_auc'] - compounds_merge['test_pooled_auc']
         compounds_merge['delta_ec50'] = compounds_merge['ref_pooled_ec50'] - compounds_merge['test_pooled_ec50']
 
+        # Additional calculations for median differences
+        compounds_merge['delta_s_prime_median'] = compounds_merge['ref_median_s_prime'] - compounds_merge['test_median_s_prime']
+
+        # Calculate p-value using Mann-Whitney U test
+        p_values = []
+        for index, row in compounds_merge.iterrows():
+            group1 = df_ref_group[df_ref_group['name'] == row['name']]['S\'']
+            group2 = df_test_group[df_test_group['name'] == row['name']]['S\'']
+            stat, p_value = mannwhitneyu(group1, group2, alternative='two-sided')
+            p_values.append(p_value)
+
+        compounds_merge['p_val_median_man_whit'] = p_values
+
+        # Calculate modified Z-scores using MAD for reference and test groups
+        if not df_ref_group.empty:
+            # Calculate modified Z-scores for the reference group
+            ref_z_scores = calculate_modified_z_score(df_ref_group, 'S\'')
+            # Map the modified Z-scores back to the compounds
+            ref_z_score_map = df_ref_group.groupby('name').apply(lambda x: calculate_modified_z_score(x, 'S\'')).reset_index(name='ref_modified_z')
+            compounds_merge = compounds_merge.merge(ref_z_score_map, on='name', how='left')
+        else:
+            compounds_merge['ref_modified_z'] = None  # Handle empty case
+
+        if not df_test_group.empty:
+            # Calculate modified Z-scores for the test group
+            test_z_scores = calculate_modified_z_score(df_test_group, 'S\'')
+            # Map the modified Z-scores back to the compounds
+            test_z_score_map = df_test_group.groupby('name').apply(lambda x: calculate_modified_z_score(x, 'S\'')).reset_index(name='test_modified_z')
+            compounds_merge = compounds_merge.merge(test_z_score_map, on='name', how='left')
+        else:
+            compounds_merge['test_modified_z'] = None  # Handle empty case
+
+        # Sensitivity calculations
         compounds_merge['Sensitivity Score'] = np.where(compounds_merge['delta_s_prime'] < -0.5, -1,
-                                                np.where(compounds_merge['delta_s_prime'] > 0.5, 1, 0))
+                                                        np.where(compounds_merge['delta_s_prime'] > 0.5, 1, 0))
 
         compounds_merge['Sensitivity'] = np.where(compounds_merge['delta_s_prime'] < -0.5, 'Sensitive',
-                                                np.where(compounds_merge['delta_s_prime'] > 0.5, 'Resistent', 'Equivocal'))
+                                                        np.where(compounds_merge['delta_s_prime'] > 0.5, 'Resistant', 'Equivocal'))
 
-        df_drug_moa = dm_merged[["name","moa","target", "group_sub"]]
+        # Merging drug MOA information
+        df_drug_moa = dm_merged[["name", "moa", "target", "group_sub"]]
         df_drug_moa_unique = df_drug_moa.drop_duplicates(subset=['name'])
         compounds_merge = pd.merge(compounds_merge, df_drug_moa_unique, on='name', how='left')
-        
+
+        # Formatting MOA
         def format_to_array(x):
             if isinstance(x, str):
                 return x.split(",")
             return [str(x)]
 
         compounds_merge['moa'] = compounds_merge['moa'].apply(format_to_array)
+
         return compounds_merge
     
     compounds_merge = compute_compounds_test_agg(active_gene)
@@ -221,7 +302,8 @@ if not dm_merged.empty:
                 label="Download data as CSV",
                 data=compounds_merge.to_csv().encode('utf-8'),
                 file_name='delta_s_prime.csv',
-                mime='text/csv'
+                mime='text/csv',
+                key='download-compounds-merged'
             )
 
     with st.expander("Target Grouping"):
