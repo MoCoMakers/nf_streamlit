@@ -256,8 +256,6 @@ if not dm_merged.empty:
         # Calculate modified Z-scores using MAD for reference and test groups
         if not df_ref_group.empty:
             # Calculate modified Z-scores for the reference group
-            ref_z_scores = calculate_modified_z_score(df_ref_group, 'S\'')
-            # Map the modified Z-scores back to the compounds
             ref_z_score_map = df_ref_group.groupby('name').apply(lambda x: calculate_modified_z_score(x, 'S\'')).reset_index(name='ref_modified_z')
             compounds_merge = compounds_merge.merge(ref_z_score_map, on='name', how='left')
         else:
@@ -265,8 +263,6 @@ if not dm_merged.empty:
 
         if not df_test_group.empty:
             # Calculate modified Z-scores for the test group
-            test_z_scores = calculate_modified_z_score(df_test_group, 'S\'')
-            # Map the modified Z-scores back to the compounds
             test_z_score_map = df_test_group.groupby('name').apply(lambda x: calculate_modified_z_score(x, 'S\'')).reset_index(name='test_modified_z')
             compounds_merge = compounds_merge.merge(test_z_score_map, on='name', how='left')
         else:
@@ -291,6 +287,15 @@ if not dm_merged.empty:
             return [str(x)]
 
         compounds_merge['moa'] = compounds_merge['moa'].apply(format_to_array)
+
+        # Re-aggregate the results by name to ensure correct output
+        compounds_merge = compounds_merge.groupby('name').agg(
+            delta_s_prime=('delta_s_prime', 'mean'),
+            ref_modified_z=('ref_modified_z', 'mean'),
+            test_modified_z=('test_modified_z', 'mean'),
+            p_val_median_man_whit=('p_val_median_man_whit', 'mean'),
+            Sensitivity=('Sensitivity', lambda x: x.mode()[0] if not x.mode().empty else None)
+        ).reset_index()
 
         return compounds_merge
     
