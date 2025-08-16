@@ -29,8 +29,8 @@ with st.sidebar:
     st.write("")
     st.write("")
     
-    st.page_link("pages/Delta_S_Prime.py", label="Delta S Prime", icon="📊")
-    st.page_link("pages/MIPE_3_0.py", label="MIPE 3.0", icon="📈")
+    st.page_link("pages/Delta_S_Prime.py", label="Delta S Prime for DepMap", icon="📊")
+    st.page_link("pages/MIPE_3_0.py", label="Delta S on MIPE 3.0 for NF1 Cell Lines", icon="📈")
     
     st.write("")
     st.write("")
