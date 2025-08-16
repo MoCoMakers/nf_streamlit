@@ -8,13 +8,17 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import streamlit as st
 
-from views.signed_in_landing import landing_page
+# Remove authentication - no longer needed
+# from views.signed_in_landing import landing_page
 
 #landing_page()
 
 # from views.data import compute_ranked_delta_s_prime, display_ranked_delta_s_prime_for_download
 
 "# ΔS'"
+
+# Streamlit automatically provides page navigation in the sidebar
+
 
 def fetch_df(file, **kwargs):
     data_path = Path(file)
