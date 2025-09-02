@@ -1,0 +1,84 @@
+sources:
+  postgres-readonly:
+    kind: postgres
+    host: your-remote-postgres-host.com  # Replace with your remote PostgreSQL host
+    port: 5432
+    database: data_warehouse
+    user: compbio_dw_readonly # Replace with your remote user
+    password: PASSWORD_HERE  # Replace with your remote password
+    sslmode: require  # Required for remote connections
+
+tools:
+  list-tables:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: List all table names in the public schema.
+    statement: |
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public';
+
+  describe-table-columns:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Describe columns of a given table.
+    parameters:
+      - name: table_name
+        type: string
+        description: Name of the table to describe.
+    statement: |
+      SELECT 
+        column_name,
+        data_type,
+        character_maximum_length,
+        column_default,
+        is_nullable
+      FROM information_schema.columns
+      WHERE table_name = $1;
+
+  get-delta-sprime:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get pooled delta S′ values.
+    statement: SELECT * FROM public.fnl_sprime_pooled_delta_sprime;
+
+  get-mutation-counts:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get cell line to gene mutation counts.
+    statement: SELECT * FROM public.im_sprime_s_prime_with_mutations;
+
+  get-drug-response:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get raw cell line to drug response data.
+    statement: SELECT * FROM public.im_dep_raw_secondary_dose_curve;
+
+  get-damaging-mutations:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get raw damaging mutation data.
+    statement: SELECT * FROM public.im_dep_sprime_damaging_mutations;
+
+  get-single-s-values:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get raw single S values.
+    statement: SELECT * FROM public.im_sprime_solved_s_prime;
+
+  get-gene-translation:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Translate gene IDs to gene names.
+    statement: SELECT * FROM public.im_omics_genes;
+
+toolsets:
+  sprime_analysis:
+    - list-tables
+    - describe-table-columns
+    - get-delta-sprime
+    - get-mutation-counts
+    - get-drug-response
+    - get-damaging-mutations
+    - get-single-s-values
+    - get-gene-translation
