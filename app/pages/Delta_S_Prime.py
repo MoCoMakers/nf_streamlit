@@ -30,8 +30,6 @@ def log_step(step_name, data=None):
     if data is not None:
         logger.info(f"Data info: {data}")
     st.write(f"🔍 **Debug Log**: {step_name} - {datetime.now().strftime('%H:%M:%S')}")
-    # Force UI update
-    st.rerun() if hasattr(st, 'rerun') else None
 
 # Remove authentication - no longer needed
 # from views.signed_in_landing import landing_page
@@ -167,8 +165,6 @@ except Exception as e:
 # Display the table
 log_step("S_TABLE_START", f"Displaying S' table - Shape: {df.shape}")
 
-# Add a small delay to let UI catch up
-time.sleep(0.1)
 st.write("⏳ **UI Check**: About to display dataframe...")
 
 try:
@@ -185,8 +181,6 @@ try:
     st.dataframe(df)
     log_step("AFTER_DATAFRAME", "st.dataframe() completed successfully")
     
-    # Add another delay
-    time.sleep(0.1)
     st.write("✅ **UI Check**: Dataframe displayed, checking download button...")
     
     # Skip download button for large datasets to prevent WebSocket issues
@@ -216,7 +210,6 @@ except Exception as e:
 
 # UI Checkpoint after S' Table
 st.write("🔍 **UI Checkpoint**: Moving to Damaging Mutations section...")
-time.sleep(0.1)
 log_step("BEFORE_DAMAGING_MUTATIONS", "About to start Damaging Mutations section")
 
 st.header("Damaging Mutations")
