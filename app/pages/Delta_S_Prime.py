@@ -5,6 +5,7 @@ from scipy.stats import mannwhitneyu
 import logging
 import sys
 import traceback
+import time
 from datetime import datetime
 
 import plotly.graph_objects as go
@@ -29,6 +30,8 @@ def log_step(step_name, data=None):
     if data is not None:
         logger.info(f"Data info: {data}")
     st.write(f"🔍 **Debug Log**: {step_name} - {datetime.now().strftime('%H:%M:%S')}")
+    # Force UI update
+    st.rerun() if hasattr(st, 'rerun') else None
 
 # Remove authentication - no longer needed
 # from views.signed_in_landing import landing_page
@@ -163,14 +166,34 @@ except Exception as e:
 "## S' Table"
 # Display the table
 log_step("S_TABLE_START", f"Displaying S' table - Shape: {df.shape}")
+
+# Add a small delay to let UI catch up
+time.sleep(0.1)
+st.write("⏳ **UI Check**: About to display dataframe...")
+
 try:
+    log_step("BEFORE_DATAFRAME", "About to call st.dataframe()")
+    
+    # Test with a small subset first to isolate the issue
+    st.write("🧪 **Testing with small subset first...**")
+    test_df = df.head(100)
+    st.dataframe(test_df)
+    st.write("✅ **Small subset displayed successfully**")
+    
+    # Now try the full dataframe
+    st.write("🧪 **Now trying full dataframe...**")
     st.dataframe(df)
-    log_step("S_TABLE_DISPLAY_COMPLETE", "S' table displayed successfully")
+    log_step("AFTER_DATAFRAME", "st.dataframe() completed successfully")
+    
+    # Add another delay
+    time.sleep(0.1)
+    st.write("✅ **UI Check**: Dataframe displayed, checking download button...")
     
     # Skip download button for large datasets to prevent WebSocket issues
     if len(df) > 100000:
         st.warning("⚠️ **Large Dataset**: Download button disabled for datasets > 100K rows to prevent connection issues.")
         st.info("💡 **Alternative**: Use the data filtering options below to work with smaller subsets.")
+        log_step("DOWNLOAD_SKIPPED", "Download button skipped for large dataset")
     else:
         log_step("DOWNLOAD_BUTTON_START", "Creating download button")
         st.download_button(
@@ -180,6 +203,10 @@ try:
                         mime='text/csv'
                     )
         log_step("DOWNLOAD_BUTTON_COMPLETE", "Download button created")
+    
+    st.write("✅ **UI Check**: S' Table section completed successfully")
+    log_step("S_TABLE_SECTION_COMPLETE", "Entire S' Table section completed")
+    
 except Exception as e:
     logger.error(f"S_TABLE_ERROR: {str(e)}")
     logger.error(f"Traceback: {traceback.format_exc()}")
@@ -187,12 +214,18 @@ except Exception as e:
 
 # Add a filter (dropdown on the column 'name') that updates a dataframe table view.
 
+# UI Checkpoint after S' Table
+st.write("🔍 **UI Checkpoint**: Moving to Damaging Mutations section...")
+time.sleep(0.1)
+log_step("BEFORE_DAMAGING_MUTATIONS", "About to start Damaging Mutations section")
+
 st.header("Damaging Mutations")
 
 log_step("STUDIES_SELECTION_START", "Creating studies multiselect")
 try:
     studies = st.multiselect(label='Choose studies included', options=['HTS002', 'MTS005', 'MTS006', 'MTS010',  'HTSwithMTS010_Overlayed'], default=['HTSwithMTS010_Overlayed'])
     log_step("STUDIES_SELECTION_COMPLETE", f"Studies selected: {studies}")
+    st.write("✅ **UI Check**: Studies selection completed")
 except Exception as e:
     logger.error(f"STUDIES_SELECTION_ERROR: {str(e)}")
     st.error(f"Error creating studies selection: {str(e)}")
