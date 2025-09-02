@@ -29,29 +29,9 @@ A sister repo to this project is: [https://github.com/MoCoMakers/hack4nf-2022](h
 3. **Git** - [Download Git](https://git-scm.com/downloads)
 4. **Python 3.9+** - [Download Python](https://www.python.org/downloads/)
 
-### **Cursor IDE Setup**
-1. **Install Cursor**:
-   ```bash
-   # Download from https://cursor.sh
-   # Follow installation instructions for your OS
-   ```
 
-2. **Configure MCP in Cursor**:
-   - Open Cursor Settings (Ctrl+,)
-   - Search for "MCP"
-   - Add MCP server configuration:
-   ```json
-   {
-             "mcpServers": {
-          "datawarehouse-toolbox": {
-             "command": "docker",
-             "args": ["exec", "-i", "mcp-toolbox", "/toolbox", "--stdio"]
-          }
-       }
-   }
-   ```
 
-## 🏗️ **Quick Start with Database + MCP**
+## 🏗️ **Quick Start**
 
 ### **1. Clone and Setup**
 ```bash
@@ -59,108 +39,7 @@ git clone https://github.com/MoCoMakers/nf_streamlit.git
 cd nf_streamlit
 ```
 
-### **2. Configure Remote Database Connection**
-```bash
-# Update tools.yaml with your remote PostgreSQL credentials
-# Edit the host, user, password, and database name
-nano tools.yaml
-```
-
-### **3. Launch MCP Toolbox**
-```bash
-# Create named MCP Toolbox container with HTTP mode
-docker run -d --name mcp-toolbox -p 5000:5000 -v ./tools.yaml:/app/tools.yaml us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest --tools-file /app/tools.yaml
-
-# Verify MCP Toolbox container is running
-docker ps | grep mcp-toolbox
-```
-
-### **4. Verify MCP Connection**
-After restarting Cursor, you should see the MCP server connected successfully in the settings:
-
-![Successful MCP Connection](successful_mcp.png)
-*Note: Place the `successful_mcp.png` screenshot in the project root directory*
-
-**What you should see:**
-- ✅ **datawarehouse-toolbox** with a green status dot
-- ✅ **8 tools enabled** showing all your database tools:
-  - `get-delta-sprime`
-  - `get-mutation-counts` 
-  - `get-drug-response`
-  - `get-damaging-mutations`
-  - `get-single-s-values`
-  - `get-gene-translation`
-  - `list-tables`
-  - `describe-table-columns`
-- ✅ **Green toggle switch** indicating the MCP is active
-
-## 🎯 **Sample MCP Prompts**
-
-Once your MCP connection is established, you can use these sample prompts in Cursor to explore your database:
-
-### **Database Exploration**
-```
-Use the MCP Tool to list all tables in the database and show me the structure of the main DepMap tables
-```
-
-```
-Describe the columns and data types for the im_dep_raw_secondary_dose_curve table
-```
-
-```
-Show me the schema for the fnl_sprime_pooled_delta_sprime table and explain what each column represents
-```
-
-### **Data Analysis Queries**
-```
-Use the MCP Tool to get drug response data for the top 10 most effective drugs based on AUC values
-```
-
-```
-Get mutation counts for cell lines that have high sensitivity scores in the delta S prime results
-```
-
-```
-Show me the gene translation data for genes with significant delta S prime values (p < 0.05)
-```
-
-### **Performance Testing**
-```
-Use the MCP Tool to get a sample of 1000 rows from the dose response curve data to test query performance
-```
-
-```
-Get damaging mutations data for a specific gene ID and show me the mutation patterns
-```
-
-### **Migration Validation**
-```
-Compare the data structure between the old CSV files and the new database tables using MCP tools
-```
-
-```
-Verify that all expected columns from the original DepMap CSV are present in the database schema
-```
-
-### **Advanced Queries**
-```
-Use MCP tools to find drugs with both high AUC and low EC50 values, indicating high potency and effectiveness
-```
-
-```
-Get the pooled delta S prime values for genes that show significant differences between reference and test conditions
-```
-
-### **Troubleshooting**
-```
-Use MCP tools to check if the database connection is working and list all available tables
-```
-
-```
-Test the MCP Tool connection by getting a small sample of data from each major table
-```
-
-### **5. Launch Streamlit Application**
+### **2. Launch Streamlit Application**
 ```bash
 # Run Streamlit locally
 cd app
@@ -168,9 +47,8 @@ pip install -r requirements.txt
 streamlit run Home.py
 ```
 
-### **6. Access the Application**
+### **3. Access the Application**
 - **Streamlit App**: http://localhost:8501
-- **MCP Toolbox API**: http://localhost:5000
 - **Remote PostgreSQL**: Your configured remote host
 
 ## 📊 **Performance Comparison**
@@ -184,189 +62,43 @@ streamlit run Home.py
 
 ## 🔧 **Advanced Configuration**
 
-### **MCP Toolbox Configuration**
-The MCP Toolbox is configured via `tools.yaml`:
-
-```yaml
-sources:
-  postgres-readonly:
-    kind: postgres
-    host: your-remote-postgres-host.com  # Your remote PostgreSQL host
-    port: 5432
-    database: depmap_db
-    user: depmap_user
-    password: your_remote_password
-
-tools:
-  get-drug-response-data:
-    kind: postgres-sql
-    source: postgres-readonly
-    description: Get drug response data with filtering
-    parameters:
-      - name: limit
-        type: integer
-        default: 10000
-    statement: |
-      SELECT * FROM im_dep_raw_secondary_dose_curve 
-      ORDER BY name LIMIT $1;
-```
-
 ### **Database Schema**
-```sql
--- Main drug response table
-CREATE TABLE im_dep_raw_secondary_dose_curve (
-    id SERIAL PRIMARY KEY,
-    ccle_name VARCHAR(255),
-    screen_id VARCHAR(50),
-    upper_limit DECIMAL,
-    lower_limit DECIMAL,
-    auc DECIMAL,
-    ec50 DECIMAL,
-    name VARCHAR(255),
-    moa TEXT,
-    target TEXT,
-    row_name VARCHAR(255)
-);
+The application connects to a PostgreSQL database with the following key tables:
 
--- Indexes for performance
-CREATE INDEX idx_dose_curve_name ON im_dep_raw_secondary_dose_curve(name);
-CREATE INDEX idx_dose_curve_ccle ON im_dep_raw_secondary_dose_curve(ccle_name);
-```
+- **`im_dep_raw_secondary_dose_curve`** - Main drug response data
+- **`fnl_sprime_pooled_delta_sprime`** - Final delta S' calculations
+- **`im_dep_sprime_damaging_mutations`** - Mutation data
+- **`im_omics_genes`** - Gene information
 
-## 🐳 **Simplified Docker Setup**
+For detailed schema information and MCP integration, see **[MCP_INTEGRATION.md](MCP_INTEGRATION.md)**.
 
-### **Single Container for MCP Toolbox**
-```bash
-# Create named MCP Toolbox container with HTTP mode
-docker run -d --name mcp-toolbox -p 5000:5000 -v ./tools.yaml:/app/tools.yaml us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest --tools-file /app/tools.yaml
+## 🐳 **Docker Setup**
 
-# Verify container is running
-docker ps | grep mcp-toolbox
-```
+For MCP Toolbox setup and management, see the **[MCP Integration Guide](MCP_INTEGRATION.md)** which includes:
 
-### **Architecture Benefits**
-- ✅ **Simpler Setup**: Only one Docker container needed
-- ✅ **Remote Database**: No local PostgreSQL required
-- ✅ **Easy Scaling**: MCP Toolbox can be deployed anywhere
-- ✅ **Cost Effective**: No local database maintenance
-
-### **MCP Toolbox Management Scripts**
-We provide convenient scripts to manage the MCP Toolbox container:
-
-**Linux/macOS:**
-```bash
-# Make script executable
-chmod +x scripts/mcp-toolbox.sh
-
-# Start MCP Toolbox
-./scripts/mcp-toolbox.sh start
-
-# Check status
-./scripts/mcp-toolbox.sh status
-
-# View logs
-./scripts/mcp-toolbox.sh logs
-
-# Restart if needed
-./scripts/mcp-toolbox.sh restart
-```
-
-**Windows:**
-```cmd
-# Start MCP Toolbox
-scripts\mcp-toolbox.bat start
-
-# Check status
-scripts\mcp-toolbox.bat status
-
-# View logs
-scripts\mcp-toolbox.bat logs
-
-# Restart if needed
-scripts\mcp-toolbox.bat restart
-```
-
-## 🔍 **MCP Integration in Code**
-
-### **Before (File-based)**
-```python
-def fetch_df(file, **kwargs):
-    return pd.read_csv(file, **kwargs)
-
-# Loads 1.3M rows synchronously - causes UI freeze
-df = fetch_df("data/DepMap/Prism19Q4/secondary-screen-dose-response-curve-parameters.csv")
-```
-
-### **After (MCP-based)**
-```python
-from mcp_toolbox_client import MCPClient
-
-@st.cache_data(ttl=300)  # Cache for 5 minutes
-def get_drug_response_data(limit=10000):
-    client = MCPClient("http://localhost:5000")
-    result = client.call_tool("get-drug-response-data", {"limit": limit})
-    return pd.DataFrame(result)
-
-# Loads data asynchronously with caching - responsive UI
-df = get_drug_response_data()
-```
+- Docker container configuration
+- Management scripts for Linux/macOS and Windows
+- Troubleshooting and monitoring
 
 ## 🚨 **Troubleshooting**
 
 ### **Common Issues**
 
-1. **MCP Toolbox Connection Failed**:
-   ```bash
-   # Check if MCP Toolbox container is running
-   docker ps | grep mcp-toolbox
-   
-   # Check logs
-   docker logs mcp-toolbox
-   
-   # Restart MCP Toolbox
-   docker stop mcp-toolbox
-   docker rm mcp-toolbox
-   docker run -d --name mcp-toolbox -p 5000:5000 -v ./tools.yaml:/app/tools.yaml us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest --tools-file /app/tools.yaml
-   ```
-
-2. **Database Connection Issues**:
+1. **Database Connection Issues**:
    ```bash
    # Test remote database connection
-   psql -h your-remote-postgres-host.com -U depmap_user -d depmap_db -c "SELECT 1;"
+   psql -h your-remote-postgres-host.com -U compbio_dw_readonly -d data_warehouse -c "SELECT 1;"
    
    # Check tools.yaml configuration
    cat tools.yaml
    ```
 
-3. **MCP Toolbox Health Check**:
-   ```bash
-   # Check container status
-   docker ps | grep mcp-toolbox
-   
-   # Check container logs
-   docker logs mcp-toolbox
-   
-   # Test MCP connection (if you have an MCP client)
-   # The MCP Toolbox uses STDIO mode, not HTTP endpoints
-   ```
+2. **Streamlit Application Issues**:
+   - Ensure all dependencies are installed: `pip install -r requirements.txt`
+   - Check Python version compatibility (3.9+)
+   - Verify database credentials in `tools.yaml`
 
-4. **Cursor MCP Extension Issues**:
-   - Restart Cursor IDE
-   - Check MCP server configuration in settings
-   - Verify Docker containers are running
-
-### **Performance Monitoring**
-```bash
-# Monitor MCP Toolbox container
-docker ps | grep mcp-toolbox
-docker logs mcp-toolbox
-
-# Monitor container resource usage
-docker stats mcp-toolbox
-
-# Check container health
-docker inspect mcp-toolbox --format='{{.State.Health.Status}}'
-```
+For MCP-specific troubleshooting, see the **[MCP Integration Guide](MCP_INTEGRATION.md)**.
 
 ## 📚 **Legacy Setup (File-based)**
 
@@ -517,11 +249,26 @@ This project uses the following technologies:
 - **Streamlit** <small>([Custom container](https://github.com/MoCoMakers/nf_streamlit/blob/developer/environment/.devcontainer/Dockerfile) built from [Python base](https://hub.docker.com/_/python))</small> - Web application framework
 - **Git** <small>([download here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))</small> - Version control
 
+For detailed setup instructions for MCP integration, see **[MCP_INTEGRATION.md](MCP_INTEGRATION.md)**.
+
 # Troubleshooting for Mac users
 If you face errors upon running the `pip install -r requirements.txt`, the following [link](https://stackoverflow.com/questions/76876823/cannot-install-mysqlclient-on-macos) may be of help.
 
+## 🔍 **MCP Integration for Database Introspection (Optional)**
+
+For advanced database exploration and analysis capabilities, see the dedicated **[MCP Integration Guide](MCP_INTEGRATION.md)** which covers:
+
+- **MCP Toolbox Setup** - Docker container configuration
+- **Cursor IDE Integration** - MCP server configuration
+- **Database Introspection** - Sample prompts and queries
+- **Troubleshooting** - Common issues and solutions
+
+The MCP integration provides powerful tools for exploring your data warehouse structure and validating data migrations.
+
+
 ## 📖 **Additional Resources**
 
+- **[MCP_INTEGRATION.md](MCP_INTEGRATION.md)** - Complete MCP setup and usage guide
 - **[MIGRATION_STRATEGY.md](MIGRATION_STRATEGY.md)** - Detailed migration plan and technical specifications
 - **[MCP Toolbox Documentation](https://github.com/googleapis/genai-toolbox)** - Official MCP Toolbox documentation
 - **[Cursor IDE Documentation](https://cursor.sh/docs)** - Cursor IDE setup and usage guide

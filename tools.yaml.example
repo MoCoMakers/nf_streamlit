@@ -6,7 +6,6 @@ sources:
     database: data_warehouse
     user: compbio_dw_readonly # Replace with your remote user
     password: PASSWORD_HERE  # Replace with your remote password
-    sslmode: require  # Required for remote connections
 
 tools:
   list-tables:
