@@ -167,14 +167,19 @@ try:
     st.dataframe(df)
     log_step("S_TABLE_DISPLAY_COMPLETE", "S' table displayed successfully")
     
-    log_step("DOWNLOAD_BUTTON_START", "Creating download button")
-    st.download_button(
-                    label="Download data as CSV",
-                    data=df.to_csv().encode('utf-8'),
-                    file_name='delta_s_prime.csv',
-                    mime='text/csv'
-                )
-    log_step("DOWNLOAD_BUTTON_COMPLETE", "Download button created")
+    # Skip download button for large datasets to prevent WebSocket issues
+    if len(df) > 100000:
+        st.warning("⚠️ **Large Dataset**: Download button disabled for datasets > 100K rows to prevent connection issues.")
+        st.info("💡 **Alternative**: Use the data filtering options below to work with smaller subsets.")
+    else:
+        log_step("DOWNLOAD_BUTTON_START", "Creating download button")
+        st.download_button(
+                        label="Download data as CSV",
+                        data=df.to_csv().encode('utf-8'),
+                        file_name='delta_s_prime.csv',
+                        mime='text/csv'
+                    )
+        log_step("DOWNLOAD_BUTTON_COMPLETE", "Download button created")
 except Exception as e:
     logger.error(f"S_TABLE_ERROR: {str(e)}")
     logger.error(f"Traceback: {traceback.format_exc()}")
@@ -371,12 +376,17 @@ except Exception as e:
     st.error(f"Error displaying merged data: {str(e)}")
 
 if not dm_merged.empty:
-    st.download_button(
-                label="Download data as CSV",
-                data=dm_merged.to_csv().encode('utf-8'),
-                file_name='s_prime.csv',
-                mime='text/csv'
-            )
+    # Skip download button for large filtered datasets
+    if len(dm_merged) > 50000:
+        st.warning("⚠️ **Large Filtered Dataset**: Download button disabled for datasets > 50K rows.")
+        st.info("💡 **Alternative**: Use the compound filtering options below to work with smaller subsets.")
+    else:
+        st.download_button(
+                    label="Download data as CSV",
+                    data=dm_merged.to_csv().encode('utf-8'),
+                    file_name='s_prime.csv',
+                    mime='text/csv'
+                )
 
     st.header("Pooled Delta S' for Selected Values")
 
@@ -489,13 +499,18 @@ if not dm_merged.empty:
 
     st.write(compounds_merge)
 
-    st.download_button(
-                label="Download data as CSV",
-                data=compounds_merge.to_csv().encode('utf-8'),
-                file_name='delta_s_prime.csv',
-                mime='text/csv',
-                key='download-compounds-merged'
-            )
+    # Skip download button for large compound datasets
+    if len(compounds_merge) > 10000:
+        st.warning("⚠️ **Large Compound Dataset**: Download button disabled for datasets > 10K rows.")
+        st.info("💡 **Alternative**: Use the filtering options below to work with smaller subsets.")
+    else:
+        st.download_button(
+                    label="Download data as CSV",
+                    data=compounds_merge.to_csv().encode('utf-8'),
+                    file_name='delta_s_prime.csv',
+                    mime='text/csv',
+                    key='download-compounds-merged'
+                )
 
     with st.expander("Target Grouping"):
         st.write(cmp_trgt_grp)

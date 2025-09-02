@@ -1,6 +1,11 @@
 [client]
 showSidebarNavigation = false
 
-
 [server]
-maxMessageSize = 600
+maxMessageSize = 2000
+maxUploadSize = 2000
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+gatherUsageStats = false
