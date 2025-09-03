@@ -62,7 +62,7 @@ tools:
   get-single-s-values:
     kind: postgres-sql
     source: postgres-readonly
-    description: Get raw single S values.
+    description: Get single S values.
     statement: SELECT * FROM public.im_sprime_solved_s_prime;
 
   get-gene-translation:
@@ -72,7 +72,7 @@ tools:
     statement: SELECT * FROM public.im_omics_genes;
 
 toolsets:
-  sprime_analysis:
+  tools:
     - list-tables
     - describe-table-columns
     - get-delta-sprime
