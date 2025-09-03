@@ -21,6 +21,34 @@ Migrate the Delta S Prime page from file-based data loading to PostgreSQL databa
 3. **WebSocket Limits**: Large data transfers exceed connection limits
 4. **No Caching**: Data reloaded on every page refresh
 
+## 🔍 **Database Schema Discovery**
+
+### **Available Tables in Data Warehouse**
+The data warehouse already contains optimized, pre-processed tables that can replace the current CSV-based approach:
+
+1. **`im_dep_raw_secondary_dose_curve`** - Raw drug response data (equivalent to secondary-screen-dose-response-curve-parameters.csv)
+2. **`im_dep_sprime_damaging_mutations`** - Mutation data (equivalent to OmicsSomaticMutationsMatrixDamaging.csv)
+3. **`im_omics_genes`** - Gene reference data (equivalent to Manual_ontology.csv)
+4. **`im_sprime_solved_s_prime`** - Pre-calculated S' values with derived metrics
+5. **`fnl_sprime_pooled_delta_sprime`** - Pre-aggregated delta S' results
+6. **`im_sprime_s_prime_with_mutations`** - S' values combined with mutation status
+
+### **Key Advantages of Existing Database Structure**
+- **Pre-calculated Metrics**: S' values, EFF, EFF*100, EFF/EC50 already computed
+- **Pre-aggregated Results**: Delta S' calculations already performed
+- **Optimized Schema**: Proper indexing and data types
+- **Reduced Computation**: No need for real-time calculations in UI
+- **Better Performance**: Database queries vs. CSV file processing
+
+### **Data Mapping Analysis**
+| Current CSV File | Database Table | Status |
+|------------------|----------------|---------|
+| `secondary-screen-dose-response-curve-parameters.csv` | `im_dep_raw_secondary_dose_curve` | ✅ Direct mapping |
+| `OmicsSomaticMutationsMatrixDamaging.csv` | `im_dep_sprime_damaging_mutations` | ✅ Serialized format |
+| `Manual_ontology.csv` | `im_omics_genes` | ✅ Direct mapping |
+| **Calculated Fields** | `im_sprime_solved_s_prime` | ✅ Pre-calculated |
+| **Aggregated Results** | `fnl_sprime_pooled_delta_sprime` | ✅ Pre-aggregated |
+
 ## 🏗️ **Target Architecture**
 
 ### **PostgreSQL + MCP Integration**
@@ -42,21 +70,21 @@ AFTER:  PostgreSQL → MCP Toolbox → Streamlit UI
 
 ## 📋 **Migration Plan**
 
-### **Phase 1: Database Setup & Data Import**
-1. **PostgreSQL Schema Design**
-   - Create optimized tables with proper indexing
-   - Implement partitioning for large datasets
-   - Set up foreign key relationships
-
-2. **Data Import Pipeline**
-   - Import CSV files into PostgreSQL
-   - Data validation and cleaning
-   - Performance optimization
-
-3. **MCP Toolbox Configuration**
+### **Phase 1: MCP Toolbox Configuration & Tool Creation**
+1. **MCP Toolbox Setup**
    - Deploy MCP Toolbox Docker container
    - Configure `tools.yaml` with database connections
-   - Set up tool definitions for each data access pattern
+   - Create exploration tools for data inspection
+
+2. **Tool Definitions for Data Access**
+   - Create limited exploration tools (LIMIT 100) for initial inspection
+   - Define tools for each data access pattern
+   - Implement caching and pagination strategies
+
+3. **Data Validation & Mapping**
+   - Validate existing database tables match CSV structure
+   - Test data integrity and completeness
+   - Verify pre-calculated values match current calculations
 
 ### **Phase 2: Code Migration**
 1. **Replace File Loading Functions**
@@ -104,61 +132,36 @@ AFTER:  PostgreSQL → MCP Toolbox → Streamlit UI
 
 ## 🛠️ **Technical Implementation**
 
-### **Database Schema Design**
+### **Existing Database Schema (Already Implemented)**
+The database already contains optimized tables with proper indexing:
+
 ```sql
--- Main drug response data
-CREATE TABLE im_dep_raw_secondary_dose_curve (
-    id SERIAL PRIMARY KEY,
-    ccle_name VARCHAR(255),
-    screen_id VARCHAR(50),
-    upper_limit DECIMAL,
-    lower_limit DECIMAL,
-    auc DECIMAL,
-    ec50 DECIMAL,
-    name VARCHAR(255),
-    moa TEXT,
-    target TEXT,
-    row_name VARCHAR(255),
-    created_at TIMESTAMP DEFAULT NOW()
-);
+-- Main drug response data (already exists)
+-- im_dep_raw_secondary_dose_curve: 20 columns including all CSV fields
+-- im_sprime_solved_s_prime: Pre-calculated S' values with derived metrics
+-- im_dep_sprime_damaging_mutations: Serialized mutation data
+-- im_omics_genes: Gene reference data
+-- fnl_sprime_pooled_delta_sprime: Pre-aggregated results
 
--- Damaging mutations data
-CREATE TABLE im_dep_sprime_damaging_mutations (
-    id SERIAL PRIMARY KEY,
-    cell_line VARCHAR(255),
-    gene_id VARCHAR(50),
-    mutation_status INTEGER,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
--- Gene ontology reference
-CREATE TABLE im_omics_genes (
-    id SERIAL PRIMARY KEY,
-    gene_id VARCHAR(50),
-    gene_name VARCHAR(255),
-    group_name VARCHAR(255),
-    sub_group VARCHAR(255),
-    created_at TIMESTAMP DEFAULT NOW()
-);
-
--- Indexes for performance
-CREATE INDEX idx_dose_curve_name ON im_dep_raw_secondary_dose_curve(name);
-CREATE INDEX idx_dose_curve_ccle ON im_dep_raw_secondary_dose_curve(ccle_name);
-CREATE INDEX idx_mutations_gene ON im_dep_sprime_damaging_mutations(gene_id);
+-- Key advantages:
+-- ✅ Pre-calculated EFF, EFF*100, EFF/EC50, S' values
+-- ✅ Pre-aggregated delta S' calculations
+-- ✅ Proper indexing and data types
+-- ✅ Optimized for query performance
 ```
 
-### **MCP Tool Definitions**
+### **Required MCP Tool Definitions**
 ```yaml
 tools:
-  get-drug-response-data:
+  explore-drug-response-data:
     kind: postgres-sql
     source: postgres-readonly
-    description: Get drug response data with optional filtering
+    description: Explore drug response data with limited results for inspection
     parameters:
       - name: limit
         type: integer
         description: Maximum number of rows to return
-        default: 10000
+        default: 100
       - name: compound_name
         type: string
         description: Filter by compound name (optional)
@@ -168,17 +171,53 @@ tools:
       ORDER BY name
       LIMIT $1;
 
-  get-damaging-mutations:
+  explore-s-prime-calculated:
     kind: postgres-sql
     source: postgres-readonly
-    description: Get damaging mutation data
-    statement: SELECT * FROM im_dep_sprime_damaging_mutations;
+    description: Explore pre-calculated S' values
+    parameters:
+      - name: limit
+        type: integer
+        description: Maximum number of rows to return
+        default: 100
+    statement: |
+      SELECT * FROM im_sprime_solved_s_prime 
+      ORDER BY name
+      LIMIT $1;
 
-  get-gene-ontology:
+  explore-damaging-mutations:
     kind: postgres-sql
     source: postgres-readonly
-    description: Get gene ontology reference data
+    description: Explore damaging mutation data
+    parameters:
+      - name: limit
+        type: integer
+        description: Maximum number of rows to return
+        default: 100
+    statement: |
+      SELECT * FROM im_dep_sprime_damaging_mutations 
+      ORDER BY cell_line
+      LIMIT $1;
+
+  explore-gene-ontology:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Explore gene ontology reference data
     statement: SELECT * FROM im_omics_genes;
+
+  explore-aggregated-results:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Explore pre-aggregated delta S' results
+    parameters:
+      - name: limit
+        type: integer
+        description: Maximum number of rows to return
+        default: 100
+    statement: |
+      SELECT * FROM fnl_sprime_pooled_delta_sprime 
+      ORDER BY name
+      LIMIT $1;
 ```
 
 ### **Streamlit Integration Code**
@@ -187,40 +226,61 @@ import streamlit as st
 from mcp_toolbox_client import MCPClient
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
-def get_drug_response_data(limit=10000, compound_name=None):
-    """Get drug response data via MCP"""
+def get_s_prime_data(limit=10000, compound_name=None):
+    """Get pre-calculated S' data via MCP"""
     client = MCPClient("http://localhost:5000")
     params = {"limit": limit}
     if compound_name:
         params["compound_name"] = compound_name
     
-    result = client.call_tool("get-drug-response-data", params)
+    result = client.call_tool("explore-s-prime-calculated", params)
     return pd.DataFrame(result)
 
 @st.cache_data(ttl=600)  # Cache for 10 minutes
-def get_damaging_mutations():
+def get_damaging_mutations(limit=10000):
     """Get damaging mutations via MCP"""
     client = MCPClient("http://localhost:5000")
-    result = client.call_tool("get-damaging-mutations")
+    result = client.call_tool("explore-damaging-mutations", {"limit": limit})
+    return pd.DataFrame(result)
+
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def get_gene_ontology():
+    """Get gene ontology reference data via MCP"""
+    client = MCPClient("http://localhost:5000")
+    result = client.call_tool("explore-gene-ontology")
+    return pd.DataFrame(result)
+
+@st.cache_data(ttl=300)  # Cache for 5 minutes
+def get_aggregated_results(limit=10000, gene_id=None, tissue=None):
+    """Get pre-aggregated delta S' results via MCP"""
+    client = MCPClient("http://localhost:5000")
+    params = {"limit": limit}
+    # Add filtering logic based on gene_id and tissue
+    result = client.call_tool("explore-aggregated-results", params)
     return pd.DataFrame(result)
 ```
 
 ## 📈 **Expected Performance Improvements**
 
 ### **Load Time Reduction**
-- **Before**: 2+ minutes for initial page load
-- **After**: <10 seconds for initial page load
-- **Improvement**: 90%+ reduction in load time
+- **Before**: 2+ minutes for initial page load (CSV processing + calculations)
+- **After**: <5 seconds for initial page load (pre-calculated data)
+- **Improvement**: 95%+ reduction in load time
 
 ### **Memory Usage**
-- **Before**: 2-4GB RAM usage with multiple large DataFrames
-- **After**: <500MB RAM usage with cached, paginated results
-- **Improvement**: 75%+ reduction in memory usage
+- **Before**: 2-4GB RAM usage with multiple large DataFrames + calculations
+- **After**: <200MB RAM usage with cached, pre-calculated results
+- **Improvement**: 90%+ reduction in memory usage
+
+### **Computation Reduction**
+- **Before**: Real-time S' calculations, EFF derivations, aggregations
+- **After**: Pre-calculated values, direct database queries
+- **Improvement**: 100% elimination of real-time calculations
 
 ### **User Experience**
-- **Before**: UI freezes during data loading
-- **After**: Responsive UI with progress indicators
-- **Improvement**: Seamless user experience
+- **Before**: UI freezes during data loading and calculations
+- **After**: Instant responsive UI with pre-calculated data
+- **Improvement**: Seamless, real-time user experience
 
 ## 🔧 **Deployment Architecture**
 
@@ -257,15 +317,16 @@ sources:
 
 ## 🚀 **Migration Timeline**
 
-### **Week 1: Infrastructure Setup**
-- Set up PostgreSQL database
-- Deploy MCP Toolbox Docker container
-- Configure database schema and indexes
+### **Week 1: Data Exploration & Tool Creation**
+- ✅ **COMPLETED**: Database schema discovery and analysis
+- ✅ **COMPLETED**: Data mapping analysis
+- **NEXT**: Create MCP exploration tools for data inspection
+- **NEXT**: Validate data integrity and completeness
 
-### **Week 2: Data Migration**
-- Import CSV data into PostgreSQL
-- Validate data integrity
-- Optimize database performance
+### **Week 2: Tool Development & Testing**
+- Create production MCP tools for data access
+- Test data retrieval and caching strategies
+- Validate pre-calculated values match current calculations
 
 ### **Week 3: Code Migration**
 - Replace file loading with MCP calls
@@ -276,6 +337,60 @@ sources:
 - Performance testing and optimization
 - User acceptance testing
 - Documentation updates
+
+## 🎯 **Immediate Next Steps**
+
+### **1. Create Exploration Tools**
+Add the following tools to `tools.yaml` for initial data inspection:
+
+```yaml
+tools:
+  explore-drug-response-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample drug response data for inspection
+    statement: |
+      SELECT name, moa, target, lower_limit, upper_limit, ec50, auc, ccle_name, row_name, screen_id
+      FROM im_dep_raw_secondary_dose_curve 
+      ORDER BY name
+      LIMIT 100;
+
+  explore-s-prime-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample pre-calculated S' data for inspection
+    statement: |
+      SELECT name, moa, target, lower_limit, upper_limit, ec50, auc, eff, eff_100, eff_ec50, s_prime
+      FROM im_sprime_solved_s_prime 
+      ORDER BY name
+      LIMIT 100;
+
+  explore-mutations-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample mutation data for inspection
+    statement: |
+      SELECT cell_line, gene_id, mutation_value
+      FROM im_dep_sprime_damaging_mutations 
+      ORDER BY cell_line
+      LIMIT 100;
+
+  explore-aggregated-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample aggregated results for inspection
+    statement: |
+      SELECT name, gene_id, delta_s_prime, sensitivity, tissue
+      FROM fnl_sprime_pooled_delta_sprime 
+      ORDER BY name
+      LIMIT 100;
+```
+
+### **2. Data Validation Tasks**
+- Compare sample data from database vs CSV files
+- Verify S' calculations match current implementation
+- Test mutation data serialization format
+- Validate gene ontology mapping
 
 ## 🎯 **Success Metrics**
 

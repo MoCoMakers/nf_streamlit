@@ -71,6 +71,123 @@ tools:
     description: Translate gene IDs to gene names.
     statement: SELECT * FROM public.im_omics_genes;
 
+  # Exploration tools for data inspection (limited results)
+  explore-drug-response-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample drug response data for inspection (limited to 100 rows)
+    statement: |
+      SELECT name, moa, target, lower_limit, upper_limit, ec50, auc, ccle_name, row_name, screen_id
+      FROM im_dep_raw_secondary_dose_curve 
+      ORDER BY name
+      LIMIT 100;
+
+  explore-s-prime-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample pre-calculated S' data for inspection (limited to 100 rows)
+    statement: |
+      SELECT name, moa, target, lower_limit, upper_limit, ec50, auc, eff, eff_100, eff_ec50, s_prime
+      FROM im_sprime_solved_s_prime 
+      ORDER BY name
+      LIMIT 100;
+
+  explore-mutations-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample mutation data for inspection (limited to 100 rows)
+    statement: |
+      SELECT cell_line, gene_id, mutation_value
+      FROM im_dep_sprime_damaging_mutations 
+      ORDER BY cell_line
+      LIMIT 100;
+
+  explore-aggregated-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample aggregated results for inspection (limited to 100 rows)
+    statement: |
+      SELECT name, gene_id, delta_s_prime, sensitivity, tissue, ref_pooled_s_prime, test_pooled_s_prime
+      FROM fnl_sprime_pooled_delta_sprime 
+      ORDER BY name
+      LIMIT 100;
+
+  explore-gene-ontology-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample gene ontology data for inspection
+    statement: |
+      SELECT id, name
+      FROM im_omics_genes 
+      ORDER BY name
+      LIMIT 100;
+
+  # Schema analysis tools
+  get-primary-keys:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get primary key information for all tables
+    statement: |
+      SELECT 
+        tc.table_name,
+        kcu.column_name,
+        tc.constraint_name
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu 
+        ON tc.constraint_name = kcu.constraint_name
+        AND tc.table_schema = kcu.table_schema
+      WHERE tc.constraint_type = 'PRIMARY KEY'
+        AND tc.table_schema = 'public'
+      ORDER BY tc.table_name, kcu.ordinal_position;
+
+  get-foreign-keys:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get foreign key relationships between tables
+    statement: |
+      SELECT
+        tc.table_name AS source_table,
+        kcu.column_name AS source_column,
+        ccu.table_name AS target_table,
+        ccu.column_name AS target_column,
+        tc.constraint_name
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu
+        ON tc.constraint_name = kcu.constraint_name
+        AND tc.table_schema = kcu.table_schema
+      JOIN information_schema.constraint_column_usage ccu
+        ON ccu.constraint_name = tc.constraint_name
+        AND ccu.table_schema = tc.table_schema
+      WHERE tc.constraint_type = 'FOREIGN KEY'
+        AND tc.table_schema = 'public'
+      ORDER BY tc.table_name, kcu.ordinal_position;
+
+  get-table-indexes:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get index information for all tables
+    statement: |
+      SELECT
+        schemaname,
+        tablename,
+        indexname,
+        indexdef
+      FROM pg_indexes
+      WHERE schemaname = 'public'
+      ORDER BY tablename, indexname;
+
+  # Dynamic SQL execution - full power for read-only account
+  run-query:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Execute arbitrary SQL queries with full power (read-only account, no row limits)
+    templateParameters:
+      - name: query
+        type: string
+        description: SQL query to execute. Full SQL support including JOINs, subqueries, CTEs, etc. No row limits.
+    statement: |
+      {{.query}}
+
 toolsets:
   tools:
     - list-tables
@@ -81,3 +198,12 @@ toolsets:
     - get-damaging-mutations
     - get-single-s-values
     - get-gene-translation
+    - explore-drug-response-sample
+    - explore-s-prime-sample
+    - explore-mutations-sample
+    - explore-aggregated-sample
+    - explore-gene-ontology-sample
+    - get-primary-keys
+    - get-foreign-keys
+    - get-table-indexes
+    - run-query
