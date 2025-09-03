@@ -41,15 +41,48 @@ Before continuing, it is strongly advised to test your Postgres credentials in p
 
 ### **3. Launch MCP Toolbox**
 
+#### **Quick Start (Recommended)**
+```bash
+# Start MCP Toolbox (Windows)
+scripts\mcp-toolbox.bat start
+
+# Start MCP Toolbox (Linux/macOS)
+./scripts/mcp-toolbox.sh start
+```
+
+#### **Manual Setup**
 ```bash
 # Pull the latest MCP Toolbox image
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
 
 # Create named MCP Toolbox container with HTTP mode
-docker run -d --name mcp-toolbox -p 5000:5000 -v ./tools.yaml:/app/tools.yaml us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest --tools-file /app/tools.yaml
+docker run -d --name mcp-toolbox -p 5001:5001 -v ./tools.yaml:/app/tools.yaml us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest --tools-file /app/tools.yaml --address 0.0.0.0 --port 5001 --log-level DEBUG
 
 # Verify MCP Toolbox container is running
 docker ps | grep mcp-toolbox
+
+# Check that 3 toolsets are initialized (should show "Initialized 3 toolsets")
+docker logs mcp-toolbox | grep "Initialized.*toolsets"
+```
+
+#### **Test MCP Connection**
+```bash
+# Test MCP Toolbox is running
+curl http://localhost:5001/
+# Expected: "🧰 Hello, World! 🧰"
+
+# Test MCP protocol - List available tools
+curl -X POST http://localhost:5001/mcp/tools \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"params\":{},\"id\":1}"
+
+# Test calling a tool - List database tables
+curl -X POST http://localhost:5001/mcp/tools \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"list-tables\",\"arguments\":{}},\"id\":1}"
+
+# Check container logs
+docker logs mcp-toolbox
 ```
 
 ## 🎯 **Cursor IDE Configuration**
@@ -63,20 +96,29 @@ docker ps | grep mcp-toolbox
 ### **2. Configure MCP in Cursor**
 1. Open Cursor Settings (Ctrl+,)
 2. Search for "MCP"
-3. Add MCP server configuration:
+3. Add MCP server configuration for HTTP mode:
 
 ```json
 {
   "mcpServers": {
     "datawarehouse-toolbox": {
-      "command": "docker",
-      "args": ["exec", "-i", "mcp-toolbox", "/toolbox", "--stdio"]
+      "type": "http",
+      "url": "http://localhost:5001/mcp/tools"
     }
   }
 }
 ```
 
-### **3. Restart Cursor IDE**
+**Note**: If Cursor doesn't support HTTP-based MCP servers directly, you may need to use a bridge or proxy. The MCP toolbox is running in HTTP mode on port 5001.
+
+### **3. Toolsets Configuration**
+The `tools.yaml` file includes both toolset configurations:
+- **`tools`** - Default toolset for MCP protocol compatibility
+- **`sprime_analysis`** - Specific toolset for S-prime analysis tools
+
+Both toolsets contain the same 8 tools for database introspection and analysis.
+
+### **4. Restart Cursor IDE**
 After adding the MCP configuration, restart Cursor to establish the connection.
 
 ## ✅ **Verify MCP Connection**
@@ -114,6 +156,26 @@ Describe the columns and data types for the im_dep_raw_secondary_dose_curve tabl
 
 ```
 Show me the schema for the fnl_sprime_pooled_delta_sprime table and explain what each column represents
+```
+
+### **Direct HTTP API Testing**
+You can also test the MCP tools directly using curl commands:
+
+```bash
+# List all available tools
+curl -X POST http://localhost:5001/mcp/tools \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"tools/list\",\"params\":{},\"id\":1}"
+
+# Get database table list
+curl -X POST http://localhost:5001/mcp/tools \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"list-tables\",\"arguments\":{}},\"id\":1}"
+
+# Describe table columns (replace 'table_name' with actual table)
+curl -X POST http://localhost:5001/mcp/tools \
+  -H "Content-Type: application/json" \
+  -d "{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"describe-table-columns\",\"arguments\":{\"table_name\":\"im_dep_raw_secondary_dose_curve\"}},\"id\":1}"
 ```
 
 ### **Data Analysis Queries**
@@ -205,6 +267,13 @@ scripts\mcp-toolbox.bat restart
 
 ## 🚨 **Troubleshooting**
 
+### **Current Working Setup**
+Based on testing, the MCP toolbox works best with:
+- **HTTP mode** instead of stdio mode
+- **Port 5001** for HTTP server with logging
+- **Address 0.0.0.0** to bind to all interfaces
+- **Debug logging enabled** for troubleshooting
+
 ### **Common Issues**
 
 1. **MCP Toolbox Connection Failed**:
@@ -215,13 +284,30 @@ scripts\mcp-toolbox.bat restart
    # Check logs
    docker logs mcp-toolbox
    
-   # Restart MCP Toolbox
+   # Restart MCP Toolbox with working configuration
    docker stop mcp-toolbox
    docker rm mcp-toolbox
-   docker run -d --name mcp-toolbox -p 5000:5000 -v ./tools.yaml:/app/tools.yaml us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest --tools-file /app/tools.yaml
+   docker run -d --name mcp-toolbox -p 5001:5001 -v ./tools.yaml:/app/tools.yaml us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest --tools-file /app/tools.yaml --address 0.0.0.0 --port 5001 --log-level DEBUG
    ```
 
-2. **Database Connection Issues**:
+2. **Empty Reply from Server**:
+   ```bash
+   # This usually means the container is running in stdio mode instead of HTTP mode
+   # Restart with explicit HTTP configuration
+   docker stop mcp-toolbox && docker rm mcp-toolbox
+   docker run -d --name mcp-toolbox -p 5001:5001 -v ./tools.yaml:/app/tools.yaml us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest --tools-file /app/tools.yaml --address 0.0.0.0 --port 5001 --log-level DEBUG
+   ```
+
+3. **Cursor MCP Connection Issues**:
+   ```bash
+   # The MCP toolbox is running in HTTP mode, not stdio mode
+   # Update your Cursor mcp.json configuration to use HTTP endpoint
+   # Test the HTTP endpoint directly:
+   curl http://localhost:5001/
+   curl -X POST http://localhost:5001/mcp/tools -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"tools/list","params":{},"id":1}'
+   ```
+
+4. **Database Connection Issues**:
    ```bash
    # Test remote database connection
    psql -h your-remote-postgres-host.com -U compbio_dw_readonly -d data_warehouse -c "SELECT 1;"

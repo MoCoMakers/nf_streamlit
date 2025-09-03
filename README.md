@@ -17,9 +17,9 @@ Please visit this tool live here:
 
 A sister repo to this project is: [https://github.com/MoCoMakers/hack4nf-2022](https://github.com/MoCoMakers/hack4nf-2022)
 
-# 🚀 **NEW: High-Performance Database Setup with MCP Integration**
+# 🚀 **High-Performance Database Setup with MCP Integration**
 
-> **⚠️ Migration Notice**: We're migrating from file-based data loading to PostgreSQL with MCP (Model Context Protocol) integration for significantly improved performance. See [MIGRATION_STRATEGY.md](MIGRATION_STRATEGY.md) for details.
+> **✅ MCP Toolbox Ready**: The project now uses PostgreSQL with MCP (Model Context Protocol) integration for significantly improved performance. See [MIGRATION_STRATEGY.md](MIGRATION_STRATEGY.md) for details.
 
 ## 🛠️ **Prerequisites**
 
@@ -28,8 +28,6 @@ A sister repo to this project is: [https://github.com/MoCoMakers/hack4nf-2022](h
 2. **Docker & Docker Compose** - [Install Docker](https://docs.docker.com/get-docker/)
 3. **Git** - [Download Git](https://git-scm.com/downloads)
 4. **Python 3.9+** - [Download Python](https://www.python.org/downloads/)
-
-
 
 ## 🏗️ **Quick Start**
 
@@ -47,9 +45,11 @@ pip install -r requirements.txt
 streamlit run Home.py
 ```
 
-### **3. Access the Application**
+### **3. Access the Applications**
 - **Streamlit App**: http://localhost:8501
-- **Remote PostgreSQL**: Your configured remote host
+
+### **4. MCP Integration (Optional)**
+For MCP (Model Context Protocol) setup and database integration using HTTP mode, see [MCP_INTEGRATION.md](MCP_INTEGRATION.md)
 
 ## 📊 **Performance Comparison**
 
