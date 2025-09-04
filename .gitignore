@@ -6,5 +6,6 @@ __pycache__/
 data/
 venv/
 
+tools.yaml
 # How to check all the files that will be ignored
 # find . -not -path './.git/*' | git check-ignore --stdin -v

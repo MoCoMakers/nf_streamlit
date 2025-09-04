@@ -8,6 +8,12 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import streamlit as st
 
+# Import database connection utilities
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.database_connection import DatabaseConnection
+
 # Remove authentication - no longer needed
 # from views.signed_in_landing import landing_page
 
@@ -71,6 +77,56 @@ def get_single_testvalue():
     return df[df['name'] == 'bortezomib'].query('97.9788 < EFF*100 < 97.9790')
 st.dataframe(get_single_testvalue())
 
+# Database-driven version for comparison
+"## Single test value selected from 'bortezomib' (Database Version)"
+def get_single_testvalue_from_db():
+    """Get bortezomib test value from database with pre-calculated fields"""
+    try:
+        db_conn = DatabaseConnection()
+        if not db_conn.connect():
+            st.error("Failed to connect to database")
+            return pd.DataFrame()
+        
+        # Query for bortezomib with EFF*100 close to 97.9789
+        query = """
+        SELECT name, moa, target, lower_limit, upper_limit, ec50, auc, ccle_name, row_name, screen_id, 
+               eff, eff_100, eff_ec50, s_prime
+        FROM im_sprime_solved_s_prime 
+        WHERE name = 'bortezomib' 
+          AND eff_100 BETWEEN 97.97 AND 97.98 
+        ORDER BY ABS(eff_100 - 97.9789) 
+        LIMIT 1
+        """
+        
+        df_db = db_conn.execute_query(query)
+        db_conn.disconnect()
+        
+        if df_db is not None and not df_db.empty:
+            # Rename database columns to match CSV column names
+            # Rename database columns to match CSV column names
+            column_mapping = {
+                'eff': 'EFF',
+                'eff_100': 'EFF*100', 
+                'eff_ec50': 'EFF/EC50',
+                's_prime': "S'"
+            }
+            df_db = df_db.rename(columns=column_mapping)
+            return df_db
+        else:
+            return pd.DataFrame()
+            
+    except Exception as e:
+        st.error(f"Database query failed: {str(e)}")
+        return pd.DataFrame()
+
+# Display database version
+db_result = get_single_testvalue_from_db()
+if not db_result.empty:
+    st.dataframe(db_result)
+    st.success("✅ Database query successful!")
+else:
+    st.warning("⚠️ No data returned from database query")
+
 "## S' Table"
 # Display the table
 st.dataframe(df)
@@ -80,6 +136,55 @@ st.download_button(
                 file_name='delta_s_prime.csv',
                 mime='text/csv'
             )
+
+# Database-driven version of S' Table for comparison
+"## S' Table (Database Version - Limited Sample)"
+def get_s_prime_table_from_db(limit=100):
+    """Get S' data from database with pre-calculated fields"""
+    try:
+        db_conn = DatabaseConnection()
+        if not db_conn.connect():
+            st.error("Failed to connect to database")
+            return pd.DataFrame()
+        
+        # Query for S' data with pre-calculated fields
+        query = f"""
+        SELECT name, moa, target, lower_limit, upper_limit, ec50, auc, ccle_name, row_name, screen_id, 
+               eff, eff_100, eff_ec50, s_prime
+        FROM im_sprime_solved_s_prime 
+        ORDER BY name
+        LIMIT {limit}
+        """
+        
+        df_db = db_conn.execute_query(query)
+        db_conn.disconnect()
+        
+        if df_db is not None and not df_db.empty:
+            # Rename database columns to match CSV column names
+            # Rename database columns to match CSV column names
+            column_mapping = {
+                'eff': 'EFF',
+                'eff_100': 'EFF*100', 
+                'eff_ec50': 'EFF/EC50',
+                's_prime': "S'"
+            }
+            df_db = df_db.rename(columns=column_mapping)
+            return df_db
+        else:
+            return pd.DataFrame()
+            
+    except Exception as e:
+        st.error(f"Database query failed: {str(e)}")
+        return pd.DataFrame()
+
+# Display database version (limited sample for performance)
+db_table_result = get_s_prime_table_from_db(limit=100)
+if not db_table_result.empty:
+    st.dataframe(db_table_result)
+    st.success(f"✅ Database query successful! Showing {len(db_table_result)} rows (sample)")
+    st.info("💡 This is a sample of the database data. The full dataset contains 603,981 rows with pre-calculated values.")
+else:
+    st.warning("⚠️ No data returned from database query")
 
 # Add a filter (dropdown on the column 'name') that updates a dataframe table view.
 
