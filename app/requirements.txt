@@ -6,3 +6,10 @@ streamlit>=1.31.0,<=1.37.0
 streamlit-aggrid==0.3.4.post3
 tabulate==0.9.0
 scipy==1.15.2
+
+# PostgreSQL database support for DepMap migration
+psycopg[binary,pool]==3.2.9
+sqlalchemy==2.0.25
+
+# MCP Toolbox client (if using MCP integration)
+requests==2.31.0

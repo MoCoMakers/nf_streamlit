@@ -37,7 +37,18 @@ git clone https://github.com/MoCoMakers/nf_streamlit.git
 cd nf_streamlit
 ```
 
-### **2. Launch Streamlit Application**
+### **2. Configure Database Connection**
+```bash
+# Copy the configuration template
+cp app/.streamlit/secrets.toml.template app/.streamlit/secrets.toml
+
+# Edit secrets.toml with your PostgreSQL credentials
+# Get database credentials from your team lead
+```
+
+> **📋 Database Credentials Required**: Contact your team lead to obtain PostgreSQL database connection details for the DepMap data warehouse. The credentials will be needed for the `[connections.datawarehouse_postgres]` section in `secrets.toml`.
+
+### **3. Launch Streamlit Application**
 ```bash
 # Run Streamlit locally
 cd app
@@ -45,10 +56,10 @@ pip install -r requirements.txt
 streamlit run Home.py
 ```
 
-### **3. Access the Applications**
+### **4. Access the Applications**
 - **Streamlit App**: http://localhost:8501
 
-### **4. MCP Integration (Optional)**
+### **5. MCP Integration (Optional)**
 For MCP (Model Context Protocol) setup and database integration using HTTP mode, see [MCP_INTEGRATION.md](MCP_INTEGRATION.md)
 
 ## 📊 **Performance Comparison**
@@ -131,7 +142,7 @@ Click the "Reopen in Container" button and the project would be opened in Devcon
 
 > #### **Run the project after setup**
 > After setting up the project following the instructions above, you can run the project following the following steps:
-> - (Optional) Change [the values in the cookie dictionary](https://github.com/MoCoMakers/nf_streamlit/blob/03fcbce740253d72b8d88e1cb6deadec8e6dc5f6/app/.streamlit/secrets.toml.example#L19-L21) of the [`secrets.toml.example`](https://github.com/MoCoMakers/nf_streamlit/blob/03fcbce740253d72b8d88e1cb6deadec8e6dc5f6/app/.streamlit/secrets.toml.example) file.
+> - (Optional) Change the values in the cookie dictionary of the `secrets.toml` file.
 > - Download the files the project needs (this command has to be run the the `app/` folder):
 >> ```bash
 >> pip install gdown
@@ -155,7 +166,7 @@ Click the "Reopen in Container" button and the project would be opened in Devcon
 >> Password: `Makers`
 
 ### Local setup without `devcontainers`
-Clone repo, then copy `config.toml.example` to `config.toml`, and `secrets.toml.example` to `secrets.toml` and update the values.
+Clone repo, then copy `secrets.toml.template` to `secrets.toml` and update the values with your database credentials.
 Note that you will need a remote database connection (MySQL is the default) configured with a users table, for example:
 
 table drea_users;
@@ -229,8 +240,7 @@ docker build . -t streamlit_app
 <br>
 Clone this repo.<br>
 
-Copy `app/.streamlit/config.toml.example` to be just `config.toml`.<br>
-Copy `app/.streamlit/secrets.toml.example` to be just `secrets.toml` and fill in the desired password.
+Copy `app/.streamlit/secrets.toml.template` to be just `secrets.toml` and fill in your database credentials.
 
 Then run:<br>
 ```
