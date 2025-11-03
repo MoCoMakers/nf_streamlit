@@ -1,0 +1,1406 @@
+drug_name,moa,avg_delta_s_prime,gene_count,dbscan_cluster_label
+colfosceril-palmitate,['pulmonary surfactant'],-1.7244078277951806,798,-1
+lidamidine,['adrenergic receptor agonist'],-1.6562376217379045,599,2
+bicalutamide,['androgen receptor antagonist'],-1.640509940097969,736,-1
+cimetidine,['histamine receptor antagonist'],-1.6000681275182762,753,0
+tiludronate,"['bone resorption inhibitor', ' osteoclast inhibitor']",-1.518926551704517,761,-1
+KI-16425,['lysophosphatidic acid receptor antagonist'],-1.5128598766569066,899,-1
+SB-525334,['TGF beta receptor inhibitor'],-1.4929069501401846,779,-1
+clobutinol,['antitussive'],-1.3756696031735294,617,-1
+itraconazole,['cytochrome P450 inhibitor'],-1.348297948683882,333,-1
+camylofine-chlorhydrate,['None'],-1.3195497761488961,720,1
+alogliptin,['dipeptidyl peptidase inhibitor'],-1.317463351272998,790,-1
+octopamine,['trace amine associated receptor agonist'],-1.2742099484361844,800,-1
+isoxsuprine,['adrenergic receptor agonist'],-1.2533694703918605,505,2
+cyclovirobuxin-d,['calcium channel modulator'],-1.2407257893635963,798,-1
+nafcillin,['bacterial cell wall synthesis inhibitor'],-1.2210419614114116,750,-1
+nimorazole,['bacterial DNA inhibitor'],-1.1762234734028694,760,-1
+nitisinone,['hydroxyphenylpyruvate dioxygenase inhibitor'],-1.1541634428025234,752,-1
+thiamine,['vitamin B'],-1.139262570096842,766,-1
+DMH1,['ALK tyrosine kinase receptor inhibitor'],-1.1269326079744009,838,-1
+riluzole,['glutamate inhibitor'],-1.0885695276319185,796,-1
+halofantrine,['antimalarial agent'],-1.0513004604196365,893,-1
+sangivamycin,['DNA inhibitor'],-1.039012058044898,653,15
+altretamine,['DNA synthesis inhibitor'],-1.0350228399143797,368,-1
+dorzolamide,['carbonic anhydrase inhibitor'],-1.0176948142122677,684,-1
+dihydroergocristine,"['adrenergic receptor antagonist', ' prolactin inhibitor']",-1.0050794047979457,801,-1
+azodicarbonamide,['DNA synthesis inhibitor'],-0.9944571611190687,868,-1
+aztreonam,['bacterial cell wall synthesis inhibitor'],-0.9783232286182424,837,-1
+monobenzone,['melanin inhibitor'],-0.97104548944492,697,-1
+BMS-599626,"['EGFR inhibitor', ' protein tyrosine kinase inhibitor']",-0.9638751531234101,820,-1
+azathioprine,['dehydrogenase inhibitor'],-0.9595153170158859,849,-1
+NSC-23766,['Ras GTPase inhibitor'],-0.9570619668286521,774,-1
+mephenytoin,['hydantoin antiepileptic'],-0.9419782909756735,779,-1
+roquinimex,"['angiogenesis inhibitor', ' tumor necrosis factor production inhibitor']",-0.9419205050274887,718,-1
+ingenol-mebutate,['PKC activator'],-0.940753406742009,902,-1
+mechlorethamine,['DNA inhibitor'],-0.9223062683167741,821,15
+pentagastrin,['CCK receptor agonist'],-0.9180978028007709,763,-1
+lafutidine,['histamine receptor antagonist'],-0.9064253670723984,851,0
+saxagliptin,['dipeptidyl peptidase inhibitor'],-0.9021905494654759,855,-1
+ftorafur,['thymidylate synthase inhibitor'],-0.8876927384457522,876,-1
+zaldaride,['calmodulin antagonist'],-0.8730074431026906,905,-1
+ornithine,['NFkB pathway modulator'],-0.8709779929605019,837,-1
+terbutaline,['adrenergic receptor agonist'],-0.8521988932052891,785,2
+cebranopadol,['opioid receptor agonist'],-0.8319652821877033,854,-1
+UK-383367,['Procollagen C-Endopeptidase Inhibitors'],-0.8276631870841896,888,-1
+estramustine-phosphate,"['DNA synthesis inhibitor', ' microtubule inhibitor']",-0.8215619494995731,677,-1
+ispinesib,['kinesin inhibitor'],-0.8048874120615801,925,-1
+methylprednisolone,['glucocorticoid receptor agonist'],-0.8014859080258459,798,3
+GSK2656157,['PERK inhibitor'],-0.7950930607473732,826,-1
+4-pyrimidinecarbonitrile,['None'],-0.7929898064463226,876,1
+RAF265,"['RAF inhibitor', ' VEGFR inhibitor']",-0.7894092066025918,900,-1
+AZD9668,['elastase inhibitor'],-0.775991370346011,853,-1
+orotic-acid,['None'],-0.770891610764078,764,1
+sevelamer,['phosphate antagonist'],-0.7607945410539703,789,-1
+forskolin,['adenylyl cyclase activator'],-0.7579091202153855,757,-1
+golgicide-a,['ARF inhibitor'],-0.7524312305237711,867,-1
+leucovorin,['folate receptor ligand'],-0.7400899504522834,740,-1
+AS-703026,['MEK inhibitor'],-0.737792718578224,925,4
+tacrolimus,['calcineurin inhibitor'],-0.7347826547415283,859,-1
+morin,['cytochrome P450 inhibitor'],-0.7142028087808615,802,-1
+filanesib,"['kinesin inhibitor', ' kinesin-like spindle protein inhibitor']",-0.7115117021292153,898,-1
+pazopanib,"['KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",-0.6951272681730806,919,-1
+BAY-K-8644-(s)-(-),['L-type calcium channel activator'],-0.6920463949812498,777,-1
+azomycin-(2-nitroimidazole),['protein synthesis inhibitor'],-0.6917446314928751,725,5
+camptothecin,['topoisomerase inhibitor'],-0.6831450476985008,746,6
+temoporfin,['radical formation stimulant'],-0.6752253474663571,925,-1
+exatecan-mesylate,['topoisomerase inhibitor'],-0.6703978592947112,505,6
+talmapimod,['p38 MAPK inhibitor'],-0.6679612976037056,925,-1
+bendroflumethiazide,['sodium/potassium/chloride transporter inhibitor'],-0.665480500138911,773,-1
+G-1,['G protein-coupled receptor agonist'],-0.6630706335429782,884,-1
+SR-27897,['CCK receptor antagonist'],-0.6614993771918414,844,-1
+eptifibatide,['platelet aggregation inhibitor'],-0.6595759318238149,694,-1
+masitinib,"['KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' src inhibitor']",-0.65240583300297,721,-1
+tilmicosin,['bacterial 50S ribosomal subunit inhibitor'],-0.6510195325240907,786,-1
+A-803467,['sodium channel blocker'],-0.6495446795402237,822,7
+tacalcitol,['vitamin D receptor agonist'],-0.6421696838796882,777,-1
+stemregenin-1,['aryl hydrocarbon receptor antagonist'],-0.6395020938212079,672,-1
+YM-201636,['PI3K inhibitor'],-0.6384156334769471,897,8
+OTX015,['bromodomain inhibitor'],-0.637019726327593,693,-1
+FERb-033,['EGFR inhibitor'],-0.6365754580688189,887,9
+vemurafenib,['RAF inhibitor'],-0.6363340495123058,910,-1
+meglitinide,['potassium channel blocker'],-0.6357293378593997,853,-1
+rabeprazole,"['ATPase inhibitor', ' gastrin inhibitor']",-0.6353818331511191,691,-1
+oxiracetam,['acetylcholine receptor agonist'],-0.6314679517913772,914,-1
+odanacatib,['cathepsin inhibitor'],-0.6303900144338033,890,-1
+RS-504393,['CC chemokine receptor antagonist'],-0.6292615797380698,868,-1
+NVP-BVU972,['MET inhibitor'],-0.6281835360201153,803,-1
+nadide,['electron acceptor'],-0.6264377377296472,766,-1
+rigosertib,"['cell cycle inhibitor', ' PLK inhibitor']",-0.6254271811476187,917,-1
+GTP-14564,"['FLT3 inhibitor', ' tyrosine kinase inhibitor']",-0.625403770443145,819,-1
+taselisib,['PI3K inhibitor'],-0.6166934802983554,913,8
+4-hydroxy-phenazone,['None'],-0.6146080857431527,763,1
+CP-724714,"['EGFR inhibitor', ' protein tyrosine kinase inhibitor']",-0.6083437111219221,925,-1
+GSK-3-inhibitor-IX,"['glycogen synthase kinase inhibitor', ' lipoxygenase inhibitor']",-0.6043047378360794,870,-1
+piroxicam,['cyclooxygenase inhibitor'],-0.6033031585670308,716,10
+hypericin,['tyrosine kinase inhibitor'],-0.6030801840360317,750,-1
+ilomastat,['matrix metalloprotease inhibitor'],-0.5995547669255146,801,-1
+carboplatin,"['DNA alkylating agent', ' DNA inhibitor']",-0.5918521088849149,857,-1
+cromakalim,['None'],-0.5901403391333105,385,1
+telotristat-ethyl,['tryptophan hydroxylase inhibitor'],-0.5861289707768103,603,-1
+oxymetazoline,['adrenergic receptor agonist'],-0.5766572833658015,800,2
+PF-04217903,['c-Met inhibitor'],-0.5754792125521564,843,-1
+trans-4-Hydroxycrotonic-acid,['gamma hydroxybutyric acid ligand'],-0.5712475999476735,862,-1
+cinacalcet,['calcium channel activator'],-0.56165113666565,924,-1
+butylscopolamine-bromide,['cholinergic receptor antagonist'],-0.561135764074053,806,-1
+chlorindanol,['None'],-0.5608276107115412,884,1
+litronesib,['kinesin-like spindle protein inhibitor'],-0.5598994391863467,892,-1
+ipsapirone,['serotonin receptor agonist'],-0.5579323960394346,663,-1
+AS-1949490,['SHIP2 phosphatase inhibitor'],-0.5578056974770005,835,-1
+nilotinib,"['Abl kinase inhibitor', ' Bcr-Abl kinase inhibitor']",-0.557007470239387,869,-1
+chloropyramine,['histamine receptor antagonist'],-0.5564197430130643,294,0
+flumatinib,['Bcr-Abl kinase inhibitor'],-0.5530125950890078,819,-1
+resminostat,['HDAC inhibitor'],-0.5517535571445565,921,11
+colforsin-daproate,['adenylyl cyclase activator'],-0.5516145616975469,818,-1
+tiletamine,['glutamate receptor antagonist'],-0.5497022393754446,751,12
+piperacetazine,['dopamine receptor antagonist'],-0.5490572720614232,768,13
+SGI-1776,['Pim kinase inhibitor'],-0.5488738789773216,823,-1
+epinephrine,"['adrenergic receptor agonist', ' neurotransmitter']",-0.5471337195571925,792,-1
+phenazone,['cyclooxygenase inhibitor'],-0.537805201929737,791,10
+norethindrone,['progesterone receptor agonist'],-0.5369887000027894,589,-1
+enzalutamide,['androgen receptor antagonist'],-0.5328805080416786,682,-1
+sulfabenzamide,['bacterial antifolate'],-0.5322873770705475,705,-1
+AT13387,['HSP antagonist'],-0.5285407535069802,925,-1
+VX-702,['p38 MAPK inhibitor'],-0.5243636302429763,837,-1
+lidocaine,['histamine receptor agonist'],-0.5230360661933698,792,-1
+tanshinone-i,['AP inhibitor'],-0.5202140415587634,786,-1
+AZD2461,['PARP inhibitor'],-0.5183921476075444,839,-1
+acesulfame-potassium,['None'],-0.5148730391358047,798,1
+deflazacort,['glucocorticoid receptor agonist'],-0.5137546044881698,824,3
+daclatasvir,['HCV inhibitor'],-0.5137086103126022,761,-1
+beta-naphthol,['None'],-0.5121729374168364,783,1
+fleroxacin,['topoisomerase inhibitor'],-0.5120157214101818,810,6
+temocapril,['angiotensin converting enzyme inhibitor'],-0.510934382650115,744,-1
+sertindole,"['dopamine receptor antagonist', ' serotonin receptor antagonist']",-0.509619752058987,865,-1
+tedizolid,['bacterial 50S ribosomal subunit inhibitor'],-0.5090694585729967,874,-1
+chlorquinaldol,['other antibiotic'],-0.5082268584824483,847,-1
+hyodeoxycholic-acid,['atherosclerosis formation inhibitor'],-0.4959860683511117,809,-1
+temozolomide,['DNA alkylating agent'],-0.49389506126798915,807,-1
+streptozotocin,['DNA alkylating agent'],-0.4905425154880306,638,-1
+CMPD-1,['p38 MAPK inhibitor'],-0.484603495132777,901,-1
+dimethisoquin,['local anesthetic'],-0.4715084733287452,649,-1
+nefiracetam,"['acetylcholine receptor agonist', ' benzodiazepine receptor agonist']",-0.471148825292211,884,-1
+estradiol,['estrogen receptor agonist'],-0.46596320662990814,740,-1
+piperazine,['benzodiazepine receptor agonist'],-0.4637967093137483,805,14
+CPI-1189,['tumor necrosis factor release inhibitor'],-0.46326130208832456,925,-1
+CI-844,['None'],-0.46278425396433176,811,1
+KY02111,['Wnt pathway inhibitor'],-0.4625990206310072,735,-1
+PSI-7976,['HCV inhibitor'],-0.46189520217644536,812,-1
+creatine,['None'],-0.45859718908440983,787,1
+phlorizin,['sodium/glucose cotransporter inhibitor'],-0.4551646862247921,779,-1
+remoxipride,['dopamine receptor antagonist'],-0.45163389967014217,613,13
+SB-200646,['serotonin receptor antagonist'],-0.4495995518009119,885,-1
+ketoconazole,['sterol demethylase inhibitor'],-0.44787665727297493,700,-1
+trovafloxacin,['bacterial DNA gyrase inhibitor'],-0.44325501547836993,818,-1
+BTS-54505,['dopamine reuptake inhibitor'],-0.44294008893030606,670,-1
+GSK256066,['phosphodiesterase inhibitor'],-0.44073984019077855,720,-1
+cyt387,['None'],-0.43986216428633274,920,1
+SB-239063,['p38 MAPK inhibitor'],-0.4352272696173586,864,-1
+AZD2858,['glycogen synthase kinase inhibitor'],-0.43507209769323046,848,-1
+ZSTK-474,['PI3K inhibitor'],-0.4319425190862603,883,8
+R406,['SYK inhibitor'],-0.427607481970564,867,-1
+MRS-1220,['adenosine receptor antagonist'],-0.4268411889623567,504,-1
+KD025,['rho associated kinase inhibitor'],-0.4266596061828251,905,-1
+ziprasidone,"['dopamine receptor antagonist', ' serotonin receptor antagonist']",-0.4223058572223739,885,-1
+tirapazamine,['DNA inhibitor'],-0.42099011904682915,787,15
+pyrimethamine,['dihydrofolate reductase inhibitor'],-0.41974021083037155,894,-1
+trolox,['antioxidant'],-0.4144822421756495,714,-1
+paliperidone,"['dopamine receptor antagonist', ' serotonin receptor antagonist']",-0.4140828345844707,838,-1
+Y-39983,['rho associated kinase inhibitor'],-0.4098380440460901,837,-1
+dabrafenib,['RAF inhibitor'],-0.40959372533527694,920,-1
+CB-10-277,['DNA synthesis inhibitor'],-0.40388050360670846,834,-1
+acetylcysteine,['mucolytic agent'],-0.4032568117117932,816,-1
+candesartan,['angiotensin receptor antagonist'],-0.40254702345857535,774,-1
+MK-0773,['androgen receptor modulator'],-0.40153925820481323,721,-1
+homosalate,['HSP inducer'],-0.3988258436374918,799,-1
+cytochlor,['None'],-0.3982991095206788,889,1
+fenofibrate,['PPAR receptor agonist'],-0.3923612588854767,839,-1
+taurine,['antioxidant'],-0.3901214794719805,787,-1
+PD-98059,['MEK inhibitor'],-0.3894953357993624,626,4
+carbachol,['cholinergic receptor agonist'],-0.38908006779800114,696,-1
+AT7867,['AKT inhibitor'],-0.3880149385513566,679,-1
+4-(4-fluorobenzoyl)-1-(4-phenylbutyl)-piperidine,['serotonin receptor antagonist'],-0.38644973319409126,878,-1
+cidofovir,['DNA polymerase inhibitor'],-0.38407026787737764,850,-1
+sulfamethazine,['PABA antagonist'],-0.3820474959335664,793,-1
+tecastemizole,['histamine receptor antagonist'],-0.3786952561133746,881,0
+teriflunomide,['dihydroorotate dehydrogenase inhibitor'],-0.37573774659027204,884,-1
+ENMD-2076,"['Aurora kinase inhibitor', ' FLT3 inhibitor', ' VEGFR inhibitor']",-0.37304056125273405,839,-1
+canertinib,['EGFR inhibitor'],-0.3711315930204705,925,9
+zaleplon,['benzodiazepine receptor agonist'],-0.3700523657364837,867,14
+CHIR-98014,['glycogen synthase kinase inhibitor'],-0.3695356210127912,778,-1
+LY2603618,['CHK inhibitor'],-0.3686702252280231,925,-1
+bitopertin,"['glycine transporter inhibitor', ' GlyT-1 inhibitor']",-0.3678494598058161,877,-1
+fudosteine,['mucolytic agent'],-0.36731919702876936,877,-1
+ifosfamide,['DNA alkylating agent'],-0.36606292181081757,736,-1
+LY2608204,['glucokinase activator'],-0.3653556937701731,890,-1
+ammonium-lactate,['None'],-0.3637870507898775,828,1
+PD-184352,['MEK inhibitor'],-0.36073808213059383,900,4
+BAN-ORL-24,['nociceptin/orphanin FQ receptor antagonist'],-0.36007223279636974,785,-1
+birinapant,['XIAP inhibitor'],-0.3542509165058521,893,-1
+GW-842166,['cannabinoid receptor agonist'],-0.3519661593127731,882,-1
+PAC-1,['caspase activator'],-0.35140294431299773,892,-1
+imiquimod,"['interferon inducer', ' toll-like receptor agonist']",-0.3504495341202055,919,-1
+tozasertib,"['Aurora kinase inhibitor', ' Bcr-Abl kinase inhibitor', ' FLT3 inhibitor', ' JAK inhibitor']",-0.3473699203199417,925,-1
+thioguanine,['purine antagonist'],-0.3406272065729751,922,-1
+BMS-986020,['lysophosphatidic acid receptor antagonist'],-0.33752617447936467,881,-1
+4-iodo-6-phenylpyrimidine,['macrophage migration inhibiting factor inhibitor'],-0.3359755175338927,872,-1
+P5091,['ubiquitin specific protease inhibitor'],-0.33374666936548686,864,-1
+cyproheptadine,['histamine receptor antagonist'],-0.33331534735867524,875,0
+FR-122047,['cyclooxygenase inhibitor'],-0.3332512105662948,806,10
+maytansinol-isobutyrate,['None'],-0.3320775648106391,577,1
+naloxone,['opioid receptor antagonist'],-0.3272186024552376,663,-1
+hexachlorophene,['potassium channel activator'],-0.32652453031388995,846,-1
+vandetanib,"['EGFR inhibitor', ' RET tyrosine kinase inhibitor', ' VEGFR inhibitor']",-0.3256375418891451,899,-1
+arcyriaflavin-a,['CDK inhibitor'],-0.3248352558969019,892,16
+TAK-733,['MEK inhibitor'],-0.3241942843939483,909,4
+MGCD-265,['VEGFR inhibitor'],-0.32370996318217543,850,-1
+broxaldine,['None'],-0.32345145576356366,892,1
+tanespimycin,['HSP inhibitor'],-0.32003570662818387,925,17
+galeterone,['androgen receptor modulator'],-0.31552895332140946,826,-1
+piretanide,['glucocorticoid receptor agonist'],-0.30734152526848546,794,3
+repsox,['TGF beta receptor inhibitor'],-0.30713464982969146,896,-1
+NAN-190,['serotonin receptor agonist'],-0.3070841979105944,777,-1
+methylphenidate,['dopamine-norepinephrine reuptake inhibitor'],-0.306862479410904,782,-1
+ZK-93426,['benzodiazepine receptor antagonist'],-0.3058333212136192,876,-1
+trifluridine,"['DNA directed DNA polymerase inhibitor', ' thymidylate synthase inhibitor']",-0.3033037340859169,908,-1
+ARRY-334543,['EGFR inhibitor'],-0.30227552877264374,899,9
+AT-7519,['CDK inhibitor'],-0.29978476491807377,925,16
+fludarabine,['ribonucleotide reductase inhibitor'],-0.2982800179978755,815,-1
+nithiamide,['bacterial DNA inhibitor'],-0.29490822869157174,773,-1
+BMS-707035,['HIV integrase inhibitor'],-0.29359603240038534,799,-1
+betulinic-acid,"['apoptosis stimulant', ' NFkB pathway inhibitor']",-0.2931212200184581,697,-1
+GW-3965,['LXR agonist'],-0.29289026128344836,835,-1
+fenoprofen,['prostaglandin inhibitor'],-0.2921190503150426,778,-1
+deoxycorticosterone-acetate,['progestogen hormone'],-0.29169407093572547,894,-1
+BIBU-1361,['EGFR inhibitor'],-0.2889998233782205,915,9
+carvedilol,['adrenergic receptor antagonist'],-0.288762583610662,815,18
+PFK-015,['phosphofructokinase inhibitor'],-0.288061897327424,688,-1
+AEE788,"['EGFR inhibitor', ' VEGFR inhibitor']",-0.28766023155679477,878,-1
+etomoxir,['carnitine palmitoyltransferase inhibitor'],-0.2861155257150412,848,-1
+D-4476,['TGF beta receptor inhibitor'],-0.2846174089296814,853,-1
+baricitinib,['JAK inhibitor'],-0.2824159052921104,826,-1
+imidapril,['angiotensin converting enzyme inhibitor'],-0.2803039416085419,838,-1
+SB-590885,['RAF inhibitor'],-0.27759244323758453,865,-1
+aminopurvalanol-a,"['CDK inhibitor', ' tyrosine kinase inhibitor']",-0.27654047176150787,924,-1
+vincristine,['tubulin polymerization inhibitor'],-0.27573187556769135,908,19
+flutamide,['androgen receptor antagonist'],-0.27234547281248017,809,-1
+BI-D1870,['ribosomal protein inhibitor'],-0.2722880273976269,840,-1
+RS-67506,['serotonin receptor partial agonist'],-0.2707857685492595,718,-1
+PD-0325901,['MEK inhibitor'],-0.2672698299009396,897,4
+temsirolimus,['mTOR inhibitor'],-0.266378373018439,917,20
+diphemanil,['acetylcholine receptor antagonist'],-0.2655088387334966,845,-1
+salidroside,['beta amyloid protein neurotoxicity inhibitor'],-0.2651176202197586,870,-1
+PI-103,"['mTOR inhibitor', ' PI3K inhibitor']",-0.2637665248092135,880,-1
+satraplatin,['DNA alkylating agent'],-0.2630875187921136,886,-1
+CGP-52411,['EGFR inhibitor'],-0.26230638513951876,836,9
+ranitidine,['histamine receptor antagonist'],-0.2622494108056342,642,0
+NSC-632839,['ubiquitin specific protease inhibitor'],-0.26152012974859384,886,-1
+latrepirdine,['glutamate receptor antagonist'],-0.2603013520486777,669,12
+orantinib,"['FGFR inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",-0.26017481692037464,789,-1
+chicago-sky-blue-6b,"['glutamate inhibitor', ' macrophage migration inhibiting factor inhibitor']",-0.2587904612333337,813,-1
+TAK-715,['p38 MAPK inhibitor'],-0.2585363504206999,739,-1
+famotidine,['histamine receptor antagonist'],-0.25745087525425137,793,0
+amisulpride,['dopamine receptor antagonist'],-0.2532960976522342,803,13
+narasin,['antiprotozoal agent'],-0.25262250476299153,853,-1
+2-methoxyestradiol,['hypoxia inducible factor inhibitor'],-0.25103467826484066,925,-1
+chromocarb,['antispasmodic'],-0.2508691461225367,847,-1
+SB-743921,['kinesin-like spindle protein inhibitor'],-0.2506444157685779,330,-1
+equol,['estrogen receptor agonist'],-0.2506069714828068,823,-1
+BMS-265246,['CDK inhibitor'],-0.2487099394172498,924,16
+methyldopa,['adrenergic receptor agonist'],-0.24765069361824438,822,2
+racecadotril,['enkephalinase inhibitor'],-0.24629383007901517,771,-1
+abiraterone-acetate,['androgen biosynthesis inhibitor'],-0.24602515123127447,731,-1
+eplerenone,['cytochrome P450 inhibitor'],-0.24310523800099976,869,-1
+parthenolide-(-),['NFkB pathway inhibitor'],-0.24151867628282883,903,-1
+niridazole,['phosphofructokinase inhibitor'],-0.2394112634604441,741,-1
+MEK1-2-inhibitor,['MEK inhibitor'],-0.2390867634045659,849,4
+canrenone,['mineralocorticoid receptor antagonist'],-0.23844993612561977,888,-1
+cytarabine,['ribonucleotide reductase inhibitor'],-0.23836602235565443,778,-1
+XL-647,"['EGFR inhibitor', ' VEGFR inhibitor']",-0.23526681245117312,817,-1
+aripiprazole,"['serotonin receptor agonist', ' serotonin receptor antagonist']",-0.23461150614444826,76,-1
+lorazepam,['benzodiazepine receptor agonist'],-0.2344420556461248,844,14
+linalool,['anticonvulsant'],-0.23238288850272232,772,-1
+bifemelane,['acetylcholine release enhancer'],-0.23063763088762484,839,-1
+daunorubicin,"['RNA synthesis inhibitor', ' topoisomerase inhibitor']",-0.2291402416920609,922,-1
+oridonin,['BCL inhibitor'],-0.22688358196504133,873,-1
+prednisolone-acetate,['glucocorticoid receptor agonist'],-0.22677529938959853,791,3
+napabucasin,['STAT inhibitor'],-0.22593748441671696,877,-1
+AZ960,['JAK inhibitor'],-0.22423898345500656,858,-1
+prazosin,['adrenergic receptor antagonist'],-0.2227968693180825,798,18
+metoprolol,['adrenergic receptor antagonist'],-0.22198193733085686,737,18
+ebastine,['histamine receptor antagonist'],-0.221515293756246,881,0
+exemestane,['aromatase inhibitor'],-0.2211267208995488,675,-1
+metoxibutropate,['cyclooxygenase inhibitor'],-0.21861627886978263,751,10
+CHIR-124,['CHK inhibitor'],-0.2184697996162427,859,-1
+aurora-a-inhibitor-i,['Aurora kinase inhibitor'],-0.2163859980468605,878,21
+clonazepam,['GABA benzodiazepine site receptor agonist'],-0.21544450636654422,855,-1
+PSB-1115,['adenosine receptor antagonist'],-0.2140354490646553,813,-1
+ACDPP,['glutamate receptor antagonist'],-0.20950530933588427,787,12
+k-strophanthidin,['ATPase inhibitor'],-0.20901998439362207,172,-1
+JNJ-26481585,['HDAC inhibitor'],-0.2082576331426108,688,11
+MK-1775,['WEE1 kinase inhibitor'],-0.20825619971939066,925,-1
+digoxigenin,['steroid'],-0.20817150745147867,898,-1
+NSC-663284,['CDC inhibitor'],-0.2073307398980121,897,-1
+foretinib,['VEGFR inhibitor'],-0.20687509822770037,924,-1
+STA-5326,['interleukin synthesis inhibitor'],-0.20662432064080943,911,-1
+cefditoren-pivoxil,['bacterial cell wall synthesis inhibitor'],-0.2043303745166876,910,-1
+ginkgolide-a,['GABA receptor antagonist'],-0.20367240715939158,905,-1
+BIBR-1532,['telomerase inhibitor'],-0.20340151319904845,907,-1
+SB-216641,['serotonin receptor antagonist'],-0.20263128739909408,892,-1
+poziotinib,['EGFR inhibitor'],-0.20247369059903728,914,9
+dalcetrapib,['cholesteryl ester transfer protein inhibitor'],-0.2021871033313738,772,-1
+BNTX,['opioid receptor antagonist'],-0.19960175628429289,857,-1
+VS-4718,['focal adhesion kinase inhibitor'],-0.19867135795709354,825,-1
+thiomersal,['other antibiotic'],-0.19626317331201773,912,-1
+digitoxin,['ATPase inhibitor'],-0.1954118210260768,719,-1
+entinostat,['HDAC inhibitor'],-0.19541167768337322,898,11
+imatinib,"['Bcr-Abl kinase inhibitor', ' KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor']",-0.1947392667229138,917,-1
+difluprednate,['glucocorticoid receptor agonist'],-0.19436578489023426,865,3
+rucinol,['tyrosinase inhibitor'],-0.19275495098305165,834,-1
+gestrinone,['progesterone receptor antagonist'],-0.19269374958524127,824,-1
+evacetrapib,['cholesteryl ester transfer protein inhibitor'],-0.18776024124967175,830,-1
+indiplon,['benzodiazepine receptor agonist'],-0.18615820691054247,906,14
+tosedostat,['peptidase inhibitor'],-0.1856487009719777,873,-1
+WZ8040,['EGFR inhibitor'],-0.18455072033831058,893,9
+SR-57227A,['serotonin receptor agonist'],-0.18453019063008075,859,-1
+BW-180C,['opioid receptor agonist'],-0.18372206951354625,739,-1
+PP-1,['src inhibitor'],-0.18187800716894034,857,-1
+AZD7762,['CHK inhibitor'],-0.18187135948419808,873,-1
+AEG3482,['HSP inducer'],-0.18017443566050897,889,-1
+"CP-945,598",['cannabinoid receptor antagonist'],-0.17952362948977466,861,-1
+etoposide,['topoisomerase inhibitor'],-0.17849812214119345,894,6
+FLI-06,['notch signaling inhibitor'],-0.17779164599468408,857,-1
+sulfasalazine,['cyclooxygenase inhibitor'],-0.17617586729745272,746,10
+foscarnet,['DNA polymerase inhibitor'],-0.17564702339115404,885,-1
+clindamycin-phosphate,['protein synthesis inhibitor'],-0.17548588482320013,873,5
+TMS,['None'],-0.17499325195562415,902,1
+salvinorin-a,['opioid receptor agonist'],-0.17417668666332675,845,-1
+AZD1480,['JAK inhibitor'],-0.17241846809843575,782,-1
+nadifloxacin,['bacterial DNA gyrase inhibitor'],-0.17231693267512688,634,-1
+XBD173,['benzodiazepine receptor ligand'],-0.17036159009048715,770,-1
+thiram,['None'],-0.17000459870957166,805,1
+CGS-15943,['adenosine receptor antagonist'],-0.1698821998811248,846,-1
+tepoxalin,"['cyclooxygenase inhibitor', ' lipoxygenase inhibitor']",-0.16891224193144008,852,-1
+benzyldimethylhexadecylammonium,['cationic surfactant'],-0.16838978689690814,883,-1
+PTC-209,['BMI-1 inhibitor'],-0.168049944565974,819,-1
+obatoclax,['BCL inhibitor'],-0.16731035044589695,925,-1
+amonafide,['topoisomerase inhibitor'],-0.16635414765038178,914,6
+oltipraz,"['nuclear factor erythroid derived', ' like (NRF2) activator']",-0.16583393399742413,925,-1
+cefdinir,['bacterial cell wall synthesis inhibitor'],-0.16486192092731256,900,-1
+tyrphostin-A9,"['protein tyrosine kinase inhibitor', ' tyrosine kinase inhibitor']",-0.16400279433411552,896,-1
+GW-843682X,['PLK inhibitor'],-0.16368381200017945,907,-1
+doxercalciferol,['vitamin D receptor agonist'],-0.16311571340226474,754,-1
+terfenadine,['histamine receptor antagonist'],-0.16305571079281095,792,0
+mibefradil,['T-type calcium channel blocker'],-0.1627798412697876,826,-1
+bortezomib,"['NFkB pathway inhibitor', ' proteasome inhibitor']",-0.16184603371243292,925,-1
+tivozanib,['VEGFR inhibitor'],-0.16100429119412804,925,-1
+asymmetrical-dimethylarginine,['nitric oxide synthase inhibitor'],-0.1586995708853471,853,-1
+10-deacetylbaccatin,['antitumor agent'],-0.1574528347785585,914,-1
+xilobam,['None'],-0.1516942877875292,799,1
+XL888,['HSP inhibitor'],-0.14678132256873658,853,17
+belinostat,['HDAC inhibitor'],-0.14515998878671205,925,11
+SC-12267,['dihydroorotate dehydrogenase inhibitor'],-0.14464223011676805,809,-1
+tandutinib,"['FLT3 inhibitor', ' KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor']",-0.14373691329988914,818,-1
+clofarabine,['ribonucleotide reductase inhibitor'],-0.14326903858602782,894,-1
+BI-78D3,['JNK inhibitor'],-0.14217781488878875,826,-1
+parachlorophenol,['antiinfective drug'],-0.1420102977188233,725,-1
+BIIB021,['HSP inhibitor'],-0.14151792472952895,919,17
+sodium-tanshinone-ii-a-sulfonate,['potassium channel activator'],-0.14042131911298963,881,-1
+ryuvidine,['histone lysine methyltransferase inhibitor'],-0.1403123447308655,912,-1
+colchicine,['microtubule inhibitor'],-0.13924220029678752,808,-1
+clofazimine,['GK0582 inhibitor'],-0.13879377325466585,833,-1
+naltrexone,['opioid receptor antagonist'],-0.13858613948311954,706,-1
+abiraterone,['androgen biosynthesis inhibitor'],-0.13807586843191372,755,-1
+amprolium,['thiamine uptake blocker'],-0.1379567983966844,802,-1
+IKK-16,['IKK inhibitor'],-0.13695383162480892,896,-1
+YM-155,['survivin inhibitor'],-0.13660220417671298,909,-1
+uprosertib,['AKT inhibitor'],-0.13635997798748128,925,-1
+afobazole,['anxiolytic'],-0.13630333130128758,883,-1
+KW-2478,['HSP inhibitor'],-0.13587790846425787,925,17
+AP26113,['ALK tyrosine kinase receptor inhibitor'],-0.1352887694402847,837,-1
+VU0364770,['glutamate receptor positive allosteric modulator'],-0.13491538053992363,859,-1
+PHA-793887,['CDK inhibitor'],-0.13464171578931242,925,16
+RS-16566,['serotonin receptor antagonist'],-0.13369900677343402,840,-1
+oxyquinoline,['chelating agent'],-0.13337752773832687,793,-1
+TG-101209,['JAK inhibitor'],-0.13269515281644542,893,-1
+tremorine,['acetylcholine receptor agonist'],-0.132333998685883,817,-1
+teniposide,['topoisomerase inhibitor'],-0.13162481642301024,865,6
+cabozantinib,"['RET tyrosine kinase inhibitor', ' VEGFR inhibitor']",-0.13138784952575333,865,-1
+sufentanil,['opioid receptor modulator'],-0.13079853433366187,714,-1
+ZM-447439,['Aurora kinase inhibitor'],-0.1304377047299076,922,21
+tenovin-6,['SIRT inhibitor'],-0.12757164427080217,896,-1
+JNJ-7706621,['CDK inhibitor'],-0.12746278066444708,849,16
+PRT062607,['syk inhibitor'],-0.1272581470230673,903,-1
+AZD4547,['FGFR inhibitor'],-0.12707922421203371,707,-1
+baicalein,['lipoxygenase inhibitor'],-0.12651517172138593,846,-1
+R547,['CDK inhibitor'],-0.12607094510908462,826,16
+midostaurin,"['FLT3 inhibitor', ' KIT inhibitor', ' PKC inhibitor']",-0.12604670942867743,873,-1
+sonidegib,['smoothened receptor antagonist'],-0.12569601220825818,914,-1
+doxorubicin,['topoisomerase inhibitor'],-0.12559816330027157,874,6
+temazepam,['benzodiazepine receptor agonist'],-0.12388054864027752,771,14
+sobetirome,['thyroid hormone receptor agonist'],-0.12299328801291862,792,-1
+AZ3146,['monopolar spindle 1 kinase inhibitor'],-0.12199978738856064,864,-1
+VLX600,['ubiquitin C-terminal hydrolase inhibitor'],-0.12188144131014285,910,-1
+"2,3-DCPE",['Bcl-XL downregulator'],-0.12166386658253286,884,-1
+demecarium,['acetylcholinesterase inhibitor'],-0.12042435059397298,797,-1
+RGFP966,['HDAC inhibitor'],-0.12014810605535603,772,11
+scriptaid,['HDAC inhibitor'],-0.12003966902612995,922,11
+SB-939,['HDAC inhibitor'],-0.1195281150506036,909,11
+DU-728,['structural glycoprotein antagonist'],-0.11924632684972482,822,-1
+pilaralisib,['PI3K inhibitor'],-0.1185729737992654,891,8
+atenolol-(-),['adrenergic receptor antagonist'],-0.11796721264329842,724,18
+PD-318088,['MEK inhibitor'],-0.11772647570819282,882,4
+delanzomib,['proteasome inhibitor'],-0.11759996064010779,909,-1
+KX2-391,"['src inhibitor', ' tubulin polymerization inhibitor']",-0.11756844596456789,853,-1
+dovitinib,"['EGFR inhibitor', ' FGFR inhibitor', ' FLT3 inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",-0.11526140625290915,907,-1
+benzydamine,['prostanoid receptor antagonist'],-0.11517774539724186,872,-1
+BVD-523,['MAP kinase inhibitor'],-0.11419929648753699,876,-1
+EMD-53998,['phosphodiesterase inhibitor'],-0.11366956573903475,868,-1
+chlorogenic-acid,['antioxidant'],-0.1135834815018974,908,-1
+CR8-(R),['CDK inhibitor'],-0.11277326413897953,922,16
+romidepsin,['HDAC inhibitor'],-0.11240910200236842,858,11
+7-nitroindazole,['nitric oxide synthase inhibitor'],-0.11177156139709378,825,-1
+oligomycin-a,"['ATP synthase inhibitor', ' ATPase inhibitor']",-0.11079479233736753,779,-1
+bosutinib,"['Abl kinase inhibitor', ' Bcr-Abl kinase inhibitor', ' src inhibitor']",-0.11050652915866443,883,-1
+buparlisib,['PI3K inhibitor'],-0.1098492263744461,826,8
+obidoxime,['cholinesterase reactivator'],-0.10976862628592307,849,-1
+sodium-stibogluconate,['tyrosine phosphatase inhibitor'],-0.10923630392927113,874,-1
+nonoxynol-9,['membrane integrity inhibitor'],-0.10879596566685211,905,-1
+tetrahydropapaverine,['None'],-0.10822471950528743,885,1
+oxonic-acid,['uricase inhibitor'],-0.10721511579099059,762,-1
+sclareol,['None'],-0.1069798519592462,898,1
+Ro-9187,['HCV inhibitor'],-0.10624359736418289,844,-1
+nanchangmycin,['other antibiotic'],-0.10587612552642242,924,-1
+VER-49009,['HSP inhibitor'],-0.10371922795271038,876,17
+darifenacin,['acetylcholine receptor antagonist'],-0.10197799341716687,899,-1
+SIB-1757,['glutamate receptor antagonist'],-0.09974711277002475,764,12
+pyrithione-zinc,['ATP synthase inhibitor'],-0.09966435073153468,913,-1
+givinostat,['HDAC inhibitor'],-0.0992518381910349,826,11
+TAK-632,['RAF inhibitor'],-0.09917437776450859,826,-1
+SB-431542,['TGF beta receptor inhibitor'],-0.09875248008129528,893,-1
+AG-14361,['PARP inhibitor'],-0.0985320496892229,780,-1
+KPT-276,['exportin antagonist'],-0.09685302635296106,897,-1
+phenylmercuric-acetate,['other antifungal'],-0.09647014953680504,903,-1
+echinomycin,['DNA intercalating agent'],-0.09441412805212782,900,-1
+maprotiline,"['norepinephrine reputake inhibitor', ' tricyclic antidepressant']",-0.09401310345952384,809,-1
+valrubicin,"['DNA inhibitor', ' topoisomerase inhibitor']",-0.09388731619985319,858,-1
+palomid-529,"['AKT inhibitor', ' mTOR inhibitor']",-0.09359806047184979,787,-1
+rheochrysidin,['protein tyrosine kinase inhibitor'],-0.09281810720237023,895,-1
+voreloxin,['topoisomerase inhibitor'],-0.0925288198092115,853,6
+danazol,"['estrogen receptor antagonist', ' progesterone receptor agonist']",-0.0923225279719517,868,-1
+AZ20,['ATR kinase inhibitor'],-0.09131607047117103,857,-1
+ivermectin,['benzodiazepine receptor agonist'],-0.09077435156980036,912,14
+benfotiamine,['antioxidant'],-0.09018726098609771,753,-1
+WAY-600,['mTOR inhibitor'],-0.08895594302556169,912,20
+norfloxacin,['bacterial DNA gyrase inhibitor'],-0.08887360458535011,898,-1
+ciclopirox,['membrane integrity inhibitor'],-0.08825006354660012,905,-1
+1-naphthyl-PP1,['src inhibitor'],-0.08654122336524667,833,-1
+BVT-948,['tyrosine phosphatase inhibitor'],-0.084446259251288,787,-1
+digoxin,['ATPase inhibitor'],-0.0843987329594987,826,-1
+GGTI-298,['GGTase inhibitor'],-0.08347062244954849,887,-1
+quinidine,['sodium channel blocker'],-0.0834544792434228,823,7
+terconazole,['sterol demethylase inhibitor'],-0.0829624089703866,764,-1
+tioguanine,['purine antagonist'],-0.08280874725743267,830,-1
+BAY-11-7085,['NFkB pathway inhibitor'],-0.08261515693597662,856,-1
+MK-8245,['stearoyl-CoA desaturase inhibitor'],-0.08259193373836268,910,-1
+vatalanib,"['KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",-0.08222173170663778,909,-1
+warfarin,['vitamin K antagonist'],-0.08208135091976443,765,-1
+mefexamide,['psychoactive drug'],-0.08071213448283128,874,-1
+mitoxantrone,['topoisomerase inhibitor'],-0.07930578038389759,805,6
+hexylresorcinol,['local anesthetic'],-0.07785702892118922,685,-1
+M-344,['HDAC inhibitor'],-0.07697750288484861,896,11
+JIB04,['histone lysine demethylase inhibitor'],-0.07637607978167238,897,-1
+alpelisib,['PI3K inhibitor'],-0.07386832342115268,867,8
+trichostatin-a,['HDAC inhibitor'],-0.07354174509368813,859,11
+HA14-1,['BCL inhibitor'],-0.07296507967947685,851,-1
+ER-27319,"['mediator release inhibitor', ' SYK inhibitor']",-0.0723390101803837,907,-1
+repaglinide,['insulin secretagogue'],-0.0719092891283467,796,-1
+lanatoside-c,['cardiac glycoside'],-0.0712432312770735,874,-1
+deforolimus,['mTOR inhibitor'],-0.06767439394878011,889,20
+ibutilide,['potassium channel blocker'],-0.06760015823384616,812,-1
+XL388,['mTOR inhibitor'],-0.06755426673607656,826,20
+xylazine,['adrenergic receptor agonist'],-0.06731495428292902,771,2
+ABT-702,['adenosine kinase inhibitor'],-0.06731003557914639,915,-1
+PIK-75,"['DNA protein kinase inhibitor', ' PI3K inhibitor']",-0.06500879484053815,897,-1
+spermine,['None'],-0.06385874846747418,852,1
+SNX-5422,['HSP inhibitor'],-0.06382340424204098,732,17
+disulfiram,"['aldehyde dehydrogenase inhibitor', ' DNA methyltransferase inhibitor', ' TRPV agonist']",-0.06269762026243794,874,-1
+triptolide,['RNA polymerase inhibitor'],-0.06256649539082058,782,-1
+tetramethylthiuram-monosulfide,['None'],-0.06181083044798196,859,1
+PF-477736,['CHK inhibitor'],-0.06143038173837825,853,-1
+CGP-54626,['GABA receptor antagonist'],-0.05974786761833626,517,-1
+CUDC-907,['PI3K inhibitor'],-0.05959512718078514,907,8
+peruvoside,['cardiac glycoside'],-0.05950166471960821,853,-1
+fluvastatin,['HMGCR inhibitor'],-0.059019594512609644,914,-1
+cladribine,"['adenosine deaminase inhibitor', ' ribonucleotide reductase inhibitor']",-0.056868993064292106,719,-1
+clopamide,['sodium/chloride cotransporter inhibitor'],-0.056631884955605845,843,-1
+motesanib,"['KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",-0.055636921675384775,802,-1
+eltrombopag,['thrombopoietin receptor agonist'],-0.05407555708445422,860,-1
+valnemulin,['bacterial 50S ribosomal subunit inhibitor'],-0.05402361697469803,908,-1
+cinnarazine,['calcium channel blocker'],-0.05392392436901848,785,-1
+crenolanib,['PDGFR tyrosine kinase receptor inhibitor'],-0.053775427095218126,909,-1
+WP1130,['deubiquitinase inhibitor'],-0.05255474014320494,896,-1
+amoxicillin,['penicillin binding protein inhibitor'],-0.05217368645671724,840,-1
+CX-4945,['casein kinase inhibitor'],-0.05091824685190707,796,-1
+RS-17053,['adrenergic receptor antagonist'],-0.04872722416222328,852,18
+costunolide,['telomerase inhibitor'],-0.04784347261844377,836,-1
+NVP-TAE226,['protein tyrosine kinase inhibitor'],-0.046591202040911286,857,-1
+proscillaridin-a,['None'],-0.0455873844760315,719,1
+broxyquinoline,['antiprotozoal agent'],-0.045227489202011494,849,-1
+crizotinib,['ALK tyrosine kinase receptor inhibitor'],-0.044976042682834096,925,-1
+azilsartan,['angiotensin receptor antagonist'],-0.04493756153844783,877,-1
+merimepodib,['inosine monophosphate dehydrogenase inhibitor'],-0.04426833070016781,826,-1
+dacinostat,['HDAC inhibitor'],-0.044166674911946154,900,11
+PLX-4720,['RAF inhibitor'],-0.04229458872416498,922,-1
+tagatose,['phosphorylase inhibitor'],-0.04211051371109854,873,-1
+pilocarpine,['acetylcholine receptor agonist'],-0.04060701676862363,792,-1
+dexrazoxane,"['chelating agent', ' topoisomerase inhibitor']",-0.04057680436465023,808,-1
+INH1,['Hec1 inhibitor'],-0.0389270708682621,828,-1
+BX-912,['pyruvate dehydrogenase kinase inhibitor'],-0.037995390389235634,912,-1
+triciribine,['AKT inhibitor'],-0.037948229349215844,910,-1
+oxcarbazepine,['sodium channel blocker'],-0.03755646993919245,811,7
+SB-225002,['CC chemokine receptor antagonist'],-0.03747373588813859,732,-1
+curcumin,"['cyclooxygenase inhibitor', ' histone acetyltransferase inhibitor', ' lipoxygenase inhibitor', ' NFkB pathway inhibitor']",-0.037317156012372524,905,-1
+gastrodin,['None'],-0.03710430921474221,900,1
+NSC-319726,['p53 activator'],-0.03565392940994486,854,-1
+meclizine,['constitutive androstane receptor (CAR) agonist'],-0.03555501940067131,798,-1
+thonzonium,['ATPase inhibitor'],-0.03540781809600988,816,-1
+oseltamivir-phosphate,['neuraminidase inhibitor'],-0.03533353595318268,740,-1
+8-bromo-cGMP,['PKA activator'],-0.033922508280906184,749,-1
+deferasirox,['chelating agent'],-0.03276003879794293,890,-1
+MK-5108,['Aurora kinase inhibitor'],-0.031712380678147946,909,21
+5-fluorouracil,['thymidylate synthase inhibitor'],-0.031673655171038435,798,-1
+refametinib,['MEK inhibitor'],-0.031569387712789644,684,4
+GDC-0980,"['mTOR inhibitor', ' PI3K inhibitor']",-0.03142205190616936,925,-1
+triapine,['ribonucleotide reductase inhibitor'],-0.031349162968954576,905,-1
+D-64131,['microtubule inhibitor'],-0.029439137871702558,827,-1
+ganetespib,['HSP inhibitor'],-0.029050458660984966,925,17
+aphidicolin,['RNA synthesis inhibitor'],-0.028767138576269,732,-1
+puromycin,['protein synthesis inhibitor'],-0.02810009780753355,858,5
+tipifarnib,['farnesyltransferase inhibitor'],-0.027927702784857265,873,-1
+naftifine,['fungal squalene epoxidase inhibitor'],-0.027695978610255443,888,-1
+7-hydroxystaurosporine,"['CDK inhibitor', ' CHK inhibitor', ' PKC inhibitor']",-0.026606637581856434,732,-1
+mericitabine,['HCV inhibitor'],-0.026561833141666755,809,-1
+MPI-0479605,['mitotic kinase inhibitor'],-0.026534933558077563,859,-1
+R306465,['HDAC inhibitor'],-0.026204148701316807,732,11
+octenidine,['membrane integrity inhibitor'],-0.02596452612548654,512,-1
+KI-8751,"['KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",-0.025812484285543412,874,-1
+GSK923295,['centromere associated protein inhibitor'],-0.02581078831624665,826,-1
+anisomycin,['DNA synthesis inhibitor'],-0.02530369725423575,896,-1
+estramustine,['DNA alkylating agent'],-0.02520390094516997,925,-1
+epothilone-b,"['microtubule stabilizing agent', ' tubulin polymerization inhibitor']",-0.023913908148657546,882,-1
+GW-788388,['ALK tyrosine kinase receptor inhibitor'],-0.023453177154916707,797,-1
+elesclomol,['oxidative stress inducer'],-0.02224296235342375,925,-1
+AZD5438,['CDK inhibitor'],-0.02207303843959002,853,16
+mexiletine,['sodium channel blocker'],-0.02205726685018392,903,7
+epirubicin,['topoisomerase inhibitor'],-0.021843022052069644,654,6
+torin-2,['mTOR inhibitor'],-0.021422047815161077,857,20
+mevastatin,['HMGCR inhibitor'],-0.02109752475344862,891,-1
+sirolimus,['mTOR inhibitor'],-0.02105233704907293,863,20
+LY2183240,"['FAAH inhibitor', ' FAAH reuptake inhibitor']",-0.020539567263044615,922,-1
+indoprofen,"['cyclooxygenase inhibitor', ' prostanoid receptor antagonist']",-0.02053607194005868,874,-1
+MG-132,['proteasome inhibitor'],-0.020294180736931625,857,-1
+VU0361737,['glutamate receptor positive allosteric modulator'],-0.020111800015391364,887,-1
+KD-023,['ACAT inhibitor'],-0.019952124156704366,897,-1
+BI-2536,['PLK inhibitor'],-0.019774900665027934,907,-1
+hypoestoxide,['IKK inhibitor'],-0.0193379778121553,688,-1
+monensin,['bacterial permeability inducer'],-0.018352313739488868,515,-1
+brilliant-green,['None'],-0.018280707723181105,826,1
+DPI-201106,['sodium channel activator'],-0.01751076601096287,835,-1
+brigatinib,"['ALK tyrosine kinase receptor inhibitor', ' EGFR inhibitor']",-0.017464947995159668,839,-1
+tyrphostin-AG-1478,['EGFR inhibitor'],-0.016287167697866457,901,9
+TG-101348,"['FLT3 inhibitor', ' JAK inhibitor']",-0.015980056711990966,924,-1
+NMS-E973,['HSP inhibitor'],-0.01584747233402241,874,17
+TG-02,"['CDK inhibitor', ' FLT3 inhibitor', ' JAK inhibitor']",-0.014913376390567416,922,-1
+mebendazole,['tubulin polymerization inhibitor'],-0.014068669361000817,719,19
+SNX-2112,['HSP inhibitor'],-0.01395541819661168,873,17
+UNC2250,['MER tyrosine kinase inhibitor'],-0.01394681222062654,829,-1
+endo-IWR-1,['PARP inhibitor'],-0.013931825802473827,901,-1
+almorexant,['orexin receptor antagonist'],-0.012854596002633419,788,-1
+selinexor,['exportin antagonist'],-0.012589136399600024,889,-1
+MK-8745,['Aurora kinase inhibitor'],-0.011867154029639905,826,21
+protirelin,['thyrotropin releasing hormone receptor agonist'],-0.01115175459858798,786,-1
+PD-173074,"['FGFR inhibitor', ' VEGFR inhibitor']",-0.011044113907216581,830,-1
+GSK1070916,['Aurora kinase inhibitor'],-0.0110408505149535,814,21
+LDN-212854,['bone morphogenic protein inhibitor'],-0.009093667838206403,896,-1
+nemorubicin,['topoisomerase inhibitor'],-0.009027298961040023,889,6
+BAY-11-7082,['NFkB pathway inhibitor'],-0.00824818568338125,809,-1
+WP1066,['STAT inhibitor'],-0.007881697152041832,909,-1
+azalomycin-b,['bacterial 50S ribosomal subunit inhibitor'],-0.007854340440230182,905,-1
+primaquine,"['antimalarial agent', ' DNA inhibitor']",-0.007241316774787176,855,-1
+KPT-185,['exportin antagonist'],-0.006643605017773566,889,-1
+mitomycin-c,"['DNA alkylating agent', ' DNA synthesis inhibitor']",-0.006545771555333122,854,-1
+melengestrol-acetate,['progesterone receptor agonist'],-0.005740426689685044,853,-1
+rociletinib,['EGFR inhibitor'],-0.005615712698440414,897,9
+CUDC-101,['EGFR inhibitor'],-0.00558239604298427,444,9
+BMS-387032,"['CDK inhibitor', ' cell cycle inhibitor', ' MCL1 inhibitor']",-0.005372720443358002,849,-1
+bisindolylmaleimide-ix,['PKC inhibitor'],-0.004996251777472301,922,-1
+halofuginone,['collagenase inhibitor'],-0.004706107394678946,826,-1
+AZD8330,['MEK inhibitor'],-0.0046180933824717585,919,4
+A-674563,['AKT inhibitor'],-0.004501762545236,859,-1
+idarubicin,['topoisomerase inhibitor'],-0.004363492344180311,805,6
+9-aminoacridine,['None'],-0.0036034021029472296,856,1
+triamterene,['sodium channel blocker'],-0.003548722394675329,852,7
+gossypol,"['BCL inhibitor', ' MCL1 inhibitor']",-0.0005799697998033888,849,-1
+CID-5458317,['MAP kinase phosphatase inhibitor'],0.0002902359636433764,912,-1
+AR-12,['phosphoinositide dependent kinase inhibitor'],0.0007614628378311468,826,-1
+ACY-1215,['HDAC inhibitor'],0.0018625254298838306,887,11
+maxacalcitol,['vitamin D receptor agonist'],0.002879606914005449,811,-1
+ETP-46464,['ATR kinase inhibitor'],0.0033011292863116787,896,-1
+emetine,['protein synthesis inhibitor'],0.003842055526355805,849,5
+famciclovir,['DNA polymerase inhibitor'],0.00422649299067536,694,-1
+AZD8055,['mTOR inhibitor'],0.004803864530511888,853,20
+nilutamide,['androgen receptor antagonist'],0.005013209063407627,758,-1
+dolastatin-10,['tubulin polymerization inhibitor'],0.005048115615006552,913,19
+vinorelbine,['tubulin polymerization inhibitor'],0.00543114734383591,894,19
+NSC-697923,['ubiquitin-conjugating enzyme inhibitor'],0.005708965363829163,887,-1
+lenalidomide,['anticancer agent'],0.006077379061927817,852,-1
+toremifene,"['estrogen receptor antagonist', ' selective estrogen receptor modulator (SERM)']",0.0063655071660534916,880,-1
+epothilone-d,"['microtubule stabilizing agent', ' tubulin polymerization inhibitor']",0.0070808798532302954,688,-1
+ciprofibrate,['PPAR receptor agonist'],0.0078066723187855186,795,-1
+4E1RCat,['protein synthesis inhibitor'],0.008215883809082931,706,5
+SKF-96365,['calcium channel blocker'],0.008641101412837608,827,-1
+TW-37,['BCL inhibitor'],0.008817433978051837,874,-1
+NMS-1286937,['PLK inhibitor'],0.009145156138624239,688,-1
+TG-100572,"['src inhibitor', ' VEGFR inhibitor']",0.009249315530862275,882,-1
+quinethazone,['thiazide diuretic'],0.010650349533549933,721,-1
+brefeldin-a,['protein synthesis inhibitor'],0.010722120905497977,889,5
+CX-5461,['RNA polymerase inhibitor'],0.010802539348680583,873,-1
+PCI-24781,['HDAC inhibitor'],0.011573646414875778,889,11
+colistin-b-sulfate,['bacterial permeability inducer'],0.011834497733421653,580,-1
+GSK-J4,['histone lysine demethylase inhibitor'],0.012604321848631838,875,-1
+tezacaftor,['CFTR channel agonist'],0.013521261142057343,787,-1
+gemcitabine,['ribonucleotide reductase inhibitor'],0.014375255297199883,832,-1
+SB-2343,"['mTOR inhibitor', ' PI3K inhibitor']",0.014514751477009853,925,-1
+KF-38789,['P selectin inhibitor'],0.014662344529747125,889,-1
+AV-412,['protein tyrosine kinase inhibitor'],0.014843238920472726,900,-1
+cephalomannine,['DNA polymerase inhibitor'],0.01636315538592442,907,-1
+PD-198306,"['MAP kinase inhibitor', ' MEK inhibitor']",0.016642121389617737,893,-1
+mocetinostat,['HDAC inhibitor'],0.016888794049305673,503,11
+voxtalisib,"['mTOR inhibitor', ' PI3K inhibitor']",0.017317267743485413,908,-1
+EVP4593,['NFkB pathway inhibitor'],0.020096966677476718,896,-1
+Ro-106-9920,['NFkB pathway inhibitor'],0.021370120337103626,896,-1
+CH5132799,['PI3K inhibitor'],0.02231910743699975,732,8
+formestane,['aromatase inhibitor'],0.02294941494894641,853,-1
+desonide,['glucocorticoid receptor agonist'],0.023819198906330687,877,3
+CYT-997,['tubulin polymerization inhibitor'],0.02385364269557684,889,19
+vorinostat,['HDAC inhibitor'],0.025255823124545315,922,11
+SU014813,"['PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",0.025616969602347987,918,-1
+clofoctol,['protein synthesis inhibitor'],0.025688823435044326,774,5
+fenbendazole,['tubulin polymerization inhibitor'],0.02590161303395594,805,19
+NVP-BHG712,['ephrin inhibitor'],0.02615490509440202,849,-1
+acivicin,['gamma glutamyltransferase Inhibitors'],0.026832308108399344,782,-1
+pacritinib,"['FLT3 inhibitor', ' JAK inhibitor']",0.02689918071602642,856,-1
+LY2334737,"['antitumor agent', ' ribonucleotide reductase inhibitor']",0.027129490115918416,849,-1
+spironolactone,['mineralocorticoid receptor antagonist'],0.027307460462899624,798,-1
+LY2090314,['glycogen synthase kinase inhibitor'],0.027560713126710212,862,-1
+idoxuridine,['DNA directed DNA polymerase inhibitor'],0.027720029729629003,869,-1
+GSK2126458,"['mTOR inhibitor', ' PI3K inhibitor']",0.02866093360404504,732,-1
+diclazuril,['antiprotozoal agent'],0.02975453391781733,826,-1
+carfilzomib,['proteasome inhibitor'],0.031050467353348186,925,-1
+genz-644282,['topoisomerase inhibitor'],0.0313743796706994,873,6
+PU-H71,['HSP inhibitor'],0.03140971565710614,900,17
+menadione,"['mitochondrial DNA polymerase inhibitor', ' phosphatase inhibitor']",0.031991951927905965,789,-1
+ixazomib-citrate,['proteasome inhibitor'],0.03202749440770813,826,-1
+ML133,['potassium channel blocker'],0.03233290621167321,877,-1
+mexeneone,['None'],0.0324523361217267,822,1
+CD-437,['retinoid receptor agonist'],0.0329700798216794,896,-1
+amsacrine,['topoisomerase inhibitor'],0.033452267632115826,805,6
+LDN-57444,['ubiquitin C-terminal hydrolase inhibitor'],0.03469849010314966,840,-1
+domperidone,['dopamine receptor antagonist'],0.03527832411048671,789,13
+fexinidazole,['None'],0.03528872696812483,635,1
+methotrexate,['dihydrofolate reductase inhibitor'],0.0356463281571541,719,-1
+anguidine,['protein synthesis inhibitor'],0.03566325157729433,849,5
+GDC-0349,['Pim kinase inhibitor'],0.036089722071546634,924,-1
+10-hydroxycamptothecin,['topoisomerase inhibitor'],0.036310747549243606,857,6
+crizotinib-(S),['MTH1 inhibitor'],0.03667322369124553,851,-1
+mesoridazine,['dopamine receptor antagonist'],0.037379475505354545,745,13
+serdemetan,['MDM inhibitor'],0.03756095803704969,683,-1
+GDC-0152,['XIAP inhibitor'],0.03781812623696406,853,-1
+trimebutine,['opioid receptor agonist'],0.0385838337533778,824,-1
+ONX-0914,['proteasome inhibitor'],0.0391925618858796,858,-1
+torin-1,['mTOR inhibitor'],0.03921904030186809,896,20
+floxuridine,['DNA synthesis inhibitor'],0.03929476167855341,858,-1
+erteberel,['estrogen receptor agonist'],0.03950798521295913,893,-1
+mubritinib,['protein tyrosine kinase inhibitor'],0.04047883372405268,688,-1
+dioscin,['apoptosis stimulant'],0.04048918172970413,857,-1
+bruceantin,['protein synthesis inhibitor'],0.041232501921121024,907,5
+harringtonine,['protein synthesis inhibitor'],0.041702498339286354,849,5
+AT-9283,"['Aurora kinase inhibitor', ' JAK inhibitor']",0.04182777384244259,843,-1
+erlotinib,['EGFR inhibitor'],0.04199230584207941,925,9
+aminoglutethimide,['glucocorticoid receptor antagonist'],0.041993266326963735,921,-1
+darapladib,['phospholipase inhibitor'],0.04427218953350899,900,-1
+busulfan,['DNA inhibitor'],0.04620578882351264,796,15
+PF-05212384,"['mTOR inhibitor', ' PI3K inhibitor']",0.046739352280197224,925,-1
+benzethonium,['sodium channel blocker'],0.04724279981612159,727,7
+marimastat,['matrix metalloprotease inhibitor'],0.04740097451803482,894,-1
+atipamezole,['adrenergic receptor antagonist'],0.047489573095361504,903,18
+plinabulin,['tubulin polymerization inhibitor'],0.047522304773214,907,19
+PHA-665752,['c-Met inhibitor'],0.04766443652005993,859,-1
+LY364947,"['TGF beta receptor inhibitor', ' p38 MAPK inhibitor']",0.04963982849625227,795,-1
+dolutegravir,['HIV integrase inhibitor'],0.04979584633779232,710,-1
+fludarabine-phosphate,['ribonucleotide reductase inhibitor'],0.04982727234417935,855,-1
+iododexetimide,['acetylcholine receptor antagonist'],0.050434318802378295,810,-1
+bardoxolone,"['nuclear factor erythroid derived', ' like (NRF2) activator']",0.05070005399019662,683,-1
+gambogic-acid,['caspase activator'],0.05082699844081824,925,-1
+betamethasone-dipropionate,['anti-inflammatory agent'],0.051297059340390784,869,-1
+ribavirin,['antiviral'],0.05136662360258492,848,-1
+lasalocid,['bacterial permeability inducer'],0.05153579411479181,850,-1
+lestaurtinib,"['FLT3 inhibitor', ' growth factor receptor inhibitor', ' JAK inhibitor']",0.05201423227130994,732,-1
+3-deazaneplanocin-A,['histone lysine methyltransferase inhibitor'],0.0523950135839324,904,-1
+CEP-37440,['ALK tyrosine kinase receptor inhibitor'],0.05308301644113671,843,-1
+sodium-glucoheptonate,['None'],0.05402618960746937,754,1
+PR-619,['DUB inhibitor'],0.05454351002399143,816,-1
+epothilone-a,['microtubule stabilizing agent'],0.05482274646397274,897,-1
+JTC-801,['opioid receptor antagonist'],0.054843343511687334,889,-1
+trapidil,['PDGFR tyrosine kinase receptor inhibitor'],0.055830490269896386,902,-1
+PD-153035,['EGFR inhibitor'],0.056005616740117704,845,9
+K-858,['kinesin-like spindle protein inhibitor'],0.05607999454288756,859,-1
+AC-264613,['PAR agonist'],0.05705655891327039,873,-1
+LY2874455,['FGFR antagonist'],0.057180059492324124,814,-1
+hydroxyurea,['ribonucleotide reductase inhibitor'],0.05720093934478981,894,-1
+MEK162,['MEK inhibitor'],0.05724534804279206,826,4
+defactinib,['focal adhesion kinase inhibitor'],0.05727779238086808,685,-1
+licochalcone-a,['topoisomerase inhibitor'],0.05845776984039978,887,6
+3-amino-benzamide,['PARP inhibitor'],0.05857802119081727,879,-1
+chlormidazole,['fungal lanosterol demethylase inhibitor'],0.05907743630278787,894,-1
+penfluridol,['T-type calcium channel blocker'],0.05957831958196344,908,-1
+oxiperomide,['dopamine receptor antagonist'],0.060630228682990686,833,13
+PP-121,['protein tyrosine kinase inhibitor'],0.06071495284064817,896,-1
+raltitrexed,['thymidylate synthase inhibitor'],0.06133762486644865,904,-1
+volasertib,['PLK inhibitor'],0.061457607641568664,925,-1
+eprinomectin,['benzodiazepine receptor agonist'],0.06157843491126911,636,14
+oprozomib,['proteasome inhibitor'],0.06182190188371273,732,-1
+SCH-58261,['adenosine receptor antagonist'],0.06185568441292139,796,-1
+golvatinib,['VEGFR inhibitor'],0.062307081838818855,878,-1
+metatinib,['Bcr-Abl kinase inhibitor'],0.06307134836352739,924,-1
+SGI-1027,['DNA methyltransferase inhibitor'],0.06398516471330574,922,-1
+OTS167,['maternal embryonic leucine zipper kinase inhibitor'],0.0650149080968955,925,-1
+propoxycaine,['local anesthetic'],0.06537381030012043,785,-1
+cholecalciferol,['None'],0.0665406944085301,894,1
+tetrandrine,['calcium channel blocker'],0.06809860177182898,897,-1
+STF-118804,['NAMPT inhibitor'],0.0687063508634091,857,-1
+triamcinolone-acetonide,"['glucocorticoid receptor agonist', ' immunosuppressant']",0.06882498258476054,575,-1
+AR-42,['HDAC inhibitor'],0.06889099085529685,878,11
+podophyllotoxin,"['microtubule inhibitor', ' tubulin polymerization inhibitor']",0.06891591680330647,905,-1
+bardoxolone-methyl,"['nuclear factor erythroid derived', ' like (NRF2) activator']",0.0690111404638253,925,-1
+frentizole,['immunosuppressant'],0.0692543003349665,916,-1
+PJ-34,['PARP inhibitor'],0.0708055451747904,854,-1
+triclabendazole,['microtubule inhibitor'],0.07086426830364784,905,-1
+regorafenib,"['FGFR inhibitor', ' KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' RAF inhibitor', ' RET tyrosine kinase inhibitor', ' VEGFR inhibitor']",0.07346540606956582,925,-1
+doxifluridine,['thymidylate synthase inhibitor'],0.07352193321594545,879,-1
+3'-fluorobenzylspiperone,['dopamine receptor ligand'],0.0736408090024734,794,-1
+tamoxifen,"['estrogen receptor antagonist', ' selective estrogen receptor modulator (SERM)']",0.07406948013442562,778,-1
+tivantinib,['tyrosine kinase inhibitor'],0.07433870177102446,925,-1
+PF-04691502,"['mTOR inhibitor', ' PI3K inhibitor']",0.07532466222054149,846,-1
+bekanamycin,['bacterial 30S ribosomal subunit inhibitor'],0.07573788004726602,884,-1
+isometheptene-mucate,['None'],0.07649738186433368,686,1
+ICI-162846,['histamine receptor antagonist'],0.07664040407466415,854,0
+dofetilide,['potassium channel blocker'],0.07714410381974053,895,-1
+phenelzine,['monoamine oxidase inhibitor'],0.07827387881641917,756,-1
+nizatidine,['histamine receptor antagonist'],0.078597896592471,769,0
+BGT226,['PI3K inhibitor'],0.07986231760177505,826,8
+kynurenic-acid,['glutamate receptor antagonist'],0.07995170186453984,821,12
+parbendazole,['tubulin polymerization inhibitor'],0.08021222557607163,874,19
+RG108,['DNA methyltransferase inhibitor'],0.08052225099552549,839,-1
+PF-4981517,['cytochrome P450 inhibitor'],0.08109890231596364,831,-1
+pibenzimol,['DNA inhibitor'],0.08168677309207363,918,15
+PD-168393,['EGFR inhibitor'],0.08220524795788639,922,9
+YM-976,['phosphodiesterase inhibitor'],0.08271504838536613,822,-1
+xanomeline,['acetylcholine receptor agonist'],0.08283227575769019,879,-1
+ixabepilone,['microtubule stabilizing agent'],0.08288230349043013,874,-1
+PF-562271,['focal adhesion kinase inhibitor'],0.08293957019070274,868,-1
+IKK-2-inhibitor-V,"['IKK inhibitor', ' NFkB pathway inhibitor']",0.08302098113364516,919,-1
+flumethasone-pivalate,['glucocorticoid receptor agonist'],0.08458722697596338,756,3
+theophylline,['adenosine receptor antagonist'],0.08532685472085046,826,-1
+CCG-50014,['G protein signaling inhibitor'],0.08701755030897813,834,-1
+AZ-628,['RAF inhibitor'],0.08730977333933303,906,-1
+cediranib,"['KIT inhibitor', ' VEGFR inhibitor']",0.08783539759340289,912,-1
+cabazitaxel,['microtubule inhibitor'],0.08848052687681128,894,-1
+TAS-103,['topoisomerase inhibitor'],0.08854667330267751,826,6
+estrone,"['estrogen receptor agonist', ' estrogenic hormone']",0.08855027311905378,804,-1
+cetylpyridinium,['None'],0.08905289769566684,889,1
+alisertib,['Aurora kinase inhibitor'],0.08909624561914284,915,21
+ruxolitinib,['JAK inhibitor'],0.08981262877113098,925,-1
+docetaxel,['tubulin polymerization inhibitor'],0.09033979010340625,925,19
+PKI-179,"['mTOR inhibitor', ' PI3K inhibitor']",0.09099593874642163,900,-1
+ABT-751,['tubulin polymerization inhibitor'],0.09108717280809847,849,19
+adarotene,['retinoid receptor agonist'],0.09124637577444229,243,-1
+BIX-01294,['histone lysine methyltransferase inhibitor'],0.0920376140409405,904,-1
+pranidipine,['calcium channel blocker'],0.09246039124377167,849,-1
+pyroxamide,['HDAC inhibitor'],0.09251464856318668,786,11
+CEP-33779,['JAK inhibitor'],0.09365436615131763,763,-1
+SCS,['None'],0.09385139241995877,626,1
+cyclosporin-a,['calcineurin inhibitor'],0.0950745366670161,811,-1
+AM-404,"['cyclooxygenase inhibitor', ' FAAH inhibitor', ' TRPV antagonist']",0.0950826826327524,509,-1
+selamectin,['nematocide'],0.09696297408583568,603,-1
+JK-184,['hedgehog pathway inhibitor'],0.0972922181007745,857,-1
+WAY-170523,['metalloproteinase inhibitor'],0.09849399390581072,899,-1
+polydatin,['ICAM1 expression inhibitor'],0.09910049192619108,865,-1
+SNS-314,['Aurora kinase inhibitor'],0.10048716758737754,834,21
+trometamol,['None'],0.10092901806982768,817,1
+4-methylgenistein,['protein tyrosine kinase inhibitor'],0.10115324221836298,904,-1
+sorafenib,"['FLT3 inhibitor', ' KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' RAF inhibitor', ' RET tyrosine kinase inhibitor', ' VEGFR inhibitor']",0.1026068826002678,925,-1
+LB42708,['farnesyltransferase inhibitor'],0.10375939698405937,896,-1
+nemonapride,['dopamine receptor antagonist'],0.10435637517437121,718,13
+paclitaxel,['tubulin polymerization inhibitor'],0.10517121227720884,925,19
+riociguat,['guanylate cyclase stimulant'],0.10519776490149604,736,-1
+dronedarone,['adrenergic receptor antagonist'],0.10776880581129349,826,18
+oxyphencyclimine,['cholinergic receptor antagonist'],0.10785937354386127,903,-1
+prednisolone-hemisuccinate,['glucocorticoid receptor agonist'],0.10836618074873444,916,3
+thiostrepton,"['FOXM1 inhibitor', ' protein synthesis inhibitor']",0.10899888206232819,854,-1
+hesperadin,['Aurora kinase inhibitor'],0.11033090705142636,842,21
+oxibendazole,['tubulin polymerization inhibitor'],0.11038385487567298,905,19
+mesna,['antioxidant'],0.11191451705806667,859,-1
+cetrimonium,['None'],0.11330878108178123,911,1
+pirenperone,['serotonin receptor antagonist'],0.1136955372569323,911,-1
+cyclocytidine,"['DNA synthesis inhibitor', ' RNA synthesis inhibitor']",0.1138517707896308,857,-1
+batimastat,['matrix metalloprotease inhibitor'],0.11431274176488385,925,-1
+LE-135,['retinoid receptor agonist'],0.1143149172221968,863,-1
+tyrphostin-AG-494,['EGFR inhibitor'],0.11596439504261499,860,9
+AZD3463,"['ALK tyrosine kinase receptor inhibitor', ' insulin growth factor receptor inhibitor']",0.11619625848181796,851,-1
+trequinsin,['phosphodiesterase inhibitor'],0.11774155953315645,822,-1
+tryptanthrin,['cyclooxygenase inhibitor'],0.11792687581897282,912,10
+OSI-027,['mTOR inhibitor'],0.11826162776132527,914,20
+SB-228357,['serotonin receptor antagonist'],0.11857711347255896,814,-1
+chlorpropamide,['ATP channel blocker'],0.11873488851597239,814,-1
+estradiol-benzoate,['contraceptive agent'],0.11887411296187463,678,-1
+TG-100713,['PI3K inhibitor'],0.1194138991780787,859,8
+NMS-873,['ATPase inhibitor'],0.12004527511470772,857,-1
+filgotinib,['JAK inhibitor'],0.12010354978532456,713,-1
+PF-3845,['FAAH inhibitor'],0.12084417551859128,822,-1
+GSK1838705A,['insulin growth factor receptor inhibitor'],0.12095060952255957,780,-1
+DCEBIO,['potassium channel activator'],0.12229387825631419,826,-1
+zardaverine,['phosphodiesterase inhibitor'],0.12416300166190598,891,-1
+OLDA,['TRPV agonist'],0.12491489074669576,682,-1
+quizartinib,['FLT3 inhibitor'],0.12580588711603352,906,-1
+HMN-214,['PLK inhibitor'],0.12615044928418387,908,-1
+RG2833,['HDAC inhibitor'],0.12676548867830886,822,11
+VU0238429,['acetylcholine receptor allosteric modulator'],0.12815615234018257,897,-1
+E7449,['PARP inhibitor'],0.1288944172188203,900,-1
+BMS-690514,"['EGFR inhibitor', ' VEGFR inhibitor']",0.12910778474850287,925,-1
+ibrutinib,"[""Bruton's tyrosine kinase (BTK) inhibitor""]",0.12979681127037693,915,-1
+cilostamide,['phosphodiesterase inhibitor'],0.13010120104454978,845,-1
+PP242,['mTOR inhibitor'],0.13038338249688686,874,20
+taltobulin,['tubulin polymerization inhibitor'],0.13060361463797748,732,19
+EPZ-5676,['histone lysine methyltransferase inhibitor'],0.13064564682379065,851,-1
+teroxirone,['DNA inhibitor'],0.13076621537446778,909,15
+GZD824,['Bcr-Abl kinase inhibitor'],0.13155358833062802,827,-1
+RU-58841,['androgen receptor antagonist'],0.1325267136726194,636,-1
+OSI-930,"['KIT inhibitor', ' VEGFR inhibitor']",0.1326270776482915,853,-1
+combretastatin-A-4,['tubulin polymerization inhibitor'],0.13321666868169715,925,19
+alexidine,['phosphatidylglycerophosphatase inhibitor'],0.1339123506552552,900,-1
+simvastatin,['HMGCR inhibitor'],0.13418396009415157,890,-1
+SC-144,['P glycoprotein inhibitor'],0.13488674091866643,842,-1
+iproniazid,['monoamine oxidase inhibitor'],0.13571568692742167,778,-1
+enocitabine,['DNA synthesis inhibitor'],0.1363229641524424,817,-1
+WYE-354,['mTOR inhibitor'],0.13653918620317082,918,20
+BF2.649,['histamine receptor antagonist'],0.1381462732579035,912,0
+secnidazole,"['acetylcholinesterase inhibitor', ' microtubule inhibitor']",0.13965148249155282,874,-1
+naftidrofuryl,['adrenergic receptor antagonist'],0.14225139352714777,675,18
+TAK-901,['Aurora kinase inhibitor'],0.14237988566825258,925,21
+PF-03758309,['p21 activated kinase inhibitor'],0.14309384136818368,646,-1
+FK-3311,['cyclooxygenase inhibitor'],0.14442952097773,871,10
+florfenicol,['protein synthesis inhibitor'],0.14450383866028163,793,5
+epinastine,['histamine receptor antagonist'],0.14659248722180382,745,0
+dichloroacetate,['pyruvate dehydrogenase kinase inhibitor'],0.14670426224727742,912,-1
+pepstatin,['aspartic protease inhibitor'],0.14679650890865753,854,-1
+GSK1292263,['glucose dependent insulinotropic receptor agonist'],0.14910285399233905,812,-1
+CP-673451,['PDGFR tyrosine kinase receptor inhibitor'],0.15006530443793858,884,-1
+suxibuzone,['cyclooxygenase inhibitor'],0.15008518166274343,887,10
+CGM097,['MDM inhibitor'],0.15013074477257612,807,-1
+pterostilbene,"['cyclooxygenase inhibitor', ' PPAR receptor agonist']",0.1503340703094211,655,-1
+PF-03814735,['Aurora kinase inhibitor'],0.15096964409104027,853,21
+TPCA-1,['IKK inhibitor'],0.15123169360332955,888,-1
+dienogest,['progesterone receptor agonist'],0.1522918067517849,900,-1
+indirubin,"['CDK inhibitor', ' glycogen synthase kinase inhibitor']",0.152783851720603,920,-1
+LY2801653,['MET inhibitor'],0.15421160703155626,925,-1
+crystal-violet,['other antibiotic'],0.1548053110634668,878,-1
+sevoflurane,['membrane integrity inhibitor'],0.15514969574066165,898,-1
+thiocolchicoside,['GABA receptor antagonist'],0.1552411335732994,807,-1
+oxprenolol,['adrenergic receptor antagonist'],0.15577272191185196,865,18
+tipiracil,['thymidine phosphorylase inhibitor'],0.15822224787709893,905,-1
+pomalidomide,"['angiogenesis inhibitor', ' tumor necrosis factor production inhibitor']",0.15850826802217804,834,-1
+vidarabine,['antiviral'],0.158568726126013,815,-1
+kenpaullone,"['CDK inhibitor', ' glycogen synthase kinase inhibitor']",0.16045737423275155,869,-1
+niacin,"['NAD precursor', ' vitamin B']",0.1610989757126383,626,-1
+indibulin,['tubulin polymerization inhibitor'],0.16232085197814416,849,19
+mepivacaine,"['potassium channel blocker', ' sodium channel blocker']",0.1625180574750525,763,-1
+FG-4592,['hypoxia inducible factor prolyl hydroxylase inhibitor'],0.16256686349358523,818,-1
+nelarabine,"['DNA synthesis inhibitor', ' T cell inhibitor']",0.1629195374199836,813,-1
+cisplatin,"['DNA alkylating agent', ' DNA synthesis inhibitor']",0.16364913626835081,905,-1
+embelin,"['HCV inhibitor', ' XIAP inhibitor']",0.16452115712064397,802,-1
+SRT1720,['SIRT activator'],0.16514992806990944,871,-1
+proflavine-hemisulfate,['topical anesthetic'],0.16522463884020885,719,-1
+SR-33805,['calcium channel blocker'],0.16567875699675064,732,-1
+PFI-1,['bromodomain inhibitor'],0.16608515393759987,898,-1
+bosentan,['endothelin receptor antagonist'],0.16799104759450834,783,-1
+BMS-754807,['IGF-1 inhibitor'],0.16830545612740175,925,-1
+NH125,['eukaryotic translation elongation factor 2 inhibitor'],0.16831081724250152,922,-1
+calcitriol,['vitamin D receptor agonist'],0.16846816547005308,854,-1
+lapatinib,['EGFR inhibitor'],0.1685339973271121,925,9
+lerisetron,['serotonin receptor antagonist'],0.16869524581061457,824,-1
+chloroxine,['opioid receptor antagonist'],0.16901371393496778,914,-1
+"MNS-(3,4-Methylenedioxy-nitrostyrene)","['src inhibitor', ' syk inhibitor']",0.17285170645454,840,-1
+JNJ-16259685,['glutamate receptor antagonist'],0.17409040416989263,788,12
+neratinib,['EGFR inhibitor'],0.17577350540023676,922,9
+captamine,['None'],0.17715591344140824,856,1
+PHA-680632,['Aurora kinase inhibitor'],0.17720874111205662,826,21
+torcetrapib,['cholesteryl ester transfer protein inhibitor'],0.17750899885842872,803,-1
+capecitabine,"['DNA synthesis inhibitor', ' thymidylate synthase inhibitor']",0.17851687397368926,918,-1
+balapiravir,['RNA polymerase inhibitor'],0.17895150416910272,875,-1
+domiphen,['None'],0.17958736552779578,838,1
+P276-00,['CDK inhibitor'],0.18216953880752246,925,16
+CGP-37849,['glutamate receptor antagonist'],0.1825631114951121,826,12
+PPT,['estrogen receptor agonist'],0.18360045193350033,837,-1
+fendiline,['calcium channel blocker'],0.18361958981890497,729,-1
+BIX-02188,['MEK inhibitor'],0.18418732100645716,875,4
+CCT137690,['Aurora kinase inhibitor'],0.18439177668744827,896,21
+KP-1212,['None'],0.18510872395765354,688,1
+pelitinib,['EGFR inhibitor'],0.18537693460990062,925,9
+etofylline-clofibrate,['platelet aggregation inhibitor'],0.18575074878390557,667,-1
+parthenolide,['NFkB pathway inhibitor'],0.18629340475765585,722,-1
+SN-38,['topoisomerase inhibitor'],0.18740887791169622,637,6
+idazoxan,['adrenergic receptor antagonist'],0.18766429654314176,897,18
+lonafarnib,['farnesyltransferase inhibitor'],0.18784710244518696,898,-1
+ixazomib,['proteasome inhibitor'],0.18897587478144193,924,-1
+blebbistatin-(-),['ATPase inhibitor'],0.1905299429515183,798,-1
+MTPG,['glutamate receptor antagonist'],0.19084724648568896,839,12
+LY2109761,['TGF beta receptor inhibitor'],0.19131006617623714,807,-1
+fluocinolone-acetonide,['glucocorticoid receptor agonist'],0.19299993139899052,873,3
+isoetharine,['adrenergic receptor agonist'],0.19339583743388672,743,2
+nicorandil,"['nitric oxide donor', ' potassium channel activator']",0.19527325888225266,818,-1
+diphenyleneiodonium,['nitric oxide synthase inhibitor'],0.19558280862926072,859,-1
+dinaciclib,['CDK inhibitor'],0.1964322838909211,925,16
+levocarnitine,['None'],0.19672357683201036,750,1
+securinine,"['GABA receptor antagonist', ' TP53 activator']",0.19707011513806988,857,-1
+fluoromethylcholine,['None'],0.19732107109746183,680,1
+SB-505124,['ALK tyrosine kinase receptor inhibitor'],0.19750518087136065,873,-1
+resatorvid,['toll-like receptor antagonist'],0.20088734049534118,864,-1
+SID-7969543,['steroidogenic factor antagonist'],0.20318029160519097,790,-1
+fdcyd,['DNA methyltransferase inhibitor'],0.20397863061601998,854,-1
+GSK461364,['PLK inhibitor'],0.20465792954352993,910,-1
+carmustine,"['DNA alkylating agent', ' DNA inhibitor']",0.20555467908024655,856,-1
+noretynodrel,['progestogen hormone'],0.20557930475908257,800,-1
+SU3327,['JNK inhibitor'],0.20751667368540555,922,-1
+nizofenone,['ion channel antagonist'],0.20790795885266178,870,-1
+chlorpyrifos,['acetylcholinesterase inhibitor'],0.20884191276902989,758,-1
+D-7193,['None'],0.20939269703872443,861,1
+fluorometholone,['glucocorticoid receptor agonist'],0.20940501319547342,790,3
+evodiamine,"['ATPase inhibitor', ' TRPV agonist']",0.2107944323902409,921,-1
+PRT062070,"['JAK inhibitor', ' syk inhibitor']",0.2119935645635583,859,-1
+Ro-10-5824,['dopamine receptor agonist'],0.2124800569199232,820,-1
+GW-583340,['EGFR inhibitor'],0.21298329984001868,906,9
+nocodazole,['tubulin polymerization inhibitor'],0.21434153828336713,896,19
+ZK-93423,['benzodiazepine receptor agonist'],0.21563709356157407,919,14
+halobetasol-propionate,['glucocorticoid receptor agonist'],0.2170618257499792,899,3
+phenylbutazone,"['cyclooxygenase inhibitor', ' prostanoid receptor antagonist']",0.21766338005115465,808,-1
+SB-218078,['CHK inhibitor'],0.21769890402234912,908,-1
+guanidine,['HSP inhibitor'],0.2179015405755591,838,17
+PHA-767491,['CDC inhibitor'],0.21802986122715493,864,-1
+I-BET-762,['bromodomain inhibitor'],0.22207603006638413,914,-1
+artesunate,['DNA synthesis inhibitor'],0.2243048819970538,824,-1
+S-methylcysteine,['None'],0.22585193765595651,795,1
+nobiletin,['MEK inhibitor'],0.22696034191863693,873,4
+lomefloxacin,['bacterial DNA gyrase inhibitor'],0.2272183687899255,452,-1
+telatinib,"['KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",0.22732448549520176,868,-1
+danusertib,"['Aurora kinase inhibitor', ' growth factor receptor inhibitor']",0.22862964338073144,873,-1
+NVP-AUY922,['HSP inhibitor'],0.2299203155874486,925,17
+U-18666A,['oxidosqualene cyclase inhibitor'],0.23310478742452925,877,-1
+dexamethasone-acetate,['glucocorticoid receptor agonist'],0.23339002296798364,638,3
+raclopride,['dopamine receptor antagonist'],0.23391706515130695,851,13
+chloramphenicol-palmitate,['protein synthesis inhibitor'],0.23445953244886983,686,5
+CNX-774,"[""Bruton's tyrosine kinase (BTK) inhibitor""]",0.237431675646243,892,-1
+dichlorisone-acetate,['None'],0.23755434327923666,643,1
+ethacridine-lactate-monohydrate,['DNA intercalating agent'],0.23771793522989446,842,-1
+stattic,['None'],0.24096642054741887,826,1
+PF-04136309,['CC chemokine receptor antagonist'],0.2409912046128403,810,-1
+flubendazole,['tubulin polymerization inhibitor'],0.24686586784159634,925,19
+alvocidib,['CDK inhibitor'],0.25037189518354797,914,16
+ketoprofen,['cyclooxygenase inhibitor'],0.2505260780977241,810,10
+oncrasin-1,['apoptosis stimulant'],0.2515287956278984,912,-1
+mibampator,['glutamate receptor modulator'],0.2521359822169651,732,-1
+kifunensine,['mannosidase inhibitor'],0.25377386935112384,871,-1
+WYE-125132,['mTOR inhibitor'],0.2539955902641287,857,20
+dirithromycin,['bacterial 50S ribosomal subunit inhibitor'],0.25473560100853304,896,-1
+NU6027,['CDK inhibitor'],0.25502680931470884,827,16
+VX-765,['caspase inhibitor'],0.2551990639440763,837,-1
+inosine,['neurotrophic agent'],0.25675361689543663,877,-1
+pitavastatin,['HMGCR inhibitor'],0.25852691213931156,719,-1
+S26948,['PPAR receptor agonist'],0.25995561615583934,825,-1
+uridine,['dopamine receptor agonist'],0.2606216283171202,813,-1
+practolol,['adrenergic receptor antagonist'],0.2608890176670386,719,18
+AZD6482,['PI3K inhibitor'],0.26169882243619436,925,8
+RITA,['MDM inhibitor'],0.26618359194273067,866,-1
+Y-320,['interleukin inhibitor'],0.2666861163892025,827,-1
+palmatine-chloride,['dopamine synthesis inhibitor'],0.2668441389548196,854,-1
+teprenone,['mucus protecting agent'],0.2673964255783408,825,-1
+NVP-TAE684,['ALK tyrosine kinase receptor inhibitor'],0.2697030981783854,853,-1
+carmofur,['thymidylate synthase inhibitor'],0.27241889337819936,922,-1
+BAY-87-2243,['hypoxia inducible factor inhibitor'],0.2728154943520064,849,-1
+fosbretabulin,"['tubulin polymerization inhibitor', ' VE-cadherin antagonist']",0.2760696215316213,925,-1
+WZ-3146,['EGFR inhibitor'],0.27738807126939075,855,9
+AMG-208,['tyrosine kinase inhibitor'],0.278666337690357,840,-1
+TH-302,['DNA alkylating agent'],0.27998668627254936,732,-1
+vincamine,['adrenergic receptor antagonist'],0.2800754654254761,887,18
+MK-3207,['calcitonin antagonist'],0.2815209265507342,847,-1
+rutin,"['antioxidant', ' capillary stabilizing agent', ' nitric oxide scavenger']",0.28228421927598446,911,-1
+dapivirine,['non-nucleoside reverse transcriptase inhibitor'],0.28442582420182166,853,-1
+atenolol-(+/-),['adrenergic receptor antagonist'],0.2855970725870416,764,18
+lappaconite,['sodium channel blocker'],0.28562127494156914,925,7
+SAR131675,['VEGFR inhibitor'],0.288432321559383,859,-1
+ouabain,['ATPase inhibitor'],0.28868905824030194,854,-1
+ajmaline,['sodium channel blocker'],0.2892968605473782,780,7
+LY303511,"['casein kinase inhibitor', ' mTOR inhibitor', ' PI3K inhibitor']",0.2901075253343696,831,-1
+ramifenazone,['cyclooxygenase inhibitor'],0.29027742634352477,755,10
+eprobemide,['monoamine oxidase inhibitor'],0.29180530698118196,796,-1
+5-hydroxymethyl-tolterodine,['acetylcholine receptor antagonist'],0.29257982840111957,732,-1
+metaraminol,['adrenergic receptor agonist'],0.2930033021730023,908,2
+tacedinaline,['HDAC inhibitor'],0.29377585325448397,925,11
+sulmazole,['adenosine receptor antagonist'],0.29423630051754646,875,-1
+rifampin,['RNA polymerase inhibitor'],0.2956617767803907,906,-1
+ritodrine,['adrenergic receptor agonist'],0.29596917969577324,867,2
+nitrocaramiphen,['cholinergic receptor antagonist'],0.2962564955731853,699,-1
+CCT129202,['Aurora kinase inhibitor'],0.30076746273030436,897,21
+mycophenolic-acid,"['dehydrogenase inhibitor', ' inositol monophosphatase inhibitor']",0.3035441822431835,719,-1
+ethinyl-estradiol,"['estrogen receptor agonist', ' estrogenic hormone']",0.30426887650364626,768,-1
+CCMI,['acetylcholine receptor allosteric modulator'],0.306315261376507,854,-1
+vanoxerine,['dopamine uptake inhibitor'],0.30747275020972004,925,-1
+IOWH032,['CFTR channel antagonist'],0.30783386741046037,914,-1
+tropisetron,['serotonin receptor antagonist'],0.3084406330630769,817,-1
+everolimus,['mTOR inhibitor'],0.30849428552148445,922,20
+gamma-aminobutyric-acid,['benzodiazepine receptor agonist'],0.3091337388760636,773,14
+VE-821,['ATR kinase inhibitor'],0.31096817310826524,918,-1
+ZK811752,['CC chemokine receptor antagonist'],0.31188880687993953,914,-1
+Ro-4987655,['MEK inhibitor'],0.312769362463205,873,4
+LY456236,['glutamate receptor antagonist'],0.3135915041550943,897,12
+imiloxan,['adrenergic receptor antagonist'],0.31367238595642016,666,18
+vismodegib,"['hedgehog pathway inhibitor', ' smoothened receptor antagonist']",0.3150594988725514,918,-1
+INC-280,['c-Met inhibitor'],0.31525423074442055,908,-1
+KW-2449,"['Abl kinase inhibitor', ' Aurora kinase inhibitor', ' FLT3 inhibitor']",0.31726364115255,861,-1
+nisoxetine,['norepinephrine reuptake inhibitor'],0.3183721590270137,767,-1
+saracatinib,['src inhibitor'],0.3264043684181472,924,-1
+dihydromyricetin,['None'],0.3282188693777969,897,1
+diazooxonorleucine,['glutamate receptor antagonist'],0.32878439903596096,869,12
+GSK429286A,['rho associated kinase inhibitor'],0.3303927056812918,793,-1
+novobiocin,['bacterial DNA gyrase inhibitor'],0.33070120293409216,913,-1
+anastrozole,['aromatase inhibitor'],0.33147459164487836,811,-1
+lanoconazole,['sterol demethylase inhibitor'],0.3316313731870539,716,-1
+alvespimycin,['HSP inhibitor'],0.3319493721815282,914,17
+"L-798,106",['prostanoid receptor antagonist'],0.33303516346768725,842,-1
+mycophenolate-mofetil,"['dehydrogenase inhibitor', ' inositol monophosphatase inhibitor']",0.3342622628571682,647,-1
+sulfanilamide,['carbonic anhydrase inhibitor'],0.3352342257755177,774,-1
+dacomitinib,['EGFR inhibitor'],0.3367943481060106,925,9
+SCH-900776,['CHK inhibitor'],0.34164653124282857,925,-1
+iobenguane,['antineoplastic agent'],0.3425684905004279,483,-1
+iodipamide,['radiopaque medium'],0.34281969621555836,817,-1
+SDZ-WAG-994,['adenosine receptor agonist'],0.34362812244609287,886,-1
+A61603,['adrenergic receptor agonist'],0.3468407432779578,859,2
+ulipristal,['progesterone receptor antagonist'],0.3490098294772696,658,-1
+digitoxigenin,['ATPase inhibitor'],0.34987061640541633,922,-1
+melphalan,"['DNA alkylating agent', ' DNA inhibitor']",0.3504238718162876,877,-1
+usniacin-(+),['MAP kinase activator'],0.3528520077322422,883,-1
+4-chlorophenylguanidine,['urokinase inhibitor'],0.3542205092272458,835,-1
+clomifene,['estrogen receptor antagonist'],0.35587415919094106,883,-1
+spiradoline,['opioid receptor agonist'],0.35652977292498983,845,-1
+lomitapide,['microsomal trigylceride transfer protein inhibitor'],0.3569150123470357,767,-1
+tucatinib,['EGFR inhibitor'],0.35733971055807184,876,9
+penicillamine-(D),['chelating agent'],0.3580659466864885,845,-1
+OSI-420,['EGFR inhibitor'],0.35994474343314203,885,9
+dichlorvos,['acetylcholinesterase inhibitor'],0.36300864056219645,913,-1
+drospirenone,['mineralocorticoid receptor antagonist'],0.36442786546364847,880,-1
+oxaliplatin,['DNA inhibitor'],0.3655601085685163,871,15
+RI-1,['None'],0.3667083373902062,777,1
+tyrphostin-AG-1296,['FLT3 inhibitor'],0.36759671321708903,886,-1
+sulconazole,['sterol demethylase inhibitor'],0.36815255344528974,887,-1
+adaprev,['TGF beta receptor inhibitor'],0.36984492267424013,924,-1
+azithromycin,['bacterial 50S ribosomal subunit inhibitor'],0.3716920861870173,815,-1
+tazemetostat,['histone lysine methyltransferase inhibitor'],0.37273315926871736,835,-1
+sarafloxacin,['bacterial DNA gyrase inhibitor'],0.3730380805956944,707,-1
+icotinib,['EGFR inhibitor'],0.37399287744319465,925,9
+istradefylline,['adenosine receptor antagonist'],0.37956980100942495,634,-1
+FPH1-(BRD-6125),['hepatocyte function enhancer'],0.38377414533353493,712,-1
+MLN-8054,['Aurora kinase inhibitor'],0.38677648980281465,681,21
+PD-407824,['PKC inhibitor'],0.3900841579558247,802,-1
+ku-0063794,['mTOR inhibitor'],0.39147651250745635,922,20
+azacitidine,['DNA methyltransferase inhibitor'],0.3935269975543621,917,-1
+epiandrosterone,['steroid'],0.3940875731018698,799,-1
+dequalinium,['PKC inhibitor'],0.39458220783390796,908,-1
+finafloxacin,['bacterial DNA gyrase inhibitor'],0.3956194848790099,850,-1
+isoflupredone-acetate,['None'],0.3960672852168859,734,1
+2'-MeCCPA,['adenosine receptor agonist'],0.3967931322975683,760,-1
+salinomycin,['None'],0.3969045763484488,843,1
+tyloxapol,['NFkB pathway inhibitor'],0.39843703556664417,613,-1
+GSK2110183,['AKT inhibitor'],0.39888582928272104,832,-1
+diaveridine,['dihydrofolate reductase inhibitor'],0.3995425212891935,883,-1
+nintedanib,"['FGFR inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",0.4003192102329206,905,-1
+omeprazole,['ATPase inhibitor'],0.4015858510167259,720,-1
+nicotine,['acetylcholine receptor agonist'],0.4020975558891847,797,-1
+ercalcitriol,['vitamin D receptor agonist'],0.40285991655145625,826,-1
+panobinostat,['HDAC inhibitor'],0.40348892258862046,925,11
+butamben,['sodium channel blocker'],0.4039043389468705,801,7
+PF-04457845,['FAAH inhibitor'],0.40567634763771654,925,-1
+AVL-292,"[""Bruton's tyrosine kinase (BTK) inhibitor""]",0.40802381987013536,870,-1
+semaxanib,['VEGFR inhibitor'],0.410511649349586,905,-1
+efonidipine-monoethanolate,"['L-type calcium channel blocker', ' T-type calcium channel blocker']",0.412950732437068,906,-1
+clebopride,['dopamine receptor antagonist'],0.4137938971565188,710,13
+se-methylselenocysteine,['None'],0.4147228486260229,866,1
+chlorambucil,['DNA inhibitor'],0.41551051478999695,818,15
+nexturastat-a,['HDAC inhibitor'],0.416483776931857,836,11
+amfenac,['cyclooxygenase inhibitor'],0.4168126359328512,880,10
+josamycin,['bacterial 50S ribosomal subunit inhibitor'],0.41776555334692217,850,-1
+PF-573228,['focal adhesion kinase inhibitor'],0.4192942711840564,902,-1
+ribitol,['None'],0.42003316618695885,846,1
+radezolid,"['bacterial 30S ribosomal subunit inhibitor', ' bacterial 50S ribosomal subunit inhibitor']",0.4200677152543017,833,-1
+papaverine,['phosphodiesterase inhibitor'],0.42074214196173054,808,-1
+mifepristone,"['glucocorticoid receptor antagonist', ' progesterone receptor antagonist']",0.42346071319481315,901,-1
+cinromide,['None'],0.42435245665632265,755,1
+UNBS-5162,['CC chemokine receptor antagonist'],0.4246412029834283,832,-1
+SB-366791,['TRPV antagonist'],0.42641156878479114,899,-1
+AP1903,['None'],0.43145608418587883,718,1
+BMS-626529,['HIV attachment inhibitor'],0.43262802925709154,800,-1
+gimeracil,['dihydropyrimidine dehydrogenase inhibitor'],0.4327677289487246,768,-1
+acetazolamide,['carbonic anhydrase inhibitor'],0.4327821186372012,799,-1
+dehydrocholate-acid,['None'],0.4359763473720306,818,1
+pentamidine,['anti-pneumocystis agent'],0.43600016090519716,808,-1
+thioproperazine,['dopamine receptor antagonist'],0.4365409016111521,295,13
+talazoparib,['PARP inhibitor'],0.4440896173282327,925,-1
+methoxyflurane,['membrane permeability inhibitor'],0.44480733741400125,903,-1
+cinalukast,['leukotriene receptor antagonist'],0.44875742665381585,832,-1
+SB-657510,['urotensin receptor antagonist'],0.44908130826671244,853,-1
+D-Serine,['glutamate receptor agonist'],0.4496548510685035,665,-1
+8-hydroxy-PIPAT,['dopamine receptor ligand'],0.4501886343840637,878,-1
+MK-0812,['CC chemokine receptor antagonist'],0.4511191095479495,825,-1
+hyoscyamine,['acetylcholine receptor antagonist'],0.45113665227067984,905,-1
+niclosamide,"['DNA replication inhibitor', ' STAT inhibitor']",0.45392823034974894,902,-1
+tranilast,['angiogenesis inhibitor'],0.4582478018032278,912,-1
+ramatroban,['prostanoid receptor antagonist'],0.45879731259704676,795,-1
+mozavaptan,['vasopressin receptor antagonist'],0.46040536824147155,856,-1
+LY2784544,['JAK inhibitor'],0.46189403388540246,895,-1
+GW-405833,['cannabinoid receptor agonist'],0.46276767063928714,895,-1
+CS-110266,['dopamine receptor agonist'],0.462799644919769,821,-1
+SB-218795,['tachykinin antagonist'],0.4644826662412997,779,-1
+SB-205384,['GABA receptor modulator'],0.4655924291402382,912,-1
+homoharringtonine,['protein synthesis inhibitor'],0.4660982114837344,912,5
+dianhydrogalactitol,['DNA alkylating agent'],0.46855871835922386,913,-1
+mercaptopurine,"['immunosuppressant', ' protein synthesis inhibitor', ' purine antagonist']",0.47103070448277307,852,-1
+anagrelide,['phosphodiesterase inhibitor'],0.4718312497642011,892,-1
+doxycycline,['metalloproteinase inhibitor'],0.47296847417982707,925,-1
+lucitanib,"['FGFR inhibitor', ' VEGFR inhibitor']",0.47326461705528516,877,-1
+tiotidine,['histamine receptor antagonist'],0.47597426024255346,884,0
+AZD5363,['AKT inhibitor'],0.4764375764265772,881,-1
+PI-828,['PI3K inhibitor'],0.4766532693191623,791,8
+norgestrel,['progesterone receptor agonist'],0.4773658623721082,801,-1
+methocarbamol,['muscle relaxant'],0.47845436870579655,654,-1
+genipin,['choleretic agent'],0.47853716564526233,912,-1
+selumetinib,['MEK inhibitor'],0.4798932872935442,925,4
+narlaprevir,['HCV inhibitor'],0.4819232443537448,313,-1
+TAME,['None'],0.48247188080124503,806,1
+betamethasone,['glucocorticoid receptor agonist'],0.4827469749522062,786,3
+LCL-161,['XIAP inhibitor'],0.491991002139828,816,-1
+CGS-20625,"['benzodiazepine receptor agonist', ' GABA benzodiazepine site receptor partial agonist']",0.4923919936682886,847,-1
+Ro-90-7501,['None'],0.49755991200020927,882,1
+AZD8931,['EGFR inhibitor'],0.4981028340740817,922,9
+decitabine,['DNA methyltransferase inhibitor'],0.49815369641203217,904,-1
+cycloheximide,['protein synthesis inhibitor'],0.4994582720915437,858,5
+methscopolamine,['acetylcholine receptor antagonist'],0.5004042413251434,818,-1
+hydrocortisone,['glucocorticoid receptor agonist'],0.5021700814269131,128,3
+GSK650394,['serum/glucocorticoid regulated kinase inhibitor'],0.502768863895214,918,-1
+ambazone,['DNA damage inducer'],0.5030430707362468,799,-1
+tyrphostin-AG-99,['tyrosine kinase inhibitor'],0.5051945135338457,884,-1
+loxistatin-acid,['cysteine peptidase inhibitor'],0.5053997101946387,818,-1
+skepinone-l,['p38 MAPK inhibitor'],0.5105957920645141,874,-1
+acetylsalicylsalicylic-acid,['cyclooxygenase inhibitor'],0.5109419223042236,875,10
+oleoylethanolamide,"['cannabinoid receptor agonist', ' glucose dependent insulinotropic receptor agonist', ' potassium channel blocker', ' PPAR receptor agonist']",0.5115591709729814,787,-1
+dicycloverine,['acetylcholine receptor antagonist'],0.514899363848335,800,-1
+resiquimod,['toll-like receptor agonist'],0.5171154578783402,915,-1
+navitoclax,['BCL inhibitor'],0.5188083806697069,925,-1
+JZL-184,['monoacylglucerol lipase inhibitor'],0.5204925555155864,859,-1
+ecamsule-triethanolamine,['None'],0.521951243429511,797,1
+tetrahydrouridine,['cytidine deaminase inhibitor'],0.5232830964854598,900,-1
+isopropyl-myristate,['None'],0.523345013446242,882,1
+FK-866,['niacinamide phosphoribosyltransferase inhibitor'],0.5246202142743757,925,-1
+tanaproget,['progesterone receptor agonist'],0.5247188634869697,873,-1
+FK-888,['tachykinin antagonist'],0.5249687631868486,780,-1
+RKI-1447,['rho associated kinase inhibitor'],0.5267856562399358,900,-1
+pyritinol,['None'],0.5307521631399239,515,1
+uracil,['None'],0.535206568722022,825,1
+caffeic-acid-phenethyl-ester,['HIV integrase inhibitor'],0.535677133072667,843,-1
+nomegestrol-acetate,['progesterone receptor agonist'],0.5419556743369669,664,-1
+axitinib,"['PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",0.5419700103222991,921,-1
+abemaciclib,['CDK inhibitor'],0.5437317910103902,925,16
+methiazole,['anthelmintic agent'],0.5452181002625234,849,-1
+MK-2461,"['FGFR inhibitor', ' VEGFR inhibitor']",0.5457413004741867,900,-1
+AMG458,['MET inhibitor'],0.5479117684490986,882,-1
+tipranavir,['HIV protease inhibitor'],0.5484483643417618,706,-1
+ciclesonide,['glucocorticoid receptor agonist'],0.5507000770751054,786,3
+paricalcitol,['vitamin D receptor agonist'],0.5508321603409996,654,-1
+cyromazine,['None'],0.5508627729248461,778,1
+flufenamic-acid,['chloride channel blocker'],0.5551494650297479,809,-1
+TWS-119,['glycogen synthase kinase inhibitor'],0.55700224414166,847,-1
+naproxen,['cyclooxygenase inhibitor'],0.5624611497017074,577,10
+adapalene,['retinoid receptor agonist'],0.5660589060776956,834,-1
+Y-27632,['rho associated kinase inhibitor'],0.5714172476801939,732,-1
+pindolol,['adrenergic receptor antagonist'],0.5719649945141062,787,18
+cytochalasin-b,['microtubule inhibitor'],0.5750582948221717,925,-1
+dihydroartemisinin,['antimalarial agent'],0.5763205703774973,730,-1
+7-aminocephalosporanic-acid,['beta lactamase inhibitor'],0.5763273722518366,762,-1
+venetoclax,['BCL inhibitor'],0.5823829943530626,919,-1
+MLN0128,['mTOR inhibitor'],0.5892666178858044,925,20
+TAK-285,['EGFR inhibitor'],0.5894620145519289,900,9
+PETCM,['caspase activator'],0.5923298768889036,874,-1
+beclomethasone-dipropionate,['glucocorticoid receptor agonist'],0.5923759251106196,794,3
+minocycline,['bacterial 30S ribosomal subunit inhibitor'],0.5936729108374249,661,-1
+oxymatrine,['None'],0.5970228228303609,813,1
+sunitinib,"['FLT3 inhibitor', ' KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' RET tyrosine kinase inhibitor', ' VEGFR inhibitor']",0.601211569559882,925,-1
+CYC116,['Aurora kinase inhibitor'],0.6018160610841735,846,21
+tasisulam,['apoptosis stimulant'],0.6025102385321034,925,-1
+ponatinib,"['Bcr-Abl kinase inhibitor', ' FLT3 inhibitor', ' PDGFR tyrosine kinase receptor inhibitor']",0.603213844636439,913,-1
+clenbuterol,['adrenergic receptor agonist'],0.6042894679505397,802,2
+desoxycortone,['mineralocorticoid receptor agonist'],0.6047294804574566,808,-1
+CEP-32496,['RAF inhibitor'],0.6055248095990443,802,-1
+TMC-353121,['RSV fusion inhibitor'],0.6075476497523753,888,-1
+ADL5859,['opioid receptor agonist'],0.6107081130551307,842,-1
+RN-1734,['TRPV antagonist'],0.6107660202559795,865,-1
+ZLN005,['None'],0.6124085443379974,832,1
+riboflavin,['vitamin B2'],0.6125055031246088,741,-1
+NSC-3852,['HDAC inhibitor'],0.6143760709311177,859,11
+ICG-001,['beta-catenin inhibitor'],0.6147600466872022,907,-1
+JQ1-(+),['bromodomain inhibitor'],0.6172865946793413,855,-1
+prednisolone,['glucocorticoid receptor agonist'],0.6205445677245552,738,3
+navarixin,['CC chemokine receptor antagonist'],0.621949932299567,810,-1
+homoquinolinic-acid,['glutamate receptor agonist'],0.6221881974519099,838,-1
+AST-1306,['EGFR inhibitor'],0.6239424292851583,750,9
+pevonedistat,['nedd activating enzyme inhibitor'],0.6244747287427117,921,-1
+albendazole,['tubulin polymerization inhibitor'],0.6262293176881393,854,19
+12-O-tetradecanoylphorbol-13-acetate,['PKC activator'],0.6310429306162041,826,-1
+baicalin,['beta glucuronidase inhibitor'],0.632881755202647,798,-1
+U-0126,['MEK inhibitor'],0.6345194093393277,922,4
+linsitinib,['IGF-1 inhibitor'],0.6369918809975893,871,-1
+chlorhexidine,['membrane integrity inhibitor'],0.637270510321604,806,-1
+MK-2206,['AKT inhibitor'],0.6389418329687795,752,-1
+AMG-232,['MDM inhibitor'],0.6439541660052229,833,-1
+methacycline,['protein synthesis inhibitor'],0.6453161623602033,913,5
+GSK1904529A,"['IGF-1 inhibitor', ' insulin growth factor receptor inhibitor', ' insulin receptor ligand']",0.6466583841271237,811,-1
+apatinib,['RET tyrosine kinase inhibitor'],0.6531247648322049,855,-1
+AMG900,['Aurora kinase inhibitor'],0.6535934469014845,888,21
+1-azakenpaullone,['glycogen synthase kinase inhibitor'],0.6538143045203194,875,-1
+PHA-848125,"['CDK inhibitor', ' growth factor receptor inhibitor']",0.6574259811053229,925,-1
+buthionine-sulfoximine,['glutathione transferase inhibitor'],0.6591318615676811,751,-1
+1-phenylbiguanide,['serotonin receptor agonist'],0.6595027173244682,722,-1
+SB-242235,['p38 MAPK inhibitor'],0.6596536582972169,815,-1
+FR-139317,['endothelin receptor antagonist'],0.6605722897111581,841,-1
+rimexolone,['glucocorticoid receptor agonist'],0.6636641079126626,812,3
+astemizole,['histamine receptor antagonist'],0.6656904331296303,828,0
+propranolol,['adrenergic receptor antagonist'],0.6656953918857307,734,18
+zolantidine,['histamine receptor antagonist'],0.6666370200311096,518,0
+dasatinib,"['Bcr-Abl kinase inhibitor', ' ephrin inhibitor', ' KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' src inhibitor', ' tyrosine kinase inhibitor']",0.6687919641210691,910,-1
+piperine,['monoamine oxidase inhibitor'],0.6700173950387501,879,-1
+spermidine,['glutamate receptor modulator'],0.6710072345078595,878,-1
+favipiravir,['RNA polymerase inhibitor'],0.6751085133536049,800,-1
+barasertib,['Aurora kinase inhibitor'],0.6774734145791321,925,21
+norethindrone-acetate,['progesterone receptor agonist'],0.6798325434858777,737,-1
+sparfloxacin,['bacterial DNA gyrase inhibitor'],0.680154831351286,874,-1
+idelalisib,['PI3K inhibitor'],0.6807048028272497,889,8
+fluroxene,['local anesthetic'],0.6811802817338579,867,-1
+atiprimod,"['JAK inhibitor', ' STAT inhibitor']",0.6838881710258192,798,-1
+adefovir-dipivoxil,['DNA polymerase inhibitor'],0.6862915409654502,727,-1
+K-Ras(G12C)-inhibitor-6,['K-ras inhibitor'],0.6868234862416973,882,-1
+NVP-AEW541,['IGF-1 inhibitor'],0.6886000845202445,730,-1
+idasanutlin,['MDM inhibitor'],0.6901982318415658,925,-1
+ONC201,"['AKT inhibitor', ' MAP kinase inhibitor']",0.6946984310583698,847,-1
+raloxifene,"['estrogen receptor antagonist', ' selective estrogen receptor modulator (SERM)']",0.6961522715456155,666,-1
+P22077,['ubiquitin specific protease inhibitor'],0.7071147664810544,856,-1
+clofibrate,['PPAR receptor agonist'],0.707357118030107,648,-1
+fluticasone-propionate,['glucocorticoid receptor agonist'],0.7161488314030763,727,3
+felbamate,['glutamate receptor antagonist'],0.7197532265708793,788,12
+AVN-944,['inosine monophosphate dehydrogenase inhibitor'],0.7367841339642276,925,-1
+GS-39783,['GABA receptor modulator'],0.7374489960000761,809,-1
+latanoprost,['prostanoid receptor agonist'],0.7387112142689028,820,-1
+bephenium-hydroxynaphthoate,['anthelmintic agent'],0.7412567197011881,787,-1
+CNX-2006,['EGFR inhibitor'],0.7462968309307829,826,9
+CCT128930,['AKT inhibitor'],0.7501904820920354,875,-1
+fludroxycortide,['glucocorticoid receptor agonist'],0.7508777465765795,827,3
+torasemide,"['electrolyte reabsorption inhibitor', ' thromboxane receptor antagonist']",0.7514725412435053,815,-1
+acetophenazine,['dopamine receptor antagonist'],0.7557106314655978,802,13
+picolinic-acid,['chelating agent'],0.7557390732967167,842,-1
+BMS-345541,['IKK inhibitor'],0.7566971075379528,857,-1
+barasertib-HQPA,['Aurora kinase inhibitor'],0.762048549765904,827,21
+TU-2100,['None'],0.7631050097322315,718,1
+artemisinin,['DNA synthesis inhibitor'],0.7737522269325585,853,-1
+NVP-BEZ235,"['mTOR inhibitor', ' PI3K inhibitor']",0.7786264962296019,920,-1
+irinotecan,['topoisomerase inhibitor'],0.7805731018347254,922,6
+tideglusib,['glycogen synthase kinase inhibitor'],0.7817921698666931,871,-1
+AM-251,['cannabinoid receptor antagonist'],0.7831618790738015,900,-1
+PQ-401,['IGF-1 inhibitor'],0.7837673534717311,789,-1
+erastin,['ion channel antagonist'],0.7856707536713143,713,-1
+cyproterone-acetate,['androgen receptor antagonist'],0.7907710251954527,697,-1
+GDC-0879,['RAF inhibitor'],0.7930056618546641,795,-1
+alfacalcidol,['vitamin D receptor agonist'],0.8013662112646133,906,-1
+N-acetylmannosamine,['None'],0.8038458751832445,721,1
+flumethasone,['glucocorticoid receptor agonist'],0.8061183990406507,840,3
+bindarit,['NFkB pathway inhibitor'],0.813361708243596,816,-1
+levobunolol,['adrenergic receptor antagonist'],0.8136887226392231,791,18
+TC1,['beta-secretase inhibitor'],0.816047028936835,796,-1
+meloxicam,['cyclooxygenase inhibitor'],0.8179830528584745,812,10
+nutlin-3,['MDM inhibitor'],0.8199098636736731,819,-1
+estradiol-cypionate,['estrogen receptor agonist'],0.8201124084778336,864,-1
+ZM-306416,"['Abl kinase inhibitor', ' src inhibitor', ' VEGFR inhibitor']",0.8220507653954421,889,-1
+brequinar,['dihydroorotate dehydrogenase inhibitor'],0.8222438101363398,925,-1
+tamibarotene,['retinoid receptor agonist'],0.8235125833499762,921,-1
+DVD-111,['None'],0.8242503482785961,810,1
+caffeic-acid,"['HIV integrase inhibitor', ' lipoxygenase inhibitor', ' nitric oxide production inhibitor', ' tumor necrosis factor production inhibitor']",0.8258741261261567,792,-1
+isofloxythepin,['dopamine receptor antagonist'],0.8322059996972075,863,13
+CHIR-99021,['glycogen synthase kinase inhibitor'],0.8332561907218682,822,-1
+BAM7,['BAX activator'],0.8353086983336016,851,-1
+GDC-0068,['AKT inhibitor'],0.8357256416697296,873,-1
+atorvastatin,['HMGCR inhibitor'],0.8496579325732018,858,-1
+TG100-115,['PI3K inhibitor'],0.8506456702413648,830,8
+AM-580,['retinoid receptor agonist'],0.8582116473186975,720,-1
+VTP-27999,['renin inhibitor'],0.8746680176510913,642,-1
+zolmitriptan,['serotonin receptor agonist'],0.8789386025453952,893,-1
+gefitinib,['EGFR inhibitor'],0.8814852038074535,922,9
+LGX818,['RAF inhibitor'],0.8835100760842137,868,-1
+linifanib,"['PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",0.8835365802332485,925,-1
+erythritol,['None'],0.8836717814906956,863,1
+aspirin,['cyclooxygenase inhibitor'],0.884272170962313,791,10
+IDRA-21,['glutamate receptor positive allosteric modulator'],0.8927635748048908,854,-1
+GW-441756,['growth factor receptor inhibitor'],0.897465935110221,850,-1
+metronidazole,['DNA inhibitor'],0.8988769644985076,813,15
+bumetanide,['solute carrier family member inhibitor'],0.9057290395282962,717,-1
+palmitoylethanolamide,['cannabinoid receptor agonist'],0.9094443569820028,762,-1
+arctigenin,['MEK inhibitor'],0.9099056491367943,914,4
+lacitol,['osmosis stimulant'],0.9165366645312397,649,-1
+buphenine,['adrenergic receptor agonist'],0.917867529876884,754,2
+triamcinolone,['glucocorticoid receptor agonist'],0.9245939329856233,819,3
+trametinib,['MEK inhibitor'],0.9315754913569166,925,4
+cefpiramide,['bacterial cell wall synthesis inhibitor'],0.9325348608282505,798,-1
+"hydroxytacrine-maleate-(r,s)",['cholinesterase inhibitor'],0.9334260470514713,839,-1
+halcinonide,['glucocorticoid receptor agonist'],0.934879438547165,805,3
+osimertinib,['EGFR inhibitor'],0.9362124262172369,915,9
+4-methylhistamine,['histamine receptor agonist'],0.9424902620421388,785,-1
+oleanolic-acid,['G protein-coupled receptor agonist'],0.9442634249616804,732,-1
+berberine,['LDL receptor activator'],0.9455354839476094,873,-1
+GDC-0941,['PI3K inhibitor'],0.9619966652735545,873,8
+nitarsone,['None'],0.9647195379861805,688,1
+YO-01027,['gamma secretase inhibitor'],0.9647985214144572,853,-1
+letrozole,['aromatase inhibitor'],0.9692356128750266,815,-1
+fenaclon,['None'],0.9736228014662585,713,1
+levocetirizine,['histamine receptor antagonist'],0.9754638833189544,893,0
+ribociclib,['CDK inhibitor'],0.9785805753495136,915,16
+ABT-737,['BCL inhibitor'],0.9818930349026279,922,-1
+PP-2,['src inhibitor'],0.9820116521891086,807,-1
+acipimox,['cholesterol inhibitor'],0.9852286967813637,897,-1
+AZD2014,['mTOR inhibitor'],0.9880593379368693,925,20
+cobicistat,['cytochrome P450 inhibitor'],0.9916724422995828,877,-1
+GW-501516,['PPAR receptor agonist'],0.9988202229448195,590,-1
+WZ-4002,['EGFR inhibitor'],1.0044174647561486,869,9
+benzocaine,['sodium channel blocker'],1.0060043789633097,681,7
+pralatrexate,['dihydrofolate reductase inhibitor'],1.0086383944820199,925,-1
+lurasidone,"['dopamine receptor antagonist', ' serotonin receptor antagonist']",1.0150355979930434,845,-1
+afatinib,['EGFR inhibitor'],1.0151665297235164,922,9
+WHI-P154,['JAK inhibitor'],1.0302272219027155,812,-1
+Ro-04-5595,['None'],1.0602973921587677,809,1
+CPP,['glutamate receptor antagonist'],1.0696186445820985,884,12
+indisulam,['CDK inhibitor'],1.0792282996679392,823,16
+posaconazole,['sterol demethylase inhibitor'],1.0827224050616475,874,-1
+bromosporine,['bromodomain inhibitor'],1.083250830941252,800,-1
+taltirelin,['thyrotropin releasing hormone receptor agonist'],1.0878238328297076,803,-1
+BIBX-1382,['EGFR inhibitor'],1.0926608840999148,759,9
+fulvestrant,['estrogen receptor antagonist'],1.1016262483063206,674,-1
+bendamustine,['DNA inhibitor'],1.128953067677074,874,15
+tioxolone,['carbonic anhydrase inhibitor'],1.130700950166602,895,-1
+pheniramine,['histamine receptor antagonist'],1.1336054410789853,821,0
+midodrine,['adrenergic receptor agonist'],1.1417990854196878,812,2
+lenvatinib,"['FGFR inhibitor', ' KIT inhibitor', ' PDGFR tyrosine kinase receptor inhibitor', ' VEGFR inhibitor']",1.1441629246874332,913,-1
+palbociclib,['CDK inhibitor'],1.1504802090878947,925,16
+cariporide,['sodium/hydrogen exchanger inhibitor'],1.1584313462987703,889,-1
+SKI-II,['sphingosine kinase inhibitor'],1.1715001853428473,861,-1
+tiagabine,['GABA uptake inhibitor'],1.1737883717006488,663,-1
+dacarbazine,['DNA alkylating agent'],1.1764708820268102,860,-1
+clotrimazole,"['cytochrome P450 inhibitor', ' imidazoline receptor ligand']",1.1926784882223405,840,-1
+norepinephrine,['adrenergic receptor agonist'],1.2016000996917449,896,2
+alectinib,['ALK tyrosine kinase receptor inhibitor'],1.2118991546822433,923,-1
+olaparib,['PARP inhibitor'],1.2243483490745328,925,-1
+IEM1754,['glutamate receptor antagonist'],1.2312708596134838,857,12
+bisacodyl,['laxative'],1.232906623735348,834,-1
+eprosartan,['angiotensin receptor antagonist'],1.2607161763892158,779,-1
+CL-218872,['benzodiazepine receptor agonist'],1.2827453689549846,877,14
+UH-232-(+),['dopamine receptor antagonist'],1.298355532976931,828,13
+cyclophosphamide,['DNA alkylating agent'],1.300032044254605,713,-1
+oxazepam,['GABA benzodiazepine site receptor agonist'],1.305549624574968,788,-1
+bexarotene,['retinoid receptor agonist'],1.3091630804470735,909,-1
+uric-acid,['None'],1.31282918826326,835,1
+niraparib,['PARP inhibitor'],1.3329363556259592,876,-1
+capsaicin,['TRPV agonist'],1.3677964003520335,684,-1
+SMI-4a,['Pim kinase inhibitor'],1.4100964676739132,840,-1
+I-BET151,['bromodomain inhibitor'],1.4140659200230494,838,-1
+levonorgestrel,"['estrogen receptor agonist', ' glucocorticoid receptor antagonist', ' progesterone receptor agonist', ' progesterone receptor antagonist']",1.4978834161185934,706,-1
+avanafil,['phosphodiesterase inhibitor'],1.5394809000242775,818,-1
+clobetasol-propionate,['glucocorticoid receptor agonist'],1.5421652473594185,750,3
+prednisolone-tebutate,['anti-inflammatory agent'],1.5584191460790464,622,-1
+bucladesine,"['adenosine receptor agonist', ' cAMP stimulant']",1.7519239366962813,511,-1
+ubenimex,['leukotriene synthesis inhibitor'],1.8071955301023805,608,-1
+cobimetinib,['MEK inhibitor'],1.900893664556498,897,4
+lovastatin,['HMGCR inhibitor'],1.9019240665960635,483,-1
+clocortolone-pivalate,['steroid'],2.8098979614334163,516,-1
