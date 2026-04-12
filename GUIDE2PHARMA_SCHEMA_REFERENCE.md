@@ -1,7 +1,7 @@
 # Guide2Pharma Database Schema Reference
 
 ## Overview
-This document provides a comprehensive reference for all tables in the Guide2Pharma database. This database contains pharmaceutical and drug-related data used for research and analysis.
+This document provides a comprehensive reference for all tables in the Guide2Pharma database. The schema aligns with the public [IUPHAR/BPS Guide to PHARMACOLOGY](https://www.guidetopharmacology.org/) (GtoPdb): curated **targets** (`object`), **ligands**, **ligand–target interactions**, and a shared **bibliography** (`reference`), plus satellite tables for families, species, diseases, structures, and portal-specific views (immunopharmacology, malaria, antibacterials). Per-table **Size** figures use live PostgreSQL statistics (`pg_class.reltuples` for row estimates and `pg_total_relation_size` for on-disk bytes, including indexes and TOAST).
 
 ## Database Connection
 - **Database**: `guide2pharma`
@@ -14,13 +14,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 ## Table Inventory
 
 ### 1. **accessory_protein**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Accessory proteins (e.g. RAMPs) that assemble with receptor complexes.
+**Purpose**: Stores display names for accessory proteins referenced from target (`object`) records.
+**Size**: ~10 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| full_name | character varying(1000) | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| full_name | character varying(1000) | YES | Full human-readable name as shown in the UI (e.g. protein or accessory protein name). |
 
 **Primary Keys**: object_id
 
@@ -32,20 +33,21 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 2. **allele**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Mouse and other model-organism alleles linked to phenotype ontologies.
+**Purpose**: Curates allelic compositions, symbols, and ontology terms (e.g. MP) for genetically modified models.
+**Size**: ~12,938 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **2432 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| allele_id | integer | NO | Default: sequence: allele_allele_id_seq |
-| accessions | character varying(100) | NO | *To be documented* |
+| allele_id | integer | NO | Surrogate primary key. Default: sequence: allele_allele_id_seq |
+| accessions | character varying(100) | NO | External database accession (e.g. MGI, Ensembl). |
 | species_id | integer | NO | Default: 2 |
-| pubmed_ids | character varying(200) | YES | *To be documented* |
+| pubmed_ids | character varying(200) | YES | Comma-separated PubMed IDs supporting the row. |
 | ontology_id | integer | NO | Default: 1 |
-| term_id | character varying(100) | NO | *To be documented* |
-| allelic_composition | character varying(300) | YES | *To be documented* |
-| allele_symbol | character varying(300) | YES | *To be documented* |
-| genetic_background | character varying(300) | YES | *To be documented* |
+| term_id | character varying(100) | NO | Ontology term identifier (e.g. MP:… phenotype ID). |
+| allelic_composition | character varying(300) | YES | Genotype description (hom/het, alleles). |
+| allele_symbol | character varying(300) | YES | Standard allele symbol (e.g. gene<sup>allele</sup>). |
+| genetic_background | character varying(300) | YES | Inbred strain or mixed background of the model. |
 
 **Primary Keys**: allele_id
 
@@ -64,20 +66,21 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 3. **altered_expression**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Reports where gene/protein expression is altered in disease or knockout models.
+**Purpose**: Narrative expression evidence tied to `object_id`, species, tissue, and experimental technique.
+**Size**: ~2,074 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1784 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| altered_expression_id | integer | NO | Default: sequence: altered_expression_altered_expression_id_seq |
-| object_id | integer | NO | *To be documented* |
-| description | character varying(10000) | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| tissue | character varying(1000) | YES | *To be documented* |
-| technique | character varying(500) | YES | *To be documented* |
-| description_vector | tsvector | YES | *To be documented* |
-| tissue_vector | tsvector | YES | *To be documented* |
-| technique_vector | tsvector | YES | *To be documented* |
+| altered_expression_id | integer | NO | Surrogate primary key. Default: sequence: altered_expression_altered_expression_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| description | character varying(10000) | YES | Free-text description field. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| tissue | character varying(1000) | YES | Tissue or organ context for expression data. |
+| technique | character varying(500) | YES | Experimental method (knockout, qPCR, microarray, …). |
+| description_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `description`. |
+| tissue_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `tissue`. |
+| technique_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `technique`. |
 
 **Primary Keys**: altered_expression_id
 
@@ -96,13 +99,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 4. **altered_expression_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Citations for altered-expression statements.
+**Purpose**: Junction linking `altered_expression` rows to `reference` (PubMed-backed bibliography).
+**Size**: ~2,739 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **216 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| altered_expression_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| altered_expression_id | integer | NO | Foreign key to `altered_expression.altered_expression_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: altered_expression_id, reference_id
 
@@ -114,13 +118,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 5. **analogue_cluster**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Clusters of structurally related synthetic ligands (analogue series).
+**Purpose**: Maps `ligand_id` to a short cluster code used in GtoPdb ligand clustering views.
+**Size**: ~884 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **112 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| cluster | character varying(10) | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| cluster | character varying(10) | NO | Cluster identifier (short code) for analogue or scaffold grouping. |
 
 **Primary Keys**: ligand_id, cluster
 
@@ -132,17 +137,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 6. **antibiotic_db**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Curated antibacterial compounds from the Antibacterials portal.
+**Purpose**: Core antibacterial drug/project metadata (class, phase, institute) with optional `ligand_id` link.
+**Size**: ~2,439 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **408 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| adb_id | integer | NO | *To be documented* |
-| drug_name | character varying(2000) | NO | *To be documented* |
-| drug_class | character varying(1500) | YES | *To be documented* |
-| high_dev_phase | character varying(1500) | YES | *To be documented* |
-| institute | character varying(3000) | YES | *To be documented* |
-| ligand_id | integer | YES | *To be documented* |
+| adb_id | integer | NO | Foreign key to `antibiotic_db.adb_id`. |
+| drug_name | character varying(2000) | NO | Antibacterial resource: compound name, class, or regulatory metadata. |
+| drug_class | character varying(1500) | YES | Antibacterial resource: compound name, class, or regulatory metadata. |
+| high_dev_phase | character varying(1500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `antibiotic_db` table and related target/ligand pages for context. |
+| institute | character varying(3000) | YES | Antibacterial programme: sponsor, status, mechanism-of-action, or notes. |
+| ligand_id | integer | YES | Foreign key to `ligand.ligand_id`. |
 
 **Primary Keys**: adb_id
 
@@ -158,33 +164,34 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 7. **antibiotic_db_full**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Extended antibacterial records with spectrum, MOA, and development status.
+**Purpose**: Full antibacterial schema including Gram+/Gram− flags, resistance notes, structures, and literature links.
+**Size**: ~2,122 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **872 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| adb_id | integer | NO | *To be documented* |
-| drug_name | character varying(2000) | NO | *To be documented* |
-| drug_class | character varying(1500) | YES | *To be documented* |
-| year_fm | character varying(100) | YES | *To be documented* |
-| institute | character varying(3000) | YES | *To be documented* |
-| current_status | character varying(500) | YES | *To be documented* |
-| high_dev_phase | character varying(1500) | YES | *To be documented* |
-| reason_dropped | character varying(1000) | YES | *To be documented* |
-| moa_target_pathogen | character varying(1500) | YES | *To be documented* |
+| adb_id | integer | NO | Foreign key to `antibiotic_db.adb_id`. |
+| drug_name | character varying(2000) | NO | Antibacterial resource: compound name, class, or regulatory metadata. |
+| drug_class | character varying(1500) | YES | Antibacterial resource: compound name, class, or regulatory metadata. |
+| year_fm | character varying(100) | YES | Antibacterial programme: sponsor, status, mechanism-of-action, or notes. |
+| institute | character varying(3000) | YES | Antibacterial programme: sponsor, status, mechanism-of-action, or notes. |
+| current_status | character varying(500) | YES | Antibacterial programme: sponsor, status, mechanism-of-action, or notes. |
+| high_dev_phase | character varying(1500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `antibiotic_db_full` table and related target/ligand pages for context. |
+| reason_dropped | character varying(1000) | YES | Antibacterial programme: sponsor, status, mechanism-of-action, or notes. |
+| moa_target_pathogen | character varying(1500) | YES | Antibacterial programme: sponsor, status, mechanism-of-action, or notes. |
 | gram_neg_effect | boolean | YES | Default: false |
 | gram_pos_effect | boolean | YES | Default: false |
 | combination_therapy | boolean | YES | Default: false |
 | prop_select_res_mutants | boolean | YES | Default: false |
-| additional_info | character varying(1500) | YES | *To be documented* |
-| source_hp | character varying(3000) | YES | *To be documented* |
-| ligand_id | integer | YES | *To be documented* |
-| papers_cited_1 | character varying(3000) | YES | *To be documented* |
-| papers_cited_2 | character varying(3000) | YES | *To be documented* |
-| papers_cited_3 | character varying(3000) | YES | *To be documented* |
-| patents | character varying(3000) | YES | *To be documented* |
-| link_to_structure_1 | character varying(3000) | YES | *To be documented* |
-| link_to_structure_2 | character varying(3000) | YES | *To be documented* |
+| additional_info | character varying(1500) | YES | Antibacterial programme: sponsor, status, mechanism-of-action, or notes. |
+| source_hp | character varying(3000) | YES | Antibacterial programme: sponsor, status, mechanism-of-action, or notes. |
+| ligand_id | integer | YES | Foreign key to `ligand.ligand_id`. |
+| papers_cited_1 | character varying(3000) | YES | Supporting publication URL or external 3D structure link. |
+| papers_cited_2 | character varying(3000) | YES | Supporting publication URL or external 3D structure link. |
+| papers_cited_3 | character varying(3000) | YES | Supporting publication URL or external 3D structure link. |
+| patents | character varying(3000) | YES | Patent reference or assignee (intellectual property). |
+| link_to_structure_1 | character varying(3000) | YES | Supporting publication URL or external 3D structure link. |
+| link_to_structure_2 | character varying(3000) | YES | Supporting publication URL or external 3D structure link. |
 
 **Primary Keys**: adb_id
 
@@ -216,18 +223,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 8. **associated_protein**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Proteins that associate with the target but are not the primary gene product.
+**Purpose**: Free-text associated-protein commentary for targets, with citations via `associated_protein_refs`.
+**Size**: ~805 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **200 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| associated_protein_id | integer | NO | Default: sequence: associated_protein_associated_protein_id_seq |
-| object_id | integer | NO | *To be documented* |
-| name | character varying(1000) | YES | *To be documented* |
-| type | character varying(200) | NO | *To be documented* |
-| associated_object_id | integer | YES | *To be documented* |
-| effect | character varying(1000) | YES | *To be documented* |
-| name_vector | tsvector | YES | *To be documented* |
+| associated_protein_id | integer | NO | Surrogate primary key. Default: sequence: associated_protein_associated_protein_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| name | character varying(1000) | YES | Primary display name (target, ligand, family, etc.). |
+| type | character varying(200) | NO | Controlled type label (ligand class, interaction type, etc.). |
+| associated_object_id | integer | YES | Related `object_id` for complexes, partners, or regulated genes. |
+| effect | character varying(1000) | YES | Described pharmacological or phenotypic effect. |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
 
 **Primary Keys**: associated_protein_id
 
@@ -244,13 +252,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 9. **associated_protein_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for associated-protein text.
+**Purpose**: Links `associated_protein` rows to `reference`.
+**Size**: ~1,169 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **152 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| associated_protein_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| associated_protein_id | integer | NO | Identifier for an associated protein row (internal). |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: associated_protein_id, reference_id
 
@@ -262,20 +271,21 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 10. **binding_partner**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Nuclear receptor and other targets’ protein–protein binding partners.
+**Purpose**: Curated binding-partner descriptions for targets (`object_id`).
+**Size**: ~143 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **120 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| binding_partner_id | integer | NO | Default: sequence: binding_partner_binding_partner_id_seq |
-| object_id | integer | NO | *To be documented* |
-| name | character varying(300) | NO | *To be documented* |
-| interaction | character varying(200) | YES | *To be documented* |
-| effect | character varying(2000) | YES | *To be documented* |
-| partner_object_id | integer | YES | *To be documented* |
-| name_vector | tsvector | YES | *To be documented* |
-| effect_vector | tsvector | YES | *To be documented* |
-| interaction_vector | tsvector | YES | *To be documented* |
+| binding_partner_id | integer | NO | Surrogate primary key. Default: sequence: binding_partner_binding_partner_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| name | character varying(300) | NO | Primary display name (target, ligand, family, etc.). |
+| interaction | character varying(200) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `binding_partner` table and related target/ligand pages for context. |
+| effect | character varying(2000) | YES | Described pharmacological or phenotypic effect. |
+| partner_object_id | integer | YES | Related `object_id` for complexes, partners, or regulated genes. |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
+| effect_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| interaction_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: binding_partner_id
 
@@ -294,13 +304,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 11. **binding_partner_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for binding-partner commentary.
+**Purpose**: Links `binding_partner` to `reference`.
+**Size**: ~227 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **56 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| binding_partner_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| binding_partner_id | integer | NO | Foreign key to `binding_partner.binding_partner_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: binding_partner_id, reference_id
 
@@ -312,13 +323,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 12. **catalytic_receptor**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Enzyme-linked receptors (e.g. receptor tyrosine kinases) — class-specific block.
+**Purpose**: One row per catalytic-receptor target; holds class-specific narrative fields.
+**Size**: ~313 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **56 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| rtk_class | character varying(20) | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| rtk_class | character varying(20) | YES | Receptor tyrosine kinase subclass label. |
 
 **Primary Keys**: object_id
 
@@ -330,16 +342,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 13. **celltype_assoc**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Associations between targets and immune / cell-type contexts.
+**Purpose**: Links targets to cell-type ontology and Immunopaedia-style cell categories.
+**Size**: ~381 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **184 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| celltype_assoc_id | integer | NO | Default: sequence: celltype_assoc_celltype_assoc_id_seq |
-| object_id | integer | NO | *To be documented* |
-| immuno_celltype_id | integer | NO | *To be documented* |
-| comment | character varying(2000) | YES | *To be documented* |
-| comment_vector | tsvector | YES | *To be documented* |
+| celltype_assoc_id | integer | NO | Surrogate primary key. Default: sequence: celltype_assoc_celltype_assoc_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| immuno_celltype_id | integer | NO | Foreign key to `immuno_celltype.immuno_celltype_id`. |
+| comment | character varying(2000) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `celltype_assoc` table and related target/ligand pages for context. |
+| comment_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: celltype_assoc_id
 
@@ -354,14 +367,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 14. **celltype_assoc_colist**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Column lists / layout metadata for cell-type association displays.
+**Purpose**: Supports UI ordering and grouping for `celltype_assoc` tables on the portal.
+**Size**: ~341 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **64 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| celltype_assoc_id | integer | NO | *To be documented* |
-| co_celltype_id | integer | NO | *To be documented* |
-| cellonto_id | character varying(50) | YES | *To be documented* |
+| celltype_assoc_id | integer | NO | Foreign key to `celltype_assoc.celltype_assoc_id`. |
+| co_celltype_id | integer | NO | Foreign key to `co_celltype.co_celltype_id`. |
+| cellonto_id | character varying(50) | YES | Cell Ontology ID |
 
 **Primary Keys**: celltype_assoc_id, co_celltype_id
 
@@ -374,13 +388,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 15. **celltype_assoc_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Citations for cell-type associations.
+**Purpose**: Links `celltype_assoc` to `reference`.
+**Size**: ~388 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **72 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| celltype_assoc_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| celltype_assoc_id | integer | NO | Foreign key to `celltype_assoc.celltype_assoc_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: celltype_assoc_id, reference_id
 
@@ -392,42 +407,45 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 16. **cellular_location**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Subcellular localisation notes for targets.
+**Purpose**: Textual localization for `object_id` (e.g. membrane, nucleus).
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **16 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| cellular_location_id | integer | NO | Default: sequence: cellular_location_cellular_location_id_seq |
-| object_id | integer | NO | *To be documented* |
-| location | character varying(500) | YES | *To be documented* |
-| technique | character varying(500) | YES | *To be documented* |
-| comments | character varying(1000) | YES | *To be documented* |
+| cellular_location_id | integer | NO | Surrogate primary key. Default: sequence: cellular_location_cellular_location_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| location | character varying(500) | YES | Subcellular, anatomical, or chromosomal location string. |
+| technique | character varying(500) | YES | Experimental method (knockout, qPCR, microarray, …). |
+| comments | character varying(1000) | YES | Free-text curator comments. |
 
 **Primary Keys**: cellular_location_id
 
 **Sample Data**: *No data available or table is empty*
 ### 17. **cellular_location_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for cellular location statements.
+**Purpose**: Links `cellular_location` to `reference`.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **8192 bytes** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| cellular_location_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| cellular_location_id | integer | NO | Foreign key to `cellular_location.cellular_location_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: cellular_location_id, reference_id
 
 **Sample Data**: *No data available or table is empty*
 ### 18. **chembl_cluster**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: ChEMBL scaffold/cluster identifiers mapped to ligands.
+**Purpose**: Associates `ligand_id` with ChEMBL cluster IDs for cheminformatics browsing.
+**Size**: ~1,860 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **224 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| chembl_id | character varying(50) | NO | *To be documented* |
-| cluster | character varying(10) | NO | *To be documented* |
-| cluster_family | character varying(10) | NO | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| chembl_id | character varying(50) | NO | External database identifier for cross-referencing. |
+| cluster | character varying(10) | NO | Cluster identifier (short code) for analogue or scaffold grouping. |
+| cluster_family | character varying(10) | NO | Short cluster family code for scaffold grouping. |
 
 **Primary Keys**: object_id, chembl_id
 
@@ -441,18 +459,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 19. **cite**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: CITE (citation) identifiers used in family-level citation lists.
+**Purpose**: Maps cite tokens to contributor/citation metadata for the Concise Guide / family pages.
+**Size**: ~156 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **64 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| cite_id | character varying | NO | *To be documented* |
-| doi | character varying | YES | *To be documented* |
-| issue_volume | integer | YES | *To be documented* |
-| issue_number | integer | YES | *To be documented* |
+| cite_id | character varying | NO | GtoPdb CITE family token used for formatted citations on family pages. |
+| doi | character varying | YES | Digital Object Identifier for the cited publication. |
+| issue_volume | integer | YES | Bibliographic metadata for journal articles or books. |
+| issue_number | integer | YES | Bibliographic metadata for journal articles or books. |
 | edition | integer | NO | Default: 1 |
-| year | integer | YES | *To be documented* |
-| month | character varying | YES | *To be documented* |
+| year | integer | YES | Bibliographic metadata for journal articles or books. |
+| month | character varying | YES | Bibliographic metadata for journal articles or books. |
 
 **Primary Keys**: cite_id
 
@@ -469,18 +488,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 20. **clinical_trial**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Clinical trials referenced on ligand or disease pages.
+**Purpose**: Stores trial identifiers, titles, phases, and narrative summaries.
+**Size**: ~3,657 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **2664 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| clinical_trial_id | integer | NO | Default: sequence: clinical_trial_clinical_trial_id_seq |
-| accession | character varying(30) | NO | *To be documented* |
-| title | character varying(1000) | YES | *To be documented* |
-| url | character varying(200) | NO | *To be documented* |
+| clinical_trial_id | integer | NO | Surrogate primary key. Default: sequence: clinical_trial_clinical_trial_id_seq |
+| accession | character varying(30) | NO | Clinical trial registry accession (e.g. NCT identifier). |
+| title | character varying(1000) | YES | Short title or heading for UI display. |
+| url | character varying(200) | NO | HTTP(S) link for external resources or Immunopaedia pages. |
 | type | character varying(100) | YES | Default: NULL::character varying |
-| description | text | YES | *To be documented* |
-| source | character varying(200) | YES | *To be documented* |
+| description | text | YES | Free-text description field. |
+| source | character varying(200) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `clinical_trial` table and related target/ligand pages for context. |
 
 **Primary Keys**: clinical_trial_id
 
@@ -497,13 +517,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 21. **clinical_trial_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Bibliography links for clinical trial records.
+**Purpose**: Links `clinical_trial` rows to `reference`.
+**Size**: ~12 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| clinical_trial_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| clinical_trial_id | integer | NO | Foreign key to `clinical_trial.clinical_trial_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: clinical_trial_id, reference_id
 
@@ -515,20 +536,21 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 22. **co_celltype**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Cell Ontology terms used in immunopharmacology cell-type views.
+**Purpose**: Cell-type nodes (CL IDs, labels) for immune cell classification.
+**Size**: ~2,548 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1872 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| co_celltype_id | integer | NO | Default: sequence: co_celltype_co_celltype_id_seq |
-| name | character varying(1000) | NO | *To be documented* |
-| definition | character varying(1500) | NO | *To be documented* |
-| last_modified | date | YES | *To be documented* |
-| type | character varying(50) | NO | *To be documented* |
-| cellonto_id | character varying(50) | NO | *To be documented* |
-| name_vector | tsvector | YES | *To be documented* |
-| definition_vector | tsvector | YES | *To be documented* |
-| cellonto_id_vector | tsvector | YES | *To be documented* |
+| co_celltype_id | integer | NO | Surrogate primary key. Default: sequence: co_celltype_co_celltype_id_seq |
+| name | character varying(1000) | NO | Primary display name (target, ligand, family, etc.). |
+| definition | character varying(1500) | NO | Short definition text for the ontology or disease entry. |
+| last_modified | date | YES | Last editorial modification date for the row or text block. |
+| type | character varying(50) | NO | Controlled type label (ligand class, interaction type, etc.). |
+| cellonto_id | character varying(50) | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `co_celltype` table and related target/ligand pages for context. |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
+| definition_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| cellonto_id_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: co_celltype_id
 
@@ -547,13 +569,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 23. **co_celltype_isa**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Parent/child edges in the cell-type ontology.
+**Purpose**: Implements `is_a` relationships between `co_celltype` terms.
+**Size**: ~32,331 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1912 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| parent_id | integer | NO | *To be documented* |
-| child_id | integer | NO | *To be documented* |
+| parent_id | integer | NO | Parent or child node in a hierarchy. |
+| child_id | integer | NO | Parent or child node in a hierarchy. |
 
 **Primary Keys**: parent_id, child_id
 
@@ -565,15 +588,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 24. **co_celltype_relationship**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Non-hierarchical relationships between cell types.
+**Purpose**: Additional ontology edges (e.g. develops_from) for cell types.
+**Size**: ~530 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **88 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| co_celltype_rel_id | integer | NO | Default: sequence: co_celltype_relationship_co_celltype_rel_id_seq |
-| co_celltype_id | integer | NO | *To be documented* |
-| relationship_id | character varying(50) | NO | *To be documented* |
-| type | character varying(100) | YES | *To be documented* |
+| co_celltype_rel_id | integer | NO | Surrogate primary key. Default: sequence: co_celltype_relationship_co_celltype_rel_id_seq |
+| co_celltype_id | integer | NO | Foreign key to `co_celltype.co_celltype_id`. |
+| relationship_id | character varying(50) | NO | Identifier for a relationship edge (ontology or graph). |
+| type | character varying(100) | YES | Controlled type label (ligand class, interaction type, etc.). |
 
 **Primary Keys**: co_celltype_rel_id
 
@@ -587,20 +611,21 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 25. **cofactor**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Cofactors and co-substrates for enzyme targets.
+**Purpose**: Curated cofactor text keyed by `object_id` (enzyme).
+**Size**: ~96 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **40 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| cofactor_id | integer | NO | Default: sequence: cofactor_cofactor_id_seq |
-| object_id | integer | NO | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| ligand_id | integer | YES | *To be documented* |
-| name | character varying(1000) | YES | *To be documented* |
-| comments | character varying(1000) | YES | *To be documented* |
+| cofactor_id | integer | NO | Surrogate primary key. Default: sequence: cofactor_cofactor_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| ligand_id | integer | YES | Foreign key to `ligand.ligand_id`. |
+| name | character varying(1000) | YES | Primary display name (target, ligand, family, etc.). |
+| comments | character varying(1000) | YES | Free-text curator comments. |
 | in_iuphar | boolean | NO | Default: true |
 | in_grac | boolean | NO | Default: false |
-| name_vector | tsvector | YES | *To be documented* |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
 
 **Primary Keys**: cofactor_id
 
@@ -619,13 +644,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 26. **cofactor_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for cofactor commentary.
+**Purpose**: Links `cofactor` to `reference`.
+**Size**: ~40 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| cofactor_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| cofactor_id | integer | NO | Foreign key to `cofactor.cofactor_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: cofactor_id, reference_id
 
@@ -637,15 +663,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 27. **committee**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: IUPHAR/NC-IUPHAR committees and editorial groups.
+**Purpose**: Directory of committees used to group contributors and families.
+**Size**: ~19 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| committee_id | integer | NO | Default: sequence: committee_committee_id_seq |
-| name | character varying(1000) | NO | *To be documented* |
-| description | character varying(2000) | YES | *To be documented* |
-| family_id | integer | YES | *To be documented* |
+| committee_id | integer | NO | Surrogate primary key. Default: sequence: committee_committee_id_seq |
+| name | character varying(1000) | NO | Primary display name (target, ligand, family, etc.). |
+| description | character varying(2000) | YES | Free-text description field. |
+| family_id | integer | YES | Foreign key to `family.family_id`. |
 
 **Primary Keys**: committee_id
 
@@ -659,17 +686,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 28. **conductance**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ion channel conductance properties.
+**Purpose**: Narrative/structured conductance data for ion channel `object_id` rows.
+**Size**: ~55 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| conductance_id | integer | NO | Default: sequence: conductance_conductance_id_seq |
-| object_id | integer | NO | *To be documented* |
-| overall_channel_conductance | character varying(500) | YES | *To be documented* |
-| macroscopic_current_rectification | character varying(100) | YES | *To be documented* |
-| single_channel_current_rectification | character varying(100) | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
+| conductance_id | integer | NO | Surrogate primary key. Default: sequence: conductance_conductance_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| overall_channel_conductance | character varying(500) | YES | Ion channel biophysical descriptor (conductance / rectification). |
+| macroscopic_current_rectification | character varying(100) | YES | Ion channel biophysical descriptor (conductance / rectification). |
+| single_channel_current_rectification | character varying(100) | YES | Ion channel biophysical descriptor (conductance / rectification). |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
 
 **Primary Keys**: conductance_id
 
@@ -685,13 +713,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 29. **conductance_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Citations for conductance text.
+**Purpose**: Links `conductance` to `reference`.
+**Size**: ~66 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| conductance_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| conductance_id | integer | NO | Foreign key to `conductance.conductance_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: conductance_id, reference_id
 
@@ -703,27 +732,28 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 30. **conductance_states**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Channel conductance states (e.g. open, closed).
+**Purpose**: State-specific conductance annotations for ion channels.
+**Size**: ~6 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| conductance_states_id | integer | NO | Default: sequence: conductance_states_conductance_states_id_seq |
-| object_id | integer | NO | *To be documented* |
-| receptor | character varying(100) | NO | *To be documented* |
-| state1_high | double precision | YES | *To be documented* |
-| state1_low | double precision | YES | *To be documented* |
-| state2_high | double precision | YES | *To be documented* |
-| state2_low | double precision | YES | *To be documented* |
-| state3_high | double precision | YES | *To be documented* |
-| state3_low | double precision | YES | *To be documented* |
-| state4_high | double precision | YES | *To be documented* |
-| state4_low | double precision | YES | *To be documented* |
-| state5_high | double precision | YES | *To be documented* |
-| state5_low | double precision | YES | *To be documented* |
-| state6_high | double precision | YES | *To be documented* |
-| state6_low | double precision | YES | *To be documented* |
-| most_frequent_state | character varying(50) | YES | *To be documented* |
+| conductance_states_id | integer | NO | Surrogate primary key. Default: sequence: conductance_states_conductance_states_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| receptor | character varying(100) | NO | Receptor or target label in the assay/screen row. |
+| state1_high | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| state1_low | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| state2_high | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| state2_low | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| state3_high | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| state3_low | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| state4_high | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| state4_low | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| state5_high | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| state5_low | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| state6_high | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| state6_low | double precision | YES | Gating-state conductance or open probability bound (multi-state channel model). |
+| most_frequent_state | character varying(50) | YES | Dominant gating state under stated conditions. |
 
 **Primary Keys**: conductance_states_id
 
@@ -749,13 +779,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 31. **conductance_states_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for conductance state entries.
+**Purpose**: Links `conductance_states` to `reference`.
+**Size**: ~11 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| conductance_states_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| conductance_states_id | integer | NO | Foreign key to `conductance_states.conductance_states_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: conductance_states_id, reference_id
 
@@ -767,23 +798,24 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 32. **contributor**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Expert contributors and curators of GtoPdb content.
+**Purpose**: People records with affiliations used across family and target pages.
+**Size**: ~1,035 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **344 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| contributor_id | integer | NO | Default: sequence: contributor_contributor_id_seq |
-| address | text | YES | *To be documented* |
-| email | character varying(500) | YES | *To be documented* |
-| first_names | character varying(500) | NO | *To be documented* |
-| surname | character varying(500) | NO | *To be documented* |
-| suffix | character varying(200) | YES | *To be documented* |
-| note | character varying(1000) | YES | *To be documented* |
-| orcid | character varying(100) | YES | *To be documented* |
-| country | character varying(50) | YES | *To be documented* |
-| description | character varying(1000) | YES | *To be documented* |
-| institution | character varying(1000) | YES | *To be documented* |
-| name_vector | tsvector | YES | *To be documented* |
+| contributor_id | integer | NO | Surrogate primary key. Default: sequence: contributor_contributor_id_seq |
+| address | text | YES | Contributor or contact metadata. |
+| email | character varying(500) | YES | Contributor or contact metadata. |
+| first_names | character varying(500) | NO | Contributor name parts. |
+| surname | character varying(500) | NO | Contributor name parts. |
+| suffix | character varying(200) | YES | Contributor name parts. |
+| note | character varying(1000) | YES | Free-text note. |
+| orcid | character varying(100) | YES | Contributor or contact metadata. |
+| country | character varying(50) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `contributor` table and related target/ligand pages for context. |
+| description | character varying(1000) | YES | Free-text description field. |
+| institution | character varying(1000) | YES | Contributor or contact metadata. |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
 
 **Primary Keys**: contributor_id
 
@@ -805,15 +837,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 33. **contributor2committee**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Membership of contributors in committees.
+**Purpose**: Many-to-many linking `contributor` to `committee`.
+**Size**: ~158 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| contributor_id | integer | NO | *To be documented* |
-| committee_id | integer | NO | *To be documented* |
-| role | character varying(200) | YES | *To be documented* |
-| display_order | integer | YES | *To be documented* |
+| contributor_id | integer | NO | Foreign key to `contributor.contributor_id`. |
+| committee_id | integer | NO | Foreign key to `committee.committee_id`. |
+| role | character varying(200) | YES | Functional role label (e.g. agonist, antagonist in context). |
+| display_order | integer | YES | Sort order for lists or navigation. |
 
 **Primary Keys**: contributor_id, committee_id
 
@@ -827,16 +860,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 34. **contributor2family**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Contributors credited on target families.
+**Purpose**: Assigns contributors to `family_id` for acknowledgement lists.
+**Size**: ~1,120 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **168 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| contributor_id | integer | NO | *To be documented* |
-| family_id | integer | NO | *To be documented* |
-| role | character varying(50) | YES | *To be documented* |
-| display_order | integer | YES | *To be documented* |
-| old_display_order | integer | YES | *To be documented* |
+| contributor_id | integer | NO | Foreign key to `contributor.contributor_id`. |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
+| role | character varying(50) | YES | Functional role label (e.g. agonist, antagonist in context). |
+| display_order | integer | YES | Sort order for lists or navigation. |
+| old_display_order | integer | YES | Sort order for lists or navigation. |
 
 **Primary Keys**: contributor_id, family_id
 
@@ -851,14 +885,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 35. **contributor2intro**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Contributors tied to family introduction sections.
+**Purpose**: Links contributors to `introduction` blocks.
+**Size**: ~221 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **56 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| contributor_id | integer | NO | *To be documented* |
-| family_id | integer | NO | *To be documented* |
-| display_order | integer | NO | *To be documented* |
+| contributor_id | integer | NO | Foreign key to `contributor.contributor_id`. |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
+| display_order | integer | NO | Sort order for lists or navigation. |
 
 **Primary Keys**: contributor_id, family_id
 
@@ -871,15 +906,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 36. **contributor2object**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Contributors credited on individual targets.
+**Purpose**: Assigns contributors to specific `object_id` pages.
+**Size**: ~3,135 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **272 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| contributor_id | integer | NO | *To be documented* |
-| object_id | integer | NO | *To be documented* |
-| display_order | integer | YES | *To be documented* |
-| role | character varying | YES | *To be documented* |
+| contributor_id | integer | NO | Foreign key to `contributor.contributor_id`. |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| display_order | integer | YES | Sort order for lists or navigation. |
+| role | character varying | YES | Functional role label (e.g. agonist, antagonist in context). |
 
 **Primary Keys**: contributor_id, object_id
 
@@ -893,22 +929,23 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 37. **contributor_copy**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Alternate or historical contributor name strings.
+**Purpose**: Supports name variants for matching and display.
+**Size**: ~1,802 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **448 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| contributor_id | integer | YES | *To be documented* |
-| address | text | YES | *To be documented* |
-| email | character varying(500) | YES | *To be documented* |
-| first_names | character varying(500) | YES | *To be documented* |
-| surname | character varying(500) | YES | *To be documented* |
-| suffix | character varying(200) | YES | *To be documented* |
-| note | character varying(1000) | YES | *To be documented* |
-| orcid | character varying(100) | YES | *To be documented* |
-| country | character varying(50) | YES | *To be documented* |
-| description | character varying(1000) | YES | *To be documented* |
-| institution | character varying(1000) | YES | *To be documented* |
+| contributor_id | integer | YES | Foreign key to `contributor.contributor_id`. |
+| address | text | YES | Contributor or contact metadata. |
+| email | character varying(500) | YES | Contributor or contact metadata. |
+| first_names | character varying(500) | YES | Contributor name parts. |
+| surname | character varying(500) | YES | Contributor name parts. |
+| suffix | character varying(200) | YES | Contributor name parts. |
+| note | character varying(1000) | YES | Free-text note. |
+| orcid | character varying(100) | YES | Contributor or contact metadata. |
+| country | character varying(50) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `contributor_copy` table and related target/ligand pages for context. |
+| description | character varying(1000) | YES | Free-text description field. |
+| institution | character varying(1000) | YES | Contributor or contact metadata. |
 
 **Primary Keys**: *None identified*
 
@@ -929,13 +966,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 38. **contributor_link**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: External profile URLs for contributors.
+**Purpose**: Optional links (e.g. institutional pages).
+**Size**: ~229 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **88 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| contributor_id | integer | NO | *To be documented* |
-| url | character varying(500) | NO | *To be documented* |
+| contributor_id | integer | NO | Foreign key to `contributor.contributor_id`. |
+| url | character varying(500) | NO | HTTP(S) link for external resources or Immunopaedia pages. |
 
 **Primary Keys**: contributor_id, url
 
@@ -947,21 +985,22 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 39. **coregulator**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Nuclear receptor co-regulators (coactivators/corepressors).
+**Purpose**: Co-regulator narrative keyed by `object_id` (NHR targets).
+**Size**: ~277 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **160 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| coregulator_id | integer | NO | Default: sequence: coregulator_coregulator_id_seq |
-| object_id | integer | NO | *To be documented* |
-| activity | character varying(500) | YES | *To be documented* |
-| specific | boolean | YES | *To be documented* |
+| coregulator_id | integer | NO | Surrogate primary key. Default: sequence: coregulator_coregulator_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| activity | character varying(500) | YES | Screening assay value, unit, or activity readout. |
+| specific | boolean | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `coregulator` table and related target/ligand pages for context. |
 | ligand_dependent | boolean | NO | Default: false |
-| af2_dependent | boolean | YES | *To be documented* |
-| comments | character varying(2000) | YES | *To be documented* |
-| coregulator_gene_id | integer | YES | *To be documented* |
-| activity_vector | tsvector | YES | *To be documented* |
-| comments_vector | tsvector | YES | *To be documented* |
+| af2_dependent | boolean | YES | Whether AlphaFold-derived structural data is used. |
+| comments | character varying(2000) | YES | Free-text curator comments. |
+| coregulator_gene_id | integer | YES | Identifier linking a coregulator gene record. |
+| activity_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| comments_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `comments`. |
 
 **Primary Keys**: coregulator_id
 
@@ -981,23 +1020,24 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 40. **coregulator_gene**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Named co-regulator genes linked to receptors.
+**Purpose**: Gene-centric co-regulator detail paired with `coregulator`.
+**Size**: ~86 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **144 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| coregulator_gene_id | integer | NO | Default: sequence: coregulator_gene_coregulator_gene_id_seq |
-| primary_name | character varying(300) | NO | *To be documented* |
-| official_gene_id | character varying(100) | YES | *To be documented* |
-| other_names | character varying(1000) | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| nursa_id | character varying(100) | YES | *To be documented* |
-| comments | character varying(2000) | YES | *To be documented* |
-| gene_long_name | character varying(2000) | YES | *To be documented* |
-| primary_name_vector | tsvector | YES | *To be documented* |
-| other_names_vector | tsvector | YES | *To be documented* |
-| comments_vector | tsvector | YES | *To be documented* |
-| gene_long_name_vector | tsvector | YES | *To be documented* |
+| coregulator_gene_id | integer | NO | Surrogate primary key. Default: sequence: coregulator_gene_coregulator_gene_id_seq |
+| primary_name | character varying(300) | NO | Primary display name for lists or synonyms. |
+| official_gene_id | character varying(100) | YES | External database identifier for cross-referencing. |
+| other_names | character varying(1000) | YES | Historical or alternate naming. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| nursa_id | character varying(100) | YES | External database identifier for cross-referencing. |
+| comments | character varying(2000) | YES | Free-text curator comments. |
+| gene_long_name | character varying(2000) | YES | Gene or protein naming for display and search. |
+| primary_name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| other_names_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| comments_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `comments`. |
+| gene_long_name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: coregulator_gene_id
 
@@ -1019,13 +1059,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 41. **coregulator_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for co-regulator commentary.
+**Purpose**: Links `coregulator` to `reference`.
+**Size**: ~404 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **72 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| coregulator_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| coregulator_id | integer | NO | Foreign key to `coregulator.coregulator_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: coregulator_id, reference_id
 
@@ -1037,22 +1078,23 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 42. **covid_ligand**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligands highlighted in the Coronavirus (COVID-19) resource.
+**Purpose**: Curated COVID-related ligand list with portal-specific flags.
+**Size**: ~120 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **128 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| covid_ligand_id | integer | NO | Default: sequence: covid_ligand_id_seq |
-| ligand_id | integer | YES | *To be documented* |
-| name | character varying(200) | YES | *To be documented* |
-| url | character varying(1000) | YES | *To be documented* |
-| comment | character varying(5000) | YES | *To be documented* |
+| covid_ligand_id | integer | NO | Surrogate primary key. Default: sequence: covid_ligand_id_seq |
+| ligand_id | integer | YES | Foreign key to `ligand.ligand_id`. |
+| name | character varying(200) | YES | Primary display name (target, ligand, family, etc.). |
+| url | character varying(1000) | YES | HTTP(S) link for external resources or Immunopaedia pages. |
+| comment | character varying(5000) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `covid_ligand` table and related target/ligand pages for context. |
 | curated | boolean | YES | Default: false |
-| secondary_ligand_id | integer | YES | *To be documented* |
-| secondary_name | character varying(200) | YES | *To be documented* |
-| secondary_url | character varying(1000) | YES | *To be documented* |
-| secondary_curated | boolean | YES | *To be documented* |
-| priority | integer | YES | *To be documented* |
+| secondary_ligand_id | integer | YES | Secondary ligand in a multi-ligand assay or pairing. |
+| secondary_name | character varying(200) | YES | Secondary catalogue or alternate naming for commercial ligands. |
+| secondary_url | character varying(1000) | YES | External URL for `secondary` resources. |
+| secondary_curated | boolean | YES | Secondary catalogue or alternate naming for commercial ligands. |
+| priority | integer | YES | Sort order for lists or navigation. |
 
 **Primary Keys**: covid_ligand_id
 
@@ -1073,18 +1115,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 43. **covid_target**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Targets highlighted in the Coronavirus (COVID-19) resource.
+**Purpose**: COVID-relevant viral/host targets for quick navigation.
+**Size**: ~13 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| covid_target_id | integer | NO | Default: sequence: covid_target_id_seq |
-| object_id | integer | YES | *To be documented* |
-| name | character varying(1000) | YES | *To be documented* |
-| url | character varying(1000) | YES | *To be documented* |
-| comment | character varying(2000) | YES | *To be documented* |
+| covid_target_id | integer | NO | Surrogate primary key. Default: sequence: covid_target_id_seq |
+| object_id | integer | YES | Foreign key to `object.object_id`. |
+| name | character varying(1000) | YES | Primary display name (target, ligand, family, etc.). |
+| url | character varying(1000) | YES | HTTP(S) link for external resources or Immunopaedia pages. |
+| comment | character varying(2000) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `covid_target` table and related target/ligand pages for context. |
 | curated | boolean | YES | Default: false |
-| target_ligand_id | integer | YES | *To be documented* |
+| target_ligand_id | integer | YES | When the ‘target’ is itself a ligand entity (peptide–peptide cases). |
 
 **Primary Keys**: covid_target_id
 
@@ -1101,16 +1144,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 44. **database**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: External database registry (ChEMBL, PubChem, etc.).
+**Purpose**: Lookup of external resources for cross-links from ligands and diseases.
+**Size**: ~57 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| database_id | integer | NO | Default: sequence: database_database_id_seq |
-| name | character varying(100) | NO | *To be documented* |
-| url | text | YES | *To be documented* |
+| database_id | integer | NO | Surrogate primary key. Default: sequence: database_database_id_seq |
+| name | character varying(100) | NO | Primary display name (target, ligand, family, etc.). |
+| url | text | YES | HTTP(S) link for external resources or Immunopaedia pages. |
 | specialist | boolean | NO | Default: false |
-| prefix | character varying(100) | YES | *To be documented* |
+| prefix | character varying(100) | YES | Contributor name parts. |
 
 **Primary Keys**: database_id
 
@@ -1125,16 +1169,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 45. **database_link**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Entity-to-external-ID cross-references.
+**Purpose**: Maps targets, ligands, or diseases to third-party database accession strings.
+**Size**: ~59,261 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **6448 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| database_link_id | integer | NO | Default: sequence: database_link_database_link_id_seq |
-| object_id | integer | NO | *To be documented* |
+| database_link_id | integer | NO | Surrogate primary key. Default: sequence: database_link_database_link_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
 | species_id | integer | NO | Default: 9 |
-| database_id | integer | NO | *To be documented* |
-| placeholder | character varying(100) | NO | *To be documented* |
+| database_id | integer | NO | Foreign key to `database.database_id`. |
+| placeholder | character varying(100) | NO | Internal editorial or QA flag. |
 
 **Primary Keys**: database_link_id
 
@@ -1149,17 +1194,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 46. **deleted_family**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Audit of removed or merged family IDs.
+**Purpose**: Preserves history when families are deleted or renumbered.
+**Size**: ~45 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| family_id | integer | NO | *To be documented* |
-| name | character varying(1000) | NO | *To be documented* |
-| previous_names | character varying(300) | YES | *To be documented* |
-| type | character varying(25) | NO | *To be documented* |
-| old_family_id | integer | YES | *To be documented* |
-| new_family_id | integer | YES | *To be documented* |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
+| name | character varying(1000) | NO | Primary display name (target, ligand, family, etc.). |
+| previous_names | character varying(300) | YES | Historical or alternate naming. |
+| type | character varying(25) | NO | Controlled type label (ligand class, interaction type, etc.). |
+| old_family_id | integer | YES | Family id after merge or renumbering. |
+| new_family_id | integer | YES | Family id after merge or renumbering. |
 
 **Primary Keys**: family_id
 
@@ -1175,32 +1221,34 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 47. **discoverx**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: DiscoverX assay catalog metadata.
+**Purpose**: Reference data for commercial DiscoverX binding assays used in mapping tables.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **16 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| cat_no | character varying(100) | NO | *To be documented* |
-| url | character varying(500) | NO | *To be documented* |
-| name | character varying(500) | NO | *To be documented* |
-| description | character varying(1000) | NO | *To be documented* |
-| species_id | integer | NO | *To be documented* |
+| cat_no | character varying(100) | NO | Commercial catalog or product code (DiscoverX, MCE, …). |
+| url | character varying(500) | NO | HTTP(S) link for external resources or Immunopaedia pages. |
+| name | character varying(500) | NO | Primary display name (target, ligand, family, etc.). |
+| description | character varying(1000) | NO | Free-text description field. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
 
 **Primary Keys**: cat_no
 
 **Sample Data**: *No data available or table is empty*
 ### 48. **disease**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Disease concepts used in disease–target–ligand linking.
+**Purpose**: Core disease records (labels, definitions) for GtoPdb disease views.
+**Size**: ~1,201 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **592 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| disease_id | integer | NO | Default: sequence: disease_disease_id_seq |
-| name | character varying(1000) | NO | *To be documented* |
-| description | text | YES | *To be documented* |
+| disease_id | integer | NO | Surrogate primary key. Default: sequence: disease_disease_id_seq |
+| name | character varying(1000) | NO | Primary display name (target, ligand, family, etc.). |
+| description | text | YES | Free-text description field. |
 | type | character varying(30) | YES | Default: NULL::character varying |
-| name_vector | tsvector | YES | *To be documented* |
-| description_vector | tsvector | YES | *To be documented* |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
+| description_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `description`. |
 
 **Primary Keys**: disease_id
 
@@ -1216,14 +1264,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 49. **disease2category**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Maps diseases to high-level disease categories.
+**Purpose**: Many-to-many between `disease` and `disease_category`.
+**Size**: ~89 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| disease_id | integer | NO | *To be documented* |
-| disease_category_id | integer | NO | *To be documented* |
-| comment | character varying(500) | YES | *To be documented* |
+| disease_id | integer | NO | Foreign key to `disease.disease_id`. |
+| disease_category_id | integer | NO | Foreign key to `disease_category.disease_category_id`. |
+| comment | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `disease2category` table and related target/ligand pages for context. |
 
 **Primary Keys**: disease_id, disease_category_id
 
@@ -1236,15 +1285,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 50. **disease2synonym**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Synonyms and alternate names for diseases.
+**Purpose**: Links diseases to rows in `synonym` for search and display.
+**Size**: ~1,001 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **336 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| disease2synonym_id | integer | NO | Default: sequence: disease2synonym_disease2synonym_id_seq |
-| disease_id | integer | NO | *To be documented* |
-| synonym | character varying(1000) | NO | *To be documented* |
-| synonym_vector | tsvector | YES | *To be documented* |
+| disease2synonym_id | integer | NO | Surrogate primary key. Default: sequence: disease2synonym_disease2synonym_id_seq |
+| disease_id | integer | NO | Foreign key to `disease.disease_id`. |
+| synonym | character varying(1000) | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `disease2synonym` table and related target/ligand pages for context. |
+| synonym_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: disease2synonym_id
 
@@ -1258,14 +1308,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 51. **disease_category**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Broad disease buckets (e.g. oncology, immunology).
+**Purpose**: Controlled vocabulary for grouping diseases on the portal.
+**Size**: ~5 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| disease_category_id | integer | NO | Default: sequence: disease_category_disease_category_id_seq |
-| name | character varying(1000) | NO | *To be documented* |
-| description | text | YES | *To be documented* |
+| disease_category_id | integer | NO | Surrogate primary key. Default: sequence: disease_category_disease_category_id_seq |
+| name | character varying(1000) | NO | Primary display name (target, ligand, family, etc.). |
+| description | text | YES | Free-text description field. |
 
 **Primary Keys**: disease_category_id
 
@@ -1278,15 +1329,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 52. **disease_database_link**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: External disease identifiers (OMIM, DOID, etc.).
+**Purpose**: Crosswalk from internal `disease` to external ontologies.
+**Size**: ~2,390 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **288 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| disease_database_link_id | integer | NO | Default: sequence: disease_database_link_disease_database_link_id_seq |
-| disease_id | integer | NO | *To be documented* |
-| database_id | integer | NO | *To be documented* |
-| placeholder | character varying(100) | NO | *To be documented* |
+| disease_database_link_id | integer | NO | Surrogate primary key. Default: sequence: disease_database_link_disease_database_link_id_seq |
+| disease_id | integer | NO | Foreign key to `disease.disease_id`. |
+| database_id | integer | NO | Foreign key to `database.database_id`. |
+| placeholder | character varying(100) | NO | Internal editorial or QA flag. |
 
 **Primary Keys**: disease_database_link_id
 
@@ -1300,13 +1352,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 53. **disease_synonym2database_link**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: External IDs for disease synonym strings.
+**Purpose**: Finer-grained linking of synonym text to database IDs.
+**Size**: ~918 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **104 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| disease2synonym_id | integer | NO | *To be documented* |
-| disease_database_link_id | integer | NO | *To be documented* |
+| disease2synonym_id | integer | NO | Foreign key to `disease2synonym.disease2synonym_id`. |
+| disease_database_link_id | integer | NO | Foreign key to `disease_database_link.disease_database_link_id`. |
 
 **Primary Keys**: disease2synonym_id, disease_database_link_id
 
@@ -1318,19 +1371,20 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 54. **dna_binding**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Nuclear receptor DNA-binding / response-element commentary.
+**Purpose**: Describes HREs and dimerization for NHR `object_id` rows.
+**Size**: ~48 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **88 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| dna_binding_id | integer | NO | Default: sequence: dna_binding_dna_binding_id_seq |
-| object_id | integer | NO | *To be documented* |
-| structure | character varying(500) | YES | *To be documented* |
-| sequence | character varying(100) | YES | *To be documented* |
-| response_element | character varying(500) | YES | *To be documented* |
-| structure_vector | tsvector | YES | *To be documented* |
-| sequence_vector | tsvector | YES | *To be documented* |
-| response_element_vector | tsvector | YES | *To be documented* |
+| dna_binding_id | integer | NO | Surrogate primary key. Default: sequence: dna_binding_dna_binding_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| structure | character varying(500) | YES | Structure description or narrative. |
+| sequence | character varying(100) | YES | Mutation or sequence representation (variant or protein). |
+| response_element | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `dna_binding` table and related target/ligand pages for context. |
+| structure_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| sequence_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| response_element_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: dna_binding_id
 
@@ -1348,13 +1402,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 55. **dna_binding_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for DNA-binding commentary.
+**Purpose**: Links `dna_binding` to `reference`.
+**Size**: ~1 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| dna_binding_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| dna_binding_id | integer | NO | Foreign key to `dna_binding.dna_binding_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: dna_binding_id, reference_id
 
@@ -1366,16 +1421,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 56. **do_disease**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Disease Ontology (DO) terms mirrored for queries.
+**Purpose**: DOID-aligned disease metadata used alongside `disease`.
+**Size**: ~6,624 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1888 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| do_disease_id | integer | NO | Default: sequence: do_disease_do_disease_id_seq |
-| term | character varying(1000) | NO | *To be documented* |
-| definition | character varying(1500) | NO | *To be documented* |
-| last_modified | date | YES | *To be documented* |
-| do_id | character varying(50) | NO | *To be documented* |
+| do_disease_id | integer | NO | Surrogate primary key. Default: sequence: do_disease_do_disease_id_seq |
+| term | character varying(1000) | NO | Ontology or controlled vocabulary term string. |
+| definition | character varying(1500) | NO | Short definition text for the ontology or disease entry. |
+| last_modified | date | YES | Last editorial modification date for the row or text block. |
+| do_id | character varying(50) | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `do_disease` table and related target/ligand pages for context. |
 
 **Primary Keys**: do_disease_id
 
@@ -1390,44 +1446,47 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 57. **do_disease_isa**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: DO term parent/child relationships.
+**Purpose**: Ontology graph edges for `do_disease`.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **8192 bytes** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| parent_id | integer | NO | *To be documented* |
-| child_id | integer | NO | *To be documented* |
+| parent_id | integer | NO | Parent or child node in a hierarchy. |
+| child_id | integer | NO | Parent or child node in a hierarchy. |
 
 **Primary Keys**: parent_id, child_id
 
 **Sample Data**: *No data available or table is empty*
 ### 58. **drug2disease**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Legacy or sparse ligand–disease associations.
+**Purpose**: Associates drugs/ligands with disease concepts where used.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **8192 bytes** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| disease_id | integer | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| disease_id | integer | NO | Foreign key to `disease.disease_id`. |
 
 **Primary Keys**: ligand_id, disease_id
 
 **Sample Data**: *No data available or table is empty*
 ### 59. **drug_approvals**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Regulatory approval events (FDA, EMA, etc.).
+**Purpose**: Approval history rows referenced from ligand pages and `ligand2drug_approvals`.
+**Size**: ~301 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **104 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| drug_approvals_id | integer | NO | Default: sequence: drug_approvals_id_seq |
-| inn | character varying(300) | YES | *To be documented* |
-| trade_name | character varying(300) | YES | *To be documented* |
-| type | character varying(100) | YES | *To be documented* |
-| fda_approval_date | character varying | YES | *To be documented* |
-| indication | character varying(2000) | YES | *To be documented* |
-| ema_approval_date | character varying | YES | *To be documented* |
-| primary_target | character varying(300) | YES | *To be documented* |
-| comment | character varying(5000) | YES | *To be documented* |
+| drug_approvals_id | integer | NO | Surrogate primary key. Default: sequence: drug_approvals_id_seq |
+| inn | character varying(300) | YES | International Nonproprietary Name string (lowercase in data). |
+| trade_name | character varying(300) | YES | Commercial trade name. |
+| type | character varying(100) | YES | Controlled type label (ligand class, interaction type, etc.). |
+| fda_approval_date | character varying | YES | Regulatory approval date (US FDA / EMA). |
+| indication | character varying(2000) | YES | Clinical indication, adverse effects, or medical relevance text. |
+| ema_approval_date | character varying | YES | Regulatory approval date (US FDA / EMA). |
+| primary_target | character varying(300) | YES | Marks the interaction as defining the ligand’s primary target. |
+| comment | character varying(5000) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `drug_approvals` table and related target/ligand pages for context. |
 | year | character varying | NO | Default: 1900 |
 
 **Primary Keys**: drug_approvals_id
@@ -1448,17 +1507,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 60. **endo_ligand_pairings**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Endogenous ligand pairings to their cognate receptors.
+**Purpose**: Curated primary endogenous ligand–receptor pairings (Latest pairings feature).
+**Size**: ~3,319 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **336 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| endo_ligand_pairings_id | character varying | NO | Default: sequence: endo_ligand_pairings_id_seq |
-| ligand_id | integer | NO | *To be documented* |
-| lig_species_id | integer | NO | *To be documented* |
-| object_id | integer | NO | *To be documented* |
-| tar_species_id | integer | YES | *To be documented* |
-| source | character varying | YES | *To be documented* |
+| endo_ligand_pairings_id | character varying | NO | Surrogate primary key. Default: sequence: endo_ligand_pairings_id_seq |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| lig_species_id | integer | NO | Species id for ligand vs target in a cross-species pairing. |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| tar_species_id | integer | YES | Species id for ligand vs target in a cross-species pairing. |
+| source | character varying | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `endo_ligand_pairings` table and related target/ligand pages for context. |
 
 **Primary Keys**: endo_ligand_pairings_id
 
@@ -1474,17 +1534,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 61. **endo_ligand_pairings_nomatch**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Pairing candidates that could not be auto-matched.
+**Purpose**: Staging/QA table for unresolved endogenous pairings.
+**Size**: ~427 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **96 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| endo_ligand_pairings_nomatch_id | character varying | NO | Default: sequence: endo_ligand_pairings_id_seq |
-| ligand_id | integer | NO | *To be documented* |
-| lig_species_id | integer | NO | *To be documented* |
-| object_id | integer | NO | *To be documented* |
-| tar_species_id | integer | YES | *To be documented* |
-| source | character varying | YES | *To be documented* |
+| endo_ligand_pairings_nomatch_id | character varying | NO | Surrogate primary key. Default: sequence: endo_ligand_pairings_id_seq |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| lig_species_id | integer | NO | Species id for ligand vs target in a cross-species pairing. |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| tar_species_id | integer | YES | Species id for ligand vs target in a cross-species pairing. |
+| source | character varying | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `endo_ligand_pairings_nomatch` table and related target/ligand pages for context. |
 
 **Primary Keys**: endo_ligand_pairings_nomatch_id
 
@@ -1500,12 +1561,13 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 62. **enzyme**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Enzyme-specific commentary block per target.
+**Purpose**: Class-specific enzyme text keyed by `object_id`.
+**Size**: ~1,321 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **128 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
 
 **Primary Keys**: object_id
 
@@ -1516,40 +1578,41 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 63. **export_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References bundled for export packages.
+**Purpose**: Internal export bibliography helper.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **16 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| reference_id | integer | YES | *To be documented* |
-| type | character varying(50) | YES | *To be documented* |
-| title | character varying(2000) | YES | *To be documented* |
-| article_title | character varying(1000) | YES | *To be documented* |
-| year | smallint | YES | *To be documented* |
-| issue | character varying(50) | YES | *To be documented* |
-| volume | character varying(50) | YES | *To be documented* |
-| pages | character varying(50) | YES | *To be documented* |
-| publisher | character varying(500) | YES | *To be documented* |
-| publisher_address | character varying(2000) | YES | *To be documented* |
-| editors | character varying(2000) | YES | *To be documented* |
-| pubmed_id | bigint | YES | *To be documented* |
-| isbn | character varying(13) | YES | *To be documented* |
-| pub_status | character varying(100) | YES | *To be documented* |
-| topics | character varying(250) | YES | *To be documented* |
-| comments | character varying(500) | YES | *To be documented* |
-| read | boolean | YES | *To be documented* |
-| useful | boolean | YES | *To be documented* |
-| website | character varying(500) | YES | *To be documented* |
-| url | character varying(2000) | YES | *To be documented* |
-| doi | character varying(500) | YES | *To be documented* |
-| accessed | date | YES | *To be documented* |
-| modified | date | YES | *To be documented* |
-| patent_number | character varying(250) | YES | *To be documented* |
-| priority | date | YES | *To be documented* |
-| publication | date | YES | *To be documented* |
-| authors | text | YES | *To be documented* |
-| assignee | character varying(500) | YES | *To be documented* |
-| pmc_id | character varying(50) | YES | *To be documented* |
+| reference_id | integer | YES | Foreign key to `reference.reference_id`. |
+| type | character varying(50) | YES | Controlled type label (ligand class, interaction type, etc.). |
+| title | character varying(2000) | YES | Short title or heading for UI display. |
+| article_title | character varying(1000) | YES | Authorship or title fields for citations or Concise Guide content. |
+| year | smallint | YES | Bibliographic metadata for journal articles or books. |
+| issue | character varying(50) | YES | Bibliographic metadata for journal articles or books. |
+| volume | character varying(50) | YES | Bibliographic metadata for journal articles or books. |
+| pages | character varying(50) | YES | Bibliographic metadata for journal articles or books. |
+| publisher | character varying(500) | YES | Book or report publication metadata. |
+| publisher_address | character varying(2000) | YES | Book or report publication metadata. |
+| editors | character varying(2000) | YES | Editorial or authorship attribution for publications. |
+| pubmed_id | bigint | YES | PubMed identifier (PMID). |
+| isbn | character varying(13) | YES | Book or report publication metadata. |
+| pub_status | character varying(100) | YES | Publication status (in press, published, …). |
+| topics | character varying(250) | YES | Topic tags or keywords. |
+| comments | character varying(500) | YES | Free-text curator comments. |
+| read | boolean | YES | Editorial teaser or overview text for a topic or contributor. |
+| useful | boolean | YES | Internal editorial or QA flag. |
+| website | character varying(500) | YES | External website URL. |
+| url | character varying(2000) | YES | HTTP(S) link for external resources or Immunopaedia pages. |
+| doi | character varying(500) | YES | Digital Object Identifier for the cited publication. |
+| accessed | date | YES | Publication, access, or modification date. |
+| modified | date | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `export_refs` table and related target/ligand pages for context. |
+| patent_number | character varying(250) | YES | Patent reference or assignee (intellectual property). |
+| priority | date | YES | Sort order for lists or navigation. |
+| publication | date | YES | Authorship or title fields for citations or Concise Guide content. |
+| authors | text | YES | Authorship or title fields for citations or Concise Guide content. |
+| assignee | character varying(500) | YES | Patent reference or assignee (intellectual property). |
+| pmc_id | character varying(50) | YES | PubMed Central identifier. |
 
 **Primary Keys**: *None identified*
 
@@ -1588,16 +1651,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 64. **expression_experiment**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Metadata for expression experiments (datasets).
+**Purpose**: High-level experiment records supporting expression tables.
+**Size**: ~1 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| expression_experiment_id | integer | NO | Default: sequence: expression_experiment_expression_experiment_id_seq |
-| description | character varying(1000) | YES | *To be documented* |
-| technique | character varying(100) | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| baseline | double precision | NO | *To be documented* |
+| expression_experiment_id | integer | NO | Surrogate primary key. Default: sequence: expression_experiment_expression_experiment_id_seq |
+| description | character varying(1000) | YES | Free-text description field. |
+| technique | character varying(100) | YES | Experimental method (knockout, qPCR, microarray, …). |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| baseline | double precision | NO | Screening assay value, unit, or activity readout. |
 
 **Primary Keys**: expression_experiment_id
 
@@ -1612,15 +1676,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 65. **expression_level**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Quantitative or qualitative expression levels by tissue/cell type.
+**Purpose**: Granular expression measurements linked to targets and species.
+**Size**: ~13,407 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1152 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| structural_info_id | integer | NO | *To be documented* |
-| tissue_id | integer | NO | *To be documented* |
-| expression_experiment_id | integer | NO | *To be documented* |
-| value | double precision | NO | *To be documented* |
+| structural_info_id | integer | NO | Foreign key to `structural_info.structural_info_id`. |
+| tissue_id | integer | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `expression_level` table and related target/ligand pages for context. |
+| expression_experiment_id | integer | NO | Foreign key to `expression_experiment.expression_experiment_id`. |
+| value | double precision | NO | Numeric or textual property value. |
 
 **Primary Keys**: structural_info_id, tissue_id, expression_experiment_id
 
@@ -1634,22 +1699,23 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 66. **expression_pathophysiology**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Expression changes in pathophysiological states.
+**Purpose**: Narrative linking expression to disease context for `object_id`.
+**Size**: ~194 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **200 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| expression_pathophysiology_id | integer | NO | Default: sequence: expression_pathophysiology_expression_pathophysiology_id_seq |
-| object_id | integer | NO | *To be documented* |
-| change | text | YES | *To be documented* |
-| pathophysiology | text | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| tissue | character varying(1000) | YES | *To be documented* |
-| technique | character varying(500) | YES | *To be documented* |
-| change_vector | tsvector | YES | *To be documented* |
-| tissue_vector | tsvector | YES | *To be documented* |
-| pathophysiology_vector | tsvector | YES | *To be documented* |
-| technique_vector | tsvector | YES | *To be documented* |
+| expression_pathophysiology_id | integer | NO | Surrogate primary key. Default: sequence: expression_pathophysiology_expression_pathophysiology_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| change | text | YES | Narrative of the measured change (expression, phenotype, or assay readout vs baseline). |
+| pathophysiology | text | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `expression_pathophysiology` table and related target/ligand pages for context. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| tissue | character varying(1000) | YES | Tissue or organ context for expression data. |
+| technique | character varying(500) | YES | Experimental method (knockout, qPCR, microarray, …). |
+| change_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| tissue_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `tissue`. |
+| pathophysiology_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| technique_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `technique`. |
 
 **Primary Keys**: expression_pathophysiology_id
 
@@ -1670,13 +1736,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 67. **expression_pathophysiology_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Citations for pathophysiology expression text.
+**Purpose**: Links `expression_pathophysiology` to `reference`.
+**Size**: ~265 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **56 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| expression_pathophysiology_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| expression_pathophysiology_id | integer | NO | Foreign key to `expression_pathophysiology.expression_pathophysiology_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: expression_pathophysiology_id, reference_id
 
@@ -1688,25 +1755,26 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 68. **family**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Target families (GPCR families, ion channel families, etc.).
+**Purpose**: Central hierarchy node for the Guide to PHARMACOLOGY; groups related `object` targets.
+**Size**: ~880 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **392 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| family_id | integer | NO | Default: sequence: family_family_id_seq |
-| name | character varying(1000) | NO | *To be documented* |
-| last_modified | date | YES | *To be documented* |
-| old_family_id | integer | YES | *To be documented* |
-| type | character varying(50) | NO | *To be documented* |
-| display_order | integer | YES | *To be documented* |
+| family_id | integer | NO | Surrogate primary key. Default: sequence: family_family_id_seq |
+| name | character varying(1000) | NO | Primary display name (target, ligand, family, etc.). |
+| last_modified | date | YES | Last editorial modification date for the row or text block. |
+| old_family_id | integer | YES | Family id after merge or renumbering. |
+| type | character varying(50) | NO | Controlled type label (ligand class, interaction type, etc.). |
+| display_order | integer | YES | Sort order for lists or navigation. |
 | annotation_status | integer | NO | Default: 5 |
-| previous_names | character varying(300) | YES | *To be documented* |
-| only_grac | boolean | YES | *To be documented* |
-| only_iuphar | boolean | YES | *To be documented* |
+| previous_names | character varying(300) | YES | Historical or alternate naming. |
+| only_grac | boolean | YES | Target appears only in GRAC legacy slices. |
+| only_iuphar | boolean | YES | Target appears only in IUPHAR views. |
 | in_cgtp | boolean | NO | Default: false |
-| cite_id | character varying(20) | YES | *To be documented* |
-| name_vector | tsvector | YES | *To be documented* |
-| previous_names_vector | tsvector | YES | *To be documented* |
+| cite_id | character varying(20) | YES | Used to shows the ID of the GtoPdb CITE family for citation purposes. |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
+| previous_names_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: family_id
 
@@ -1730,20 +1798,21 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 69. **functional_assay**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Assays used to validate target function.
+**Purpose**: Functional assay descriptions per target with methods and readouts.
+**Size**: ~2,045 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1520 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| functional_assay_id | integer | NO | Default: sequence: functional_assay_functional_assay_id_seq |
-| object_id | integer | NO | *To be documented* |
-| description | character varying(1000) | NO | *To be documented* |
-| response_measured | character varying(1000) | NO | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| tissue | character varying(1000) | NO | *To be documented* |
-| description_vector | tsvector | YES | *To be documented* |
-| tissue_vector | tsvector | YES | *To be documented* |
-| response_vector | tsvector | YES | *To be documented* |
+| functional_assay_id | integer | NO | Surrogate primary key. Default: sequence: functional_assay_functional_assay_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| description | character varying(1000) | NO | Free-text description field. |
+| response_measured | character varying(1000) | NO | Screening assay value, unit, or activity readout. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| tissue | character varying(1000) | NO | Tissue or organ context for expression data. |
+| description_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `description`. |
+| tissue_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `tissue`. |
+| response_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: functional_assay_id
 
@@ -1762,13 +1831,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 70. **functional_assay_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for functional assay text.
+**Purpose**: Links `functional_assay` to `reference`.
+**Size**: ~2,884 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **216 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| functional_assay_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| functional_assay_id | integer | NO | Foreign key to `functional_assay.functional_assay_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: functional_assay_id, reference_id
 
@@ -1780,32 +1850,34 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 71. **further_reading**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Family-level further reading pointers.
+**Purpose**: Short further-reading list items for families.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **8192 bytes** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: object_id, reference_id
 
 **Sample Data**: *No data available or table is empty*
 ### 72. **go_process**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Gene Ontology biological process terms.
+**Purpose**: GO process nodes for annotation of targets.
+**Size**: ~2,707 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **2320 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| go_process_id | integer | NO | Default: sequence: go_process_go_process_seq |
-| term | character varying(1000) | NO | *To be documented* |
-| definition | character varying(1500) | NO | *To be documented* |
-| last_modified | date | YES | *To be documented* |
-| annotation | character varying(200) | NO | *To be documented* |
-| go_id | character varying(50) | NO | *To be documented* |
-| term_vector | tsvector | YES | *To be documented* |
-| definition_vector | tsvector | YES | *To be documented* |
-| go_id_vector | tsvector | YES | *To be documented* |
+| go_process_id | integer | NO | Surrogate primary key. Default: sequence: go_process_go_process_seq |
+| term | character varying(1000) | NO | Ontology or controlled vocabulary term string. |
+| definition | character varying(1500) | NO | Short definition text for the ontology or disease entry. |
+| last_modified | date | YES | Last editorial modification date for the row or text block. |
+| annotation | character varying(200) | NO | Short annotation or note. |
+| go_id | character varying(50) | NO | Gene Ontology term label or identifier. |
+| term_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| definition_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| go_id_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: go_process_id
 
@@ -1824,13 +1896,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 73. **go_process_rel**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Relationships between GO processes (e.g. part_of).
+**Purpose**: Edges connecting `go_process` terms.
+**Size**: ~32,852 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1936 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| parent_id | integer | NO | *To be documented* |
-| child_id | integer | NO | *To be documented* |
+| parent_id | integer | NO | Parent or child node in a hierarchy. |
+| child_id | integer | NO | Parent or child node in a hierarchy. |
 
 **Primary Keys**: parent_id, child_id
 
@@ -1842,14 +1915,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 74. **gpcr**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: GPCR-specific curated fields (e.g. transduction overview).
+**Purpose**: One row per G protein-coupled receptor target extending `object`.
+**Size**: ~410 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **96 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| class | character varying(200) | YES | *To be documented* |
-| ligand | character varying(500) | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| class | character varying(200) | YES | High-level class label (ligand class, family class, …). |
+| ligand | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `gpcr` table and related target/ligand pages for context. |
 
 **Primary Keys**: object_id
 
@@ -1862,17 +1936,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 75. **grac_family_text**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Legacy GRAC long-form family text blocks.
+**Purpose**: Historical narrative content from the original GRAC publication pipeline.
+**Size**: ~574 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1776 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| family_id | integer | NO | *To be documented* |
-| overview | text | YES | *To be documented* |
-| comments | text | YES | *To be documented* |
-| last_modified | date | YES | *To be documented* |
-| overview_vector | tsvector | YES | *To be documented* |
-| comments_vector | tsvector | YES | *To be documented* |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
+| overview | text | YES | Editorial teaser or overview text for a topic or contributor. |
+| comments | text | YES | Free-text curator comments. |
+| last_modified | date | YES | Last editorial modification date for the row or text block. |
+| overview_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| comments_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `comments`. |
 
 **Primary Keys**: family_id
 
@@ -1888,14 +1963,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 76. **grac_functional_characteristics**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: GRAC functional characteristics snippets.
+**Purpose**: Structured legacy characteristics text per family/target.
+**Size**: ~158 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **152 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| functional_characteristics | text | NO | *To be documented* |
-| functional_characteristics_vector | tsvector | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| functional_characteristics | text | NO | GRAC functional characteristics text block. |
+| functional_characteristics_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: object_id
 
@@ -1908,13 +1984,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 77. **grac_further_reading**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: GRAC further reading entries.
+**Purpose**: Legacy further-reading references tied to families.
+**Size**: ~4,013 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **312 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| family_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 | key_ref | boolean | NO | Default: false |
 
 **Primary Keys**: family_id, reference_id
@@ -1928,18 +2005,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 78. **grac_ligand_rank_potency**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: GRAC ligand rank/potency tables.
+**Purpose**: Ordered ligand potency rankings within families.
+**Size**: ~436 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **176 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| grac_ligand_rank_potency_id | integer | NO | Default: sequence: grac_ligand_rank_potency_grac_ligand_rank_potency_id_seq |
-| object_id | integer | NO | *To be documented* |
-| description | character varying(500) | NO | *To be documented* |
-| rank_potency | character varying(2000) | NO | *To be documented* |
-| species_id | integer | NO | *To be documented* |
+| grac_ligand_rank_potency_id | integer | NO | Surrogate primary key. Default: sequence: grac_ligand_rank_potency_grac_ligand_rank_potency_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| description | character varying(500) | NO | Free-text description field. |
+| rank_potency | character varying(2000) | NO | Ordered potency ranking within a family (GRAC tables). |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
 | in_iuphar | boolean | NO | Default: true |
-| rank_potency_vector | tsvector | YES | *To be documented* |
+| rank_potency_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: grac_ligand_rank_potency_id
 
@@ -1956,13 +2034,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 79. **grac_ligand_rank_potency_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Citations for GRAC potency rankings.
+**Purpose**: Links `grac_ligand_rank_potency` to `reference`.
+**Size**: ~334 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **56 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| grac_ligand_rank_potency_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| grac_ligand_rank_potency_id | integer | NO | Foreign key to `grac_ligand_rank_potency.grac_ligand_rank_potency_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: grac_ligand_rank_potency_id, reference_id
 
@@ -1974,13 +2053,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 80. **grac_transduction**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: GRAC transduction mechanism summaries.
+**Purpose**: Legacy G protein / signalling coupling text.
+**Size**: ~257 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **64 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| transduction | character varying(1000) | NO | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| transduction | character varying(1000) | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `grac_transduction` table and related target/ligand pages for context. |
 
 **Primary Keys**: object_id
 
@@ -1992,13 +2072,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 81. **grouping**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Groups of families and higher-level navigation groupings.
+**Purpose**: Supports nested navigation (groups of groups) on the website. Database comment: groups of families and groups of groups
+**Size**: ~882 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **104 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| group_id | integer | NO | *To be documented* |
-| family_id | integer | NO | *To be documented* |
+| group_id | integer | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `grouping` table and related target/ligand pages for context. |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
 | display_order | integer | NO | Default: 1 |
 
 **Primary Keys**: group_id, family_id
@@ -2012,16 +2093,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 82. **gtip2go_process**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: GO processes highlighted in Guide to IMMUNOPHARMACOLOGY.
+**Purpose**: Links GTIP process nodes to `go_process` for immune-focused views.
+**Size**: ~53 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| gtip_process_id | integer | NO | *To be documented* |
-| go_process_id | integer | NO | *To be documented* |
-| comment | character varying(500) | YES | *To be documented* |
-| go_id | character varying(15) | YES | *To be documented* |
-| go_term | character varying(500) | YES | *To be documented* |
+| gtip_process_id | integer | NO | Foreign key to `gtip_process.gtip_process_id`. |
+| go_process_id | integer | NO | Foreign key to `go_process.go_process_id`. |
+| comment | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `gtip2go_process` table and related target/ligand pages for context. |
+| go_id | character varying(15) | YES | Gene Ontology term label or identifier. |
+| go_term | character varying(500) | YES | Gene Ontology term label or identifier. |
 
 **Primary Keys**: gtip_process_id, go_process_id
 
@@ -2036,19 +2118,20 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 83. **gtip_process**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Immunopharmacology process headings and anchors.
+**Purpose**: Short labels and anchors for Guide to Immunopharmacology process pages.
+**Size**: ~11 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **48 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| gtip_process_id | integer | NO | Default: sequence: gtip_process_gtip_process_seq |
-| term | character varying(1000) | NO | *To be documented* |
-| definition | character varying(1500) | NO | *To be documented* |
-| last_modified | date | YES | *To be documented* |
-| short_term | character varying(500) | YES | *To be documented* |
-| anchor | character varying(10) | YES | *To be documented* |
-| term_vector | tsvector | YES | *To be documented* |
-| definition_vector | tsvector | YES | *To be documented* |
+| gtip_process_id | integer | NO | Surrogate primary key. Default: sequence: gtip_process_gtip_process_seq |
+| term | character varying(1000) | NO | Ontology or controlled vocabulary term string. |
+| definition | character varying(1500) | NO | Short definition text for the ontology or disease entry. |
+| last_modified | date | YES | Last editorial modification date for the row or text block. |
+| short_term | character varying(500) | YES | Short term for wbe display, may contain html |
+| anchor | character varying(10) | YES | very short text to use as link anchor on webpages |
+| term_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| definition_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: gtip_process_id
 
@@ -2066,15 +2149,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 84. **gtopdb_cidmap**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: PubChem compound IDs (CID) mapped to ligands.
+**Purpose**: Bridge table for PubChem structure integration and downloads.
+**Size**: ~12,219 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **864 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | YES | *To be documented* |
-| name | character varying(1000) | YES | *To be documented* |
-| pubchem_sid | bigint | YES | *To be documented* |
-| placeholder | character varying(100) | YES | *To be documented* |
+| ligand_id | integer | YES | Foreign key to `ligand.ligand_id`. |
+| name | character varying(1000) | YES | Primary display name (target, ligand, family, etc.). |
+| pubchem_sid | bigint | YES | PubChem Substance ID (when ligand is registered in PubChem). |
+| placeholder | character varying(100) | YES | Internal editorial or QA flag. |
 
 **Primary Keys**: *None identified*
 
@@ -2088,25 +2172,26 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 85. **hot_topics**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Editorial hot topics (timely review articles).
+**Purpose**: Landing pages for themed pharmacology topics on guidetopharmacology.org.
+**Size**: ~547 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **512 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| hot_topics_id | integer | NO | Default: sequence: hot_topics_id_seq |
-| date | date | NO | *To be documented* |
-| blog_url | character varying(400) | YES | *To be documented* |
-| blog_summary | character varying(2000) | YES | *To be documented* |
+| hot_topics_id | integer | NO | Surrogate primary key. Default: sequence: hot_topics_id_seq |
+| date | date | NO | Publication, access, or modification date. |
+| blog_url | character varying(400) | YES | Link to a related blog post or news article on the Guide to PHARMACOLOGY blog. |
+| blog_summary | character varying(2000) | YES | Optional blog / news teaser content for hot topics. |
 | has_blog | boolean | NO | Default: false |
-| author_name | character varying(100) | YES | *To be documented* |
-| author_affiliation | character varying(200) | YES | *To be documented* |
-| author_link | character varying(200) | YES | *To be documented* |
-| author_twitter | character varying(50) | YES | *To be documented* |
-| authorship | character varying(1000) | YES | *To be documented* |
-| title | character varying(1000) | YES | *To be documented* |
-| title_vector | tsvector | YES | *To be documented* |
-| blog_summary_vector | tsvector | YES | *To be documented* |
-| authorship_vector | tsvector | YES | *To be documented* |
+| author_name | character varying(100) | YES | Contributor or publication author metadata. |
+| author_affiliation | character varying(200) | YES | Contributor or publication author metadata. |
+| author_link | character varying(200) | YES | Contributor or publication author metadata. |
+| author_twitter | character varying(50) | YES | Contributor or publication author metadata. |
+| authorship | character varying(1000) | YES | Editorial or authorship attribution for publications. |
+| title | character varying(1000) | YES | Short title or heading for UI display. |
+| title_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `title`. |
+| blog_summary_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| authorship_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: hot_topics_id
 
@@ -2130,37 +2215,40 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 86. **hot_topics2family**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Hot topics linked to target families.
+**Purpose**: Many-to-many between `hot_topics` and `family`.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **8192 bytes** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| hot_topics_id | integer | NO | *To be documented* |
-| family_id | integer | NO | *To be documented* |
+| hot_topics_id | integer | NO | Foreign key to `hot_topics.hot_topics_id`. |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
 
 **Primary Keys**: hot_topics_id, family_id
 
 **Sample Data**: *No data available or table is empty*
 ### 87. **hot_topics2object**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Hot topics linked to individual targets.
+**Purpose**: Many-to-many between `hot_topics` and `object`.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **8192 bytes** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| hot_topics_id | integer | NO | *To be documented* |
-| object_id | integer | NO | *To be documented* |
+| hot_topics_id | integer | NO | Foreign key to `hot_topics.hot_topics_id`. |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
 
 **Primary Keys**: hot_topics_id, object_id
 
 **Sample Data**: *No data available or table is empty*
 ### 88. **hot_topics_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Bibliography for hot topic pages.
+**Purpose**: Links `hot_topics` to `reference`.
+**Size**: ~570 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **88 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| hot_topics_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| hot_topics_id | integer | NO | Foreign key to `hot_topics.hot_topics_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 | is_primary | boolean | NO | Default: false |
 
 **Primary Keys**: hot_topics_id, reference_id
@@ -2174,20 +2262,21 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 89. **hottopic_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Alternate hot-topic reference wiring.
+**Purpose**: Additional reference joins for topic content.
+**Size**: ~10 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| reference_id | integer | NO | *To be documented* |
-| date | date | NO | *To be documented* |
-| blog_url | character varying(200) | YES | *To be documented* |
-| blog_summary | character varying(2000) | YES | *To be documented* |
+| reference_id | integer | NO | ID of reference from reference table |
+| date | date | NO | Publication, access, or modification date. |
+| blog_url | character varying(200) | YES | Link to a related blog post or news article on the Guide to PHARMACOLOGY blog. |
+| blog_summary | character varying(2000) | YES | Optional blog / news teaser content for hot topics. |
 | has_blog | boolean | NO | Default: false |
-| author_name | character varying(100) | YES | *To be documented* |
-| author_affiliation | character varying(200) | YES | *To be documented* |
-| author_link | character varying(200) | YES | *To be documented* |
-| author_twitter | character varying(50) | YES | *To be documented* |
+| author_name | character varying(100) | YES | Contributor or publication author metadata. |
+| author_affiliation | character varying(200) | YES | Contributor or publication author metadata. |
+| author_link | character varying(200) | YES | Contributor or publication author metadata. |
+| author_twitter | character varying(50) | YES | Contributor or publication author metadata. |
 
 **Primary Keys**: reference_id
 
@@ -2206,14 +2295,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 90. **immuno2co_celltype**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Maps immunopharmacology sections to cell ontology terms.
+**Purpose**: Connects immune portal structure to `co_celltype`.
+**Size**: ~16 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| immuno_celltype_id | integer | NO | *To be documented* |
-| cellonto_id | character varying(50) | NO | *To be documented* |
-| comment | character varying(500) | YES | *To be documented* |
+| immuno_celltype_id | integer | NO | Foreign key to `immuno_celltype.immuno_celltype_id`. |
+| cellonto_id | character varying(50) | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `immuno2co_celltype` table and related target/ligand pages for context. |
+| comment | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `immuno2co_celltype` table and related target/ligand pages for context. |
 
 **Primary Keys**: immuno_celltype_id, cellonto_id
 
@@ -2226,18 +2316,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 91. **immuno_celltype**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Immunopharmacology cell-type categories.
+**Purpose**: Curated immune cell groupings with display names for Guide to IMMUNOPHARMACOLOGY.
+**Size**: ~10 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **96 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| immuno_celltype_id | integer | NO | Default: sequence: immuno_celltype_immuno_celltype_id_seq |
-| term | character varying(1000) | NO | *To be documented* |
-| definition | character varying(2500) | NO | *To be documented* |
-| last_modified | date | YES | *To be documented* |
-| short_term | character varying(500) | YES | *To be documented* |
-| term_vector | tsvector | YES | *To be documented* |
-| definition_vector | tsvector | YES | *To be documented* |
+| immuno_celltype_id | integer | NO | Surrogate primary key. Default: sequence: immuno_celltype_immuno_celltype_id_seq |
+| term | character varying(1000) | NO | Ontology or controlled vocabulary term string. |
+| definition | character varying(2500) | NO | Short definition text for the ontology or disease entry. |
+| last_modified | date | YES | Last editorial modification date for the row or text block. |
+| short_term | character varying(500) | YES | Short name for celltype category, may contain html |
+| term_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| definition_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: immuno_celltype_id
 
@@ -2254,17 +2345,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 92. **immuno_disease2ligand**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Immune-relevant disease–ligand associations.
+**Purpose**: Links diseases to ligands in the immunopharmacology context.
+**Size**: ~744 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **312 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| immuno_disease2ligand_id | integer | NO | Default: sequence: immuno_disease2ligand_immuno_disease2ligand_id_seq |
-| ligand_id | integer | NO | *To be documented* |
-| disease_id | integer | YES | *To be documented* |
-| comment | character varying(1000) | YES | *To be documented* |
+| immuno_disease2ligand_id | integer | NO | Surrogate primary key. Default: sequence: immuno_disease2ligand_immuno_disease2ligand_id_seq |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| disease_id | integer | YES | Foreign key to `disease.disease_id`. |
+| comment | character varying(1000) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `immuno_disease2ligand` table and related target/ligand pages for context. |
 | immuno | boolean | YES | Default: true |
-| comment_vector | tsvector | YES | *To be documented* |
+| comment_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: immuno_disease2ligand_id
 
@@ -2280,13 +2372,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 93. **immuno_disease2ligand_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Citations for immune disease–ligand links.
+**Purpose**: Links `immuno_disease2ligand` rows to `reference`.
+**Size**: ~100 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| immuno_disease2ligand_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| immuno_disease2ligand_id | integer | NO | Foreign key to `immuno_disease2ligand.immuno_disease2ligand_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: immuno_disease2ligand_id, reference_id
 
@@ -2298,17 +2391,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 94. **immuno_disease2object**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Immune-relevant disease–target associations.
+**Purpose**: Links diseases to `object` for immunopharmacology.
+**Size**: ~65 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **80 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| immuno_disease2object_id | integer | NO | Default: sequence: immuno_disease2object_immuno_disease2object_id_seq |
-| object_id | integer | NO | *To be documented* |
-| disease_id | integer | YES | *To be documented* |
-| comment | character varying(500) | YES | *To be documented* |
+| immuno_disease2object_id | integer | NO | Surrogate primary key. Default: sequence: immuno_disease2object_immuno_disease2object_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| disease_id | integer | YES | Foreign key to `disease.disease_id`. |
+| comment | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `immuno_disease2object` table and related target/ligand pages for context. |
 | immuno | boolean | YES | Default: true |
-| comment_vector | tsvector | YES | *To be documented* |
+| comment_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: immuno_disease2object_id
 
@@ -2324,13 +2418,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 95. **immuno_disease2object_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Citations for immune disease–target links.
+**Purpose**: Links `immuno_disease2object` to `reference`.
+**Size**: ~82 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| immuno_disease2object_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| immuno_disease2object_id | integer | NO | Foreign key to `immuno_disease2object.immuno_disease2object_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: immuno_disease2object_id, reference_id
 
@@ -2342,16 +2437,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 96. **immunopaedia2family**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Immunopaedia clinical cases linked to families.
+**Purpose**: Cross-links Immunopaedia content to `family`.
+**Size**: ~5 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| immunopaedia_case_id | integer | NO | *To be documented* |
-| family_id | integer | NO | *To be documented* |
-| section | character varying(50) | NO | *To be documented* |
-| url | character varying(150) | YES | *To be documented* |
-| comment | character varying(500) | YES | *To be documented* |
+| immunopaedia_case_id | integer | NO | Foreign key to `immunopaedia_cases.immunopaedia_case_id`. |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
+| section | character varying(50) | NO | Section anchor or heading within a long document. |
+| url | character varying(150) | YES | HTTP(S) link for external resources or Immunopaedia pages. |
+| comment | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `immunopaedia2family` table and related target/ligand pages for context. |
 
 **Primary Keys**: immunopaedia_case_id, family_id
 
@@ -2366,17 +2462,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 97. **immunopaedia2ligand**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Immunopaedia cases referencing ligands.
+**Purpose**: Connects Immunopaedia case studies to `ligand_id`.
+**Size**: ~120 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| immunopaedia_case_id | integer | NO | *To be documented* |
-| ligand_id | integer | NO | *To be documented* |
-| section | character varying(50) | NO | *To be documented* |
-| url | character varying(150) | YES | *To be documented* |
-| comment | character varying(500) | YES | *To be documented* |
-| placeholder | character varying(100) | YES | *To be documented* |
+| immunopaedia_case_id | integer | NO | Foreign key to `immunopaedia_cases.immunopaedia_case_id`. |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| section | character varying(50) | NO | Section anchor or heading within a long document. |
+| url | character varying(150) | YES | HTTP(S) link for external resources or Immunopaedia pages. |
+| comment | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `immunopaedia2ligand` table and related target/ligand pages for context. |
+| placeholder | character varying(100) | YES | Internal editorial or QA flag. |
 
 **Primary Keys**: immunopaedia_case_id, ligand_id
 
@@ -2392,16 +2489,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 98. **immunopaedia2object**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Immunopaedia cases referencing targets.
+**Purpose**: Connects Immunopaedia case studies to `object_id`.
+**Size**: ~31 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| immunopaedia_case_id | integer | NO | *To be documented* |
-| object_id | integer | NO | *To be documented* |
-| section | character varying(50) | NO | *To be documented* |
-| url | character varying(150) | YES | *To be documented* |
-| comment | character varying(500) | YES | *To be documented* |
+| immunopaedia_case_id | integer | NO | Foreign key to `immunopaedia_cases.immunopaedia_case_id`. |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| section | character varying(50) | NO | Section anchor or heading within a long document. |
+| url | character varying(150) | YES | HTTP(S) link for external resources or Immunopaedia pages. |
+| comment | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `immunopaedia2object` table and related target/ligand pages for context. |
 
 **Primary Keys**: immunopaedia_case_id, object_id
 
@@ -2416,16 +2514,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 99. **immunopaedia_cases**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Immunopaedia.org clinical case metadata.
+**Purpose**: Titles and URLs for educational immunology case studies.
+**Size**: ~23 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| immunopaedia_case_id | integer | NO | Default: sequence: immunopaedia_cases_immunopaedia_case_id_seq |
-| title | character varying(1000) | NO | *To be documented* |
-| url | character varying(150) | NO | *To be documented* |
-| last_modified | date | YES | *To be documented* |
-| short_title | character varying(500) | YES | *To be documented* |
+| immunopaedia_case_id | integer | NO | Surrogate primary key. Default: sequence: immunopaedia_cases_immunopaedia_case_id_seq |
+| title | character varying(1000) | NO | Short title or heading for UI display. |
+| url | character varying(150) | NO | HTTP(S) link for external resources or Immunopaedia pages. |
+| last_modified | date | YES | Last editorial modification date for the row or text block. |
+| short_title | character varying(500) | YES | Short name for case study title, may contain html |
 
 **Primary Keys**: immunopaedia_case_id
 
@@ -2440,24 +2539,25 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 100. **inn**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: WHO International Nonproprietary Names (INN) with structures.
+**Purpose**: INN registry: names, CAS, SMILES/InChI variants for salt handling and searching.
+**Size**: ~11,470 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **4720 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| inn_number | integer | NO | *To be documented* |
-| inn | character varying(500) | NO | *To be documented* |
-| cas | character varying(100) | YES | *To be documented* |
-| smiles | text | YES | *To be documented* |
-| smiles_salts_stripped | text | YES | *To be documented* |
-| inchi_key_salts_stripped | character varying(500) | YES | *To be documented* |
-| nonisomeric_smiles_salts_stripped | text | YES | *To be documented* |
-| nonisomeric_inchi_key_salts_stripped | character varying(500) | YES | *To be documented* |
-| neutralised_smiles | text | YES | *To be documented* |
-| neutralised_inchi_key | character varying(500) | YES | *To be documented* |
-| neutralised_nonisomeric_smiles | text | YES | *To be documented* |
-| neutralised_nonisomeric_inchi_key | character varying(500) | YES | *To be documented* |
-| inn_vector | tsvector | YES | *To be documented* |
+| inn_number | integer | NO | Primary key / INN registry number (links to WHO INN). |
+| inn | character varying(500) | NO | International Nonproprietary Name string (lowercase in data). |
+| cas | character varying(100) | YES | Chemical Abstracts Service registry number. |
+| smiles | text | YES | SMILES line notation for the structure (may include salts). |
+| smiles_salts_stripped | text | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `inn` table and related target/ligand pages for context. |
+| inchi_key_salts_stripped | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `inn` table and related target/ligand pages for context. |
+| nonisomeric_smiles_salts_stripped | text | YES | Salt-stripped or neutralised structure line for matching. |
+| nonisomeric_inchi_key_salts_stripped | character varying(500) | YES | Salt-stripped or neutralised structure line for matching. |
+| neutralised_smiles | text | YES | Salt-stripped or neutralised structure line for matching. |
+| neutralised_inchi_key | character varying(500) | YES | Salt-stripped or neutralised structure line for matching. |
+| neutralised_nonisomeric_smiles | text | YES | Salt-stripped or neutralised structure line for matching. |
+| neutralised_nonisomeric_inchi_key | character varying(500) | YES | Salt-stripped or neutralised structure line for matching. |
+| inn_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `inn`. |
 
 **Primary Keys**: inn_number
 
@@ -2480,52 +2580,53 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 101. **interaction**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligand–target interactions (affinity, action, selectivity).
+**Purpose**: Core pharmacology table: connects `ligand_id` to `object_id` with potency and assay metadata.
+**Size**: ~23,827 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **7264 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| interaction_id | integer | NO | Default: sequence: interaction_interaction_id_seq |
-| ligand_id | integer | NO | *To be documented* |
-| object_id | integer | YES | *To be documented* |
-| type | character varying(100) | NO | *To be documented* |
-| action | character varying(1000) | NO | *To be documented* |
-| action_comment | character varying(2000) | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
+| interaction_id | integer | NO | Surrogate primary key. Default: sequence: interaction_interaction_id_seq |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| object_id | integer | YES | Foreign key to `object.object_id`. |
+| type | character varying(100) | NO | Controlled type label (ligand class, interaction type, etc.). |
+| action | character varying(1000) | NO | Pharmacological action (agonist, antagonist, inhibitor, …). |
+| action_comment | character varying(2000) | YES | Curator prose for the `action` section on the portal. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
 | endogenous | boolean | NO | Default: false |
 | selective | boolean | NO | Default: false |
-| use_dependent | boolean | YES | *To be documented* |
-| voltage_dependent | boolean | YES | *To be documented* |
+| use_dependent | boolean | YES | Use-dependent (e.g. channel blocker) binding/activity. |
+| voltage_dependent | boolean | YES | Measurement varies with membrane voltage (ion channels). |
 | affinity_units | character varying(100) | YES | Default: -::character varying |
-| affinity_high | double precision | YES | *To be documented* |
-| affinity_median | double precision | YES | *To be documented* |
-| affinity_low | double precision | YES | *To be documented* |
-| concentration_range | character varying(200) | YES | *To be documented* |
-| affinity_voltage_high | real | YES | *To be documented* |
-| affinity_voltage_median | real | YES | *To be documented* |
-| affinity_voltage_low | real | YES | *To be documented* |
-| affinity_physiological_voltage | boolean | YES | *To be documented* |
-| rank | integer | YES | *To be documented* |
-| selectivity | character varying(100) | YES | *To be documented* |
-| original_affinity_low_nm | double precision | YES | *To be documented* |
-| original_affinity_median_nm | double precision | YES | *To be documented* |
-| original_affinity_high_nm | double precision | YES | *To be documented* |
-| original_affinity_units | character varying(20) | YES | *To be documented* |
-| original_affinity_relation | character varying(10) | YES | *To be documented* |
-| assay_description | character varying(1000) | YES | *To be documented* |
-| assay_conditions | character varying(1000) | YES | *To be documented* |
+| affinity_high | double precision | YES | Upper bound of reported affinity (numeric). |
+| affinity_median | double precision | YES | Median or most representative affinity value. |
+| affinity_low | double precision | YES | Lower bound of reported affinity (numeric). |
+| concentration_range | character varying(200) | YES | Range of concentrations tested in the assay. |
+| affinity_voltage_high | real | YES | Affinity at depolarized/hyperpolarized voltage (upper). |
+| affinity_voltage_median | real | YES | Affinity at stated voltage (median). |
+| affinity_voltage_low | real | YES | Affinity at hyperpolarized/depolarized voltage (lower). |
+| affinity_physiological_voltage | boolean | YES | Whether affinity was measured at physiological Vm. |
+| rank | integer | YES | Potency or relevance rank within a family or table. |
+| selectivity | character varying(100) | YES | Qualitative selectivity class (e.g. non-selective). |
+| original_affinity_low_nm | double precision | YES | Original literature affinity (low) in nM space. |
+| original_affinity_median_nm | double precision | YES | Original literature affinity (median) in nM space. |
+| original_affinity_high_nm | double precision | YES | Original literature affinity (high) converted or in nM. |
+| original_affinity_units | character varying(20) | YES | Units as stated in the primary publication. |
+| original_affinity_relation | character varying(10) | YES | Inequality relation (<, >, =) for original affinity. |
+| assay_description | character varying(1000) | YES | Short assay description (binding, functional, …). |
+| assay_conditions | character varying(1000) | YES | Buffer, temperature, co-factors, cell line, etc. |
 | from_grac | boolean | NO | Default: false |
 | only_grac | boolean | NO | Default: false |
-| receptor_site | character varying(300) | YES | *To be documented* |
-| ligand_context | character varying(300) | YES | *To be documented* |
-| percent_activity | double precision | YES | *To be documented* |
-| assay_url | character varying(500) | YES | *To be documented* |
-| primary_target | boolean | YES | *To be documented* |
-| target_ligand_id | integer | YES | *To be documented* |
-| whole_organism_assay | boolean | YES | *To be documented* |
+| receptor_site | character varying(300) | YES | Binding site or subpocket annotation (allosteric, orthosteric, …). |
+| ligand_context | character varying(300) | YES | Additional ligand context (prodrug, metabolite, formulation). |
+| percent_activity | double precision | YES | Functional assay percent activity (e.g. agonist screen). |
+| assay_url | character varying(500) | YES | Link to assay protocol or external assay record. |
+| primary_target | boolean | YES | Marks the interaction as defining the ligand’s primary target. |
+| target_ligand_id | integer | YES | When the ‘target’ is itself a ligand entity (peptide–peptide cases). |
+| whole_organism_assay | boolean | YES | Assay performed in vivo / whole organism vs recombinant cells. |
 | hide | boolean | NO | Default: false |
 | update_status | integer | NO | Default: 0 |
-| type_vector | tsvector | YES | *To be documented* |
+| type_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `type`. |
 
 **Primary Keys**: interaction_id
 
@@ -2576,13 +2677,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 102. **interaction_affinity_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References specifically tied to affinity values.
+**Purpose**: Subordinate citations for quantitative interaction data (subset of bibliography).
+**Size**: ~26,715 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1584 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| interaction_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| interaction_id | integer | NO | Foreign key to `interaction.interaction_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: interaction_id, reference_id
 
@@ -2594,18 +2696,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 103. **introduction**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Per-family introductory narrative (long-form HTML).
+**Purpose**: Main family overview text shown at the top of each target family page.
+**Size**: ~178 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1568 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| family_id | integer | NO | *To be documented* |
-| text | text | NO | *To be documented* |
-| last_modified | date | YES | *To be documented* |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
+| text | text | NO | Long-form HTML or prose content for display on the portal. |
+| last_modified | date | YES | Last editorial modification date for the row or text block. |
 | annotation_status | integer | NO | Default: 5 |
 | no_contributor_list | boolean | NO | Default: true |
-| cite_id | character varying(20) | YES | *To be documented* |
-| intro_vector | tsvector | YES | *To be documented* |
+| cite_id | character varying(20) | YES | Used to shows the ID of the GtoPdb CITE family for citation purposes. |
+| intro_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: family_id
 
@@ -2622,27 +2725,29 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 104. **iuphar2discoverx**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Maps GtoPdb targets to DiscoverX catalog numbers.
+**Purpose**: Bridge `object_id` to DiscoverX `cat_no` for assay panels.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **8192 bytes** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| cat_no | character varying(100) | NO | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| cat_no | character varying(100) | NO | Commercial catalog or product code (DiscoverX, MCE, …). |
 
 **Primary Keys**: object_id, cat_no
 
 **Sample Data**: *No data available or table is empty*
 ### 105. **iuphar2medchemexpress**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Maps ligands to MedChemExpress catalog SKUs.
+**Purpose**: Commercial catalog crosswalk with exactness flags for supplier integration.
+**Size**: ~5,227 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **488 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| cat_no | character varying(100) | NO | *To be documented* |
-| exact | boolean | YES | *To be documented* |
-| match | integer | YES | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| cat_no | character varying(100) | NO | Commercial catalog or product code (DiscoverX, MCE, …). |
+| exact | boolean | YES | Whether supplier structure matches GtoPdb ligand exactly. |
+| match | integer | YES | Heuristic match score or match-type code for catalog mapping. |
 
 **Primary Keys**: ligand_id, cat_no
 
@@ -2656,14 +2761,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 106. **lgic**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligand-gated ion channel specific notes.
+**Purpose**: LGIC class block per target (e.g. endogenous agonist commentary).
+**Size**: ~86 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| ligand | character varying(500) | YES | *To be documented* |
-| selectivity_comments | text | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| ligand | character varying(500) | YES | Endogenous ligand summary for LGIC targets. |
+| selectivity_comments | text | YES | Curator prose for the `selectivity` section on the portal. |
 
 **Primary Keys**: object_id
 
@@ -2676,57 +2782,58 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 107. **ligand**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Drugs, tool compounds, peptides, antibodies — all ligand entities.
+**Purpose**: Central ligand table: names, types, approvals, clinical/pharmacokinetic text, portal flags.
+**Size**: ~13,260 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **26 MB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | Default: sequence: ligand_ligand_id_seq |
-| name | character varying(1000) | NO | *To be documented* |
-| pubchem_sid | bigint | YES | *To be documented* |
+| ligand_id | integer | NO | Surrogate primary key. Default: sequence: ligand_ligand_id_seq |
+| name | character varying(1000) | NO | Primary display name (target, ligand, family, etc.). |
+| pubchem_sid | bigint | YES | PubChem Substance ID (when ligand is registered in PubChem). |
 | radioactive | boolean | NO | Default: false |
-| old_ligand_id | integer | YES | *To be documented* |
+| old_ligand_id | integer | YES | Legacy ligand ID before merges or rekeys. |
 | type | character varying(50) | NO | Default: Synthetic organic::character varying |
-| approved | boolean | YES | *To be documented* |
-| approved_source | character varying(100) | YES | *To be documented* |
-| iupac_name | character varying(1000) | YES | *To be documented* |
-| comments | character varying(4000) | YES | *To be documented* |
-| withdrawn_drug | boolean | YES | *To be documented* |
-| verified | boolean | YES | *To be documented* |
-| abbreviation | character varying(300) | YES | *To be documented* |
-| clinical_use | text | YES | *To be documented* |
-| mechanism_of_action | text | YES | *To be documented* |
-| absorption_distribution | text | YES | *To be documented* |
-| metabolism | text | YES | *To be documented* |
-| elimination | text | YES | *To be documented* |
-| popn_pharmacokinetics | text | YES | *To be documented* |
-| organ_function_impairment | text | YES | *To be documented* |
-| emc_url | character varying(1000) | YES | *To be documented* |
-| drugs_url | character varying(1000) | YES | *To be documented* |
-| ema_url | character varying(1000) | YES | *To be documented* |
-| bioactivity_comments | text | YES | *To be documented* |
-| labelled | boolean | YES | *To be documented* |
-| in_gtip | boolean | YES | *To be documented* |
-| immuno_comments | text | YES | *To be documented* |
-| in_gtmp | boolean | YES | *To be documented* |
-| gtmp_comments | text | YES | *To be documented* |
-| who_essential | boolean | YES | *To be documented* |
-| antibacterial | boolean | YES | *To be documented* |
+| approved | boolean | YES | True if the compound has regulatory approval somewhere (per GtoPdb curation). |
+| approved_source | character varying(100) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `ligand` table and related target/ligand pages for context. |
+| iupac_name | character varying(1000) | YES | IUPAC chemical name where applicable. |
+| comments | character varying(4000) | YES | Free-text curator comments. |
+| withdrawn_drug | boolean | YES | True if approval was withdrawn or drug discontinued. |
+| verified | boolean | YES | Curator verification flag for the ligand record. |
+| abbreviation | character varying(300) | YES | Short abbreviation or gene-style shorthand. |
+| clinical_use | text | YES | Approved or common clinical indications / usage text. |
+| mechanism_of_action | text | YES | Mechanistic class and receptor targets in clinic. |
+| absorption_distribution | text | YES | ADME: absorption and distribution notes. |
+| metabolism | text | YES | Metabolic routes and enzyme involvement. |
+| elimination | text | YES | Excretion pathways and half-life notes. |
+| popn_pharmacokinetics | text | YES | Population PK / special populations. |
+| organ_function_impairment | text | YES | Dosing in hepatic/renal impairment. |
+| emc_url | character varying(1000) | YES | European Medicines Community or national label URL. |
+| drugs_url | character varying(1000) | YES | Drugs.com or similar patient-oriented label link. |
+| ema_url | character varying(1000) | YES | EMA product information link. |
+| bioactivity_comments | text | YES | Miscellaneous bioactivity notes. |
+| labelled | boolean | YES | Radiolabelled ligand suitable as tracer. |
+| in_gtip | boolean | YES | Target/ligand included in Guide to IMMUNOPHARMACOLOGY. |
+| immuno_comments | text | YES | Comments for Guide to IMMUNOPHARMACOLOGY specific to ligand |
+| in_gtmp | boolean | YES | Target/ligand included in Guide to MALARIA PHARMACOLOGY. |
+| gtmp_comments | text | YES | Comments for Guide to MALARIA PHARMACOLOGY specific to ligand |
+| who_essential | boolean | YES | Listed on WHO Essential Medicines List. |
+| antibacterial | boolean | YES | Ligand has antibacterial use or antibacterial programme. |
 | has_qi_interaction | boolean | YES | Default: false |
 | has_chembl_interaction | boolean | YES | Default: false |
-| name_vector | tsvector | YES | *To be documented* |
-| comments_vector | tsvector | YES | *To be documented* |
-| abbreviation_vector | tsvector | YES | *To be documented* |
-| clinical_use_vector | tsvector | YES | *To be documented* |
-| mechanism_of_action_vector | tsvector | YES | *To be documented* |
-| absorption_distribution_vector | tsvector | YES | *To be documented* |
-| metabolism_vector | tsvector | YES | *To be documented* |
-| elimination_vector | tsvector | YES | *To be documented* |
-| popn_pharmacokinetics_vector | tsvector | YES | *To be documented* |
-| organ_function_impairment_vector | tsvector | YES | *To be documented* |
-| bioactivity_comments_vector | tsvector | YES | *To be documented* |
-| immuno_comments_vector | tsvector | YES | *To be documented* |
-| gtmp_comments_vector | tsvector | YES | *To be documented* |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
+| comments_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `comments`. |
+| abbreviation_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `abbreviation`. |
+| clinical_use_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `clinical_use`. |
+| mechanism_of_action_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `mechanism_of_action`. |
+| absorption_distribution_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `absorption_distribution`. |
+| metabolism_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `metabolism`. |
+| elimination_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `elimination`. |
+| popn_pharmacokinetics_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `popn_pharmacokinetics`. |
+| organ_function_impairment_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `organ_function_impairment`. |
+| bioactivity_comments_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `bioactivity_comments`. |
+| immuno_comments_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `immuno_comments`. |
+| gtmp_comments_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `gtmp_comments`. |
 
 **Primary Keys**: ligand_id
 
@@ -2782,13 +2889,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 108. **ligand2adb**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligands linked to antibacterial database entries.
+**Purpose**: Connects `ligand` to `antibiotic_db` / antibacterial curation.
+**Size**: ~428 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **72 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| adb_id | integer | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| adb_id | integer | NO | Foreign key to `antibiotic_db.adb_id`. |
 
 **Primary Keys**: ligand_id, adb_id
 
@@ -2800,14 +2908,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 109. **ligand2clinical_trial**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligands mentioned in specific clinical trials.
+**Purpose**: Many-to-many with optional curator comments per pairing.
+**Size**: ~3,697 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **352 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand2clinical_trial_id | integer | NO | Default: sequence: ligand2clinical_trial_seq |
-| ligand_id | integer | NO | *To be documented* |
-| clinical_trial_id | integer | NO | *To be documented* |
+| ligand2clinical_trial_id | integer | NO | Surrogate primary key. Default: sequence: ligand2clinical_trial_seq |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| clinical_trial_id | integer | NO | Foreign key to `clinical_trial.clinical_trial_id`. |
 | comment | character varying(1000) | YES | Default: NULL::character varying |
 
 **Primary Keys**: ligand2clinical_trial_id
@@ -2822,13 +2931,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 110. **ligand2clinical_trial_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Citations for ligand–trial associations.
+**Purpose**: Links `ligand2clinical_trial` rows to `reference`.
+**Size**: ~868 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **96 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand2clinical_trial_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| ligand2clinical_trial_id | integer | NO | Foreign key to `ligand2clinical_trial.ligand2clinical_trial_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: ligand2clinical_trial_id, reference_id
 
@@ -2840,15 +2950,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 111. **ligand2drug_approvals**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligands tied to regulatory approval records.
+**Purpose**: Associates `ligand` rows with `drug_approvals` events.
+**Size**: ~323 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **72 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand2drug_approvals_id | integer | NO | Default: sequence: ligand2drug_approvals_ligand2drug_approvals_id_seq |
-| drug_approvals_id | integer | NO | *To be documented* |
-| ligand_id | integer | YES | *To be documented* |
-| ligand_name | character varying(1000) | YES | *To be documented* |
+| ligand2drug_approvals_id | integer | NO | Surrogate primary key. Default: sequence: ligand2drug_approvals_ligand2drug_approvals_id_seq |
+| drug_approvals_id | integer | NO | Foreign key to `drug_approvals.drug_approvals_id`. |
+| ligand_id | integer | YES | Foreign key to `ligand.ligand_id`. |
+| ligand_name | character varying(1000) | YES | Ligand name as reported in the source screen or supplier table. |
 | curated | boolean | YES | Default: false |
 
 **Primary Keys**: ligand2drug_approvals_id
@@ -2864,14 +2975,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 112. **ligand2family**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligand membership in ligand families / classes.
+**Purpose**: Many-to-many classification for ligand browsing.
+**Size**: ~904 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **104 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| family_id | integer | NO | *To be documented* |
-| display_order | integer | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
+| display_order | integer | NO | Sort order for lists or navigation. |
 
 **Primary Keys**: ligand_id, family_id
 
@@ -2884,13 +2996,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 113. **ligand2inn**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligand ↔ INN mapping (synonyms and salts).
+**Purpose**: Links curated ligands to INN records where applicable.
+**Size**: ~3,759 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **272 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| inn_number | integer | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| inn_number | integer | NO | Primary key / INN registry number (links to WHO INN). |
 
 **Primary Keys**: ligand_id, inn_number
 
@@ -2902,26 +3015,28 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 114. **ligand2meshpharmacology**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: MeSH pharmacology vocabulary links.
+**Purpose**: Maps ligands to MeSH terms for literature cross-indexing.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **16 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| mesh_term | character varying(1000) | NO | *To be documented* |
-| type | character varying(100) | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| mesh_term | character varying(1000) | NO | Search or synonym expansion for titles, terms, or MeSH. |
+| type | character varying(100) | NO | Controlled type label (ligand class, interaction type, etc.). |
 
 **Primary Keys**: ligand_id, mesh_term
 
 **Sample Data**: *No data available or table is empty*
 ### 115. **ligand2subunit**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligands acting at specific receptor subunits.
+**Purpose**: Subunit-level specificity for multimeric receptors.
+**Size**: ~98 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| subunit_id | integer | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| subunit_id | integer | NO | Subunit `object_id` within a multimeric receptor. |
 
 **Primary Keys**: ligand_id, subunit_id
 
@@ -2933,17 +3048,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 116. **ligand2synonym**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligand names, trade names, and code names.
+**Purpose**: Large synonym table powering search and display name resolution.
+**Size**: ~30,836 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **5720 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| synonym | character varying(2000) | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| synonym | character varying(2000) | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `ligand2synonym` table and related target/ligand pages for context. |
 | from_grac | boolean | NO | Default: false |
-| ligand2synonym_id | integer | NO | Default: sequence: ligand2synonym_ligand2synonym_id_seq |
+| ligand2synonym_id | integer | NO | Surrogate primary key. Default: sequence: ligand2synonym_ligand2synonym_id_seq |
 | display | boolean | NO | Default: true |
-| synonym_vector | tsvector | YES | *To be documented* |
+| synonym_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: ligand2synonym_id
 
@@ -2959,13 +3075,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 117. **ligand2synonym_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for synonym strings.
+**Purpose**: Bibliographic support for alternate ligand names.
+**Size**: ~441 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **72 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand2synonym_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| ligand2synonym_id | integer | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `ligand2synonym_refs` table and related target/ligand pages for context. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: ligand2synonym_id, reference_id
 
@@ -2977,16 +3094,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 118. **ligand2tcp**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligands in the Teaching in Clinical Pharmacology (TCP) sets.
+**Purpose**: Educational subset cross-reference.
+**Size**: ~28 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **40 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand2tcp_id | integer | NO | Default: sequence: ligand2tcp_ligand2tcp_id_seq |
-| ligand_id | integer | NO | *To be documented* |
-| tcp_id | integer | NO | *To be documented* |
-| comment | character varying(2000) | NO | *To be documented* |
-| comment_vector | tsvector | YES | *To be documented* |
+| ligand2tcp_id | integer | NO | Surrogate primary key. Default: sequence: ligand2tcp_ligand2tcp_id_seq |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| tcp_id | integer | NO | Teaching in Clinical Pharmacology list identifier. |
+| comment | character varying(2000) | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `ligand2tcp` table and related target/ligand pages for context. |
+| comment_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: ligand2tcp_id
 
@@ -3001,13 +3119,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 119. **ligand2tcp_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Citations for TCP ligand inclusions.
+**Purpose**: Links `ligand2tcp` to `reference`.
+**Size**: ~10 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand2tcp_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| ligand2tcp_id | integer | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `ligand2tcp_refs` table and related target/ligand pages for context. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: ligand2tcp_id, reference_id
 
@@ -3019,15 +3138,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 120. **ligand_approval_sources**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Provenance of approval status (FDA label, EMA, etc.).
+**Purpose**: Tracks which regulatory source backs `approved` flags on ligands.
+**Size**: ~2,685 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **160 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| approval_source | character varying | YES | *To be documented* |
-| year | integer | YES | *To be documented* |
-| comment | character varying | YES | *To be documented* |
+| ligand_id | integer | NO | gtopdb ligand id |
+| approval_source | character varying | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `ligand_approval_sources` table and related target/ligand pages for context. |
+| year | integer | YES | Bibliographic metadata for journal articles or books. |
+| comment | character varying | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `ligand_approval_sources` table and related target/ligand pages for context. |
 
 **Primary Keys**: *None identified*
 
@@ -3041,15 +3161,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 121. **ligand_cluster**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligand structural/similarity clusters.
+**Purpose**: Cluster IDs for grouping analogues on the website.
+**Size**: ~6,859 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **584 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| cluster | character varying(100) | NO | *To be documented* |
-| distance | double precision | NO | *To be documented* |
-| cluster_centre | integer | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| cluster | character varying(100) | NO | Cluster identifier (short code) for analogue or scaffold grouping. |
+| distance | double precision | NO | Distance metric (e.g. sequence or structural distance). |
+| cluster_centre | integer | NO | Cluster centroid or representative identifier for ligand clusters. |
 
 **Primary Keys**: ligand_id
 
@@ -3063,15 +3184,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 122. **ligand_cluster_new**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Updated clustering scheme for ligands.
+**Purpose**: Newer cluster assignments alongside or replacing `ligand_cluster`.
+**Size**: ~10,346 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **712 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| cluster | character varying(100) | NO | *To be documented* |
-| distance | double precision | YES | *To be documented* |
-| cluster_centre | integer | YES | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| cluster | character varying(100) | NO | Cluster identifier (short code) for analogue or scaffold grouping. |
+| distance | double precision | YES | Distance metric (e.g. sequence or structural distance). |
+| cluster_centre | integer | YES | Cluster centroid or representative identifier for ligand clusters. |
 
 **Primary Keys**: ligand_id
 
@@ -3085,16 +3207,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 123. **ligand_database_link**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Per-ligand external database identifiers.
+**Purpose**: PubChem SID, ChEMBL ID, DrugBank, etc. for each `ligand_id`.
+**Size**: ~48,389 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **5344 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_database_link_id | integer | NO | Default: sequence: ligand_database_link_ligand_database_link_id_seq |
-| ligand_id | integer | NO | *To be documented* |
-| database_id | integer | NO | *To be documented* |
-| placeholder | character varying(100) | NO | *To be documented* |
-| source | character varying(100) | YES | *To be documented* |
+| ligand_database_link_id | integer | NO | Surrogate primary key. Default: sequence: ligand_database_link_ligand_database_link_id_seq |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| database_id | integer | NO | Foreign key to `database.database_id`. |
+| placeholder | character varying(100) | NO | Internal editorial or QA flag. |
+| source | character varying(100) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `ligand_database_link` table and related target/ligand pages for context. |
 | commercial | boolean | YES | Default: false |
 | species_id | integer | NO | Default: 9 |
 
@@ -3113,19 +3236,20 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 124. **ligand_physchem**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Physicochemical properties (logP, MW, TPSA…).
+**Purpose**: Calculated or curated descriptors for cheminformatics.
+**Size**: ~10,655 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1088 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| hydrogen_bond_acceptors | integer | NO | *To be documented* |
-| hydrogen_bond_donors | integer | NO | *To be documented* |
-| rotatable_bonds_count | integer | NO | *To be documented* |
-| topological_polar_surface_area | double precision | NO | *To be documented* |
-| molecular_weight | double precision | NO | *To be documented* |
-| xlogp | double precision | NO | *To be documented* |
-| lipinski_s_rule_of_five | integer | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| hydrogen_bond_acceptors | integer | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| hydrogen_bond_donors | integer | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| rotatable_bonds_count | integer | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| topological_polar_surface_area | double precision | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| molecular_weight | double precision | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| xlogp | double precision | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| lipinski_s_rule_of_five | integer | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
 
 **Primary Keys**: ligand_id
 
@@ -3143,37 +3267,39 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 125. **ligand_physchem_public**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Public subset of physicochemical properties.
+**Purpose**: Redacted or simplified physchem row for open releases.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **8192 bytes** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| hydrogen_bond_acceptors | integer | NO | *To be documented* |
-| hydrogen_bond_donors | integer | NO | *To be documented* |
-| rotatable_bonds_count | integer | NO | *To be documented* |
-| topological_polar_surface_area | double precision | NO | *To be documented* |
-| molecular_weight | double precision | NO | *To be documented* |
-| xlogp | double precision | NO | *To be documented* |
-| lipinski_s_rule_of_five | integer | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| hydrogen_bond_acceptors | integer | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| hydrogen_bond_donors | integer | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| rotatable_bonds_count | integer | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| topological_polar_surface_area | double precision | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| molecular_weight | double precision | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| xlogp | double precision | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| lipinski_s_rule_of_five | integer | NO | Physicochemical descriptor (Lipinski / drug-likeness related). |
 
 **Primary Keys**: ligand_id
 
 **Sample Data**: *No data available or table is empty*
 ### 126. **ligand_structure**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Structure representations (SMILES, InChI, stereo notes).
+**Purpose**: Chemical structure layer for ligands; complements identifiers in `ligand`.
+**Size**: ~10,970 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **7120 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| isomeric_smiles | text | NO | *To be documented* |
-| isomeric_standard_inchi | text | YES | *To be documented* |
-| isomeric_standard_inchi_key | character varying(300) | NO | *To be documented* |
-| nonisomeric_smiles | text | NO | *To be documented* |
-| nonisomeric_standard_inchi | text | YES | *To be documented* |
-| nonisomeric_standard_inchi_key | character varying(300) | YES | *To be documented* |
-| pubchem_cid | character varying(100) | YES | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| isomeric_smiles | text | NO | Structure representation (SMILES, InChI, HELM) for integration. |
+| isomeric_standard_inchi | text | YES | Structure representation (SMILES, InChI, HELM) for integration. |
+| isomeric_standard_inchi_key | character varying(300) | NO | Structure representation (SMILES, InChI, HELM) for integration. |
+| nonisomeric_smiles | text | NO | Salt-stripped or neutralised structure line for matching. |
+| nonisomeric_standard_inchi | text | YES | Structure representation (SMILES, InChI, HELM) for integration. |
+| nonisomeric_standard_inchi_key | character varying(300) | YES | Structure representation (SMILES, InChI, HELM) for integration. |
+| pubchem_cid | character varying(100) | YES | External database identifier for cross-referencing. |
 
 **Primary Keys**: ligand_id
 
@@ -3191,13 +3317,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 127. **lipid_maps**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: LIPID MAPS structure/class identifiers for lipid ligands.
+**Purpose**: Lipid nomenclature cross-reference for bioactive lipids.
+**Size**: ~48,249 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **3744 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| id | character varying(50) | YES | *To be documented* |
-| inchi | character varying(50) | YES | *To be documented* |
+| id | character varying(50) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `lipid_maps` table and related target/ligand pages for context. |
+| inchi | character varying(50) | YES | Structure representation (SMILES, InChI, HELM) for integration. |
 
 **Primary Keys**: *None identified*
 
@@ -3209,13 +3336,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 128. **list_ligand**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Curated ligand lists (e.g. featured sets).
+**Purpose**: Ordered list membership for static list pages.
+**Size**: ~1,552 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **160 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| ligand_id | integer | NO | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
 | display_order | integer | NO | Default: 0 |
 
 **Primary Keys**: object_id, ligand_id
@@ -3229,17 +3357,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 129. **malaria_stage**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Plasmodium life-cycle stages for antimalarial data.
+**Purpose**: Stage vocabulary for Guide to MALARIA PHARMACOLOGY.
+**Size**: ~5 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **64 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| malaria_stage_id | integer | NO | Default: sequence: malaria_stage_malaria_stage_id_seq |
-| name | character varying(300) | NO | *To be documented* |
-| description | character varying | YES | *To be documented* |
-| short_name | character varying(20) | YES | *To be documented* |
-| name_vector | tsvector | YES | *To be documented* |
-| description_vector | tsvector | YES | *To be documented* |
+| malaria_stage_id | integer | NO | Surrogate primary key. Default: sequence: malaria_stage_malaria_stage_id_seq |
+| name | character varying(300) | NO | Primary display name (target, ligand, family, etc.). |
+| description | character varying | YES | Free-text description field. |
+| short_name | character varying(20) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `malaria_stage` table and related target/ligand pages for context. |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
+| description_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `description`. |
 
 **Primary Keys**: malaria_stage_id
 
@@ -3255,13 +3384,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 130. **malaria_stage2interaction**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Stage-specific antimalarial interaction annotations.
+**Purpose**: Links interactions to `malaria_stage` for parasite stage context.
+**Size**: ~494 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **80 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| interaction_id | integer | NO | *To be documented* |
-| malaria_stage_id | integer | NO | *To be documented* |
+| interaction_id | integer | NO | Foreign key to `interaction.interaction_id`. |
+| malaria_stage_id | integer | NO | Foreign key to `malaria_stage.malaria_stage_id`. |
 
 **Primary Keys**: interaction_id, malaria_stage_id
 
@@ -3273,19 +3403,20 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 131. **medchemexpress**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: MedChemExpress product catalog mirror.
+**Purpose**: Supplier SKU metadata used with `iuphar2medchemexpress`.
+**Size**: ~34,375 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **15 MB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| cat_no | character varying(100) | NO | *To be documented* |
-| url | character varying(500) | NO | *To be documented* |
-| name | character varying(1000) | YES | *To be documented* |
-| smiles | character varying(5000) | YES | *To be documented* |
-| pubchem_cid | character varying(100) | YES | *To be documented* |
-| inchi | character varying(5000) | YES | *To be documented* |
-| inchikey | character varying(200) | YES | *To be documented* |
-| cas_number | character varying(200) | YES | *To be documented* |
+| cat_no | character varying(100) | NO | Commercial catalog or product code (DiscoverX, MCE, …). |
+| url | character varying(500) | NO | HTTP(S) link for external resources or Immunopaedia pages. |
+| name | character varying(1000) | YES | Primary display name (target, ligand, family, etc.). |
+| smiles | character varying(5000) | YES | SMILES line notation for the structure (may include salts). |
+| pubchem_cid | character varying(100) | YES | External database identifier for cross-referencing. |
+| inchi | character varying(5000) | YES | Structure representation (SMILES, InChI, HELM) for integration. |
+| inchikey | character varying(200) | YES | Structure representation (SMILES, InChI, HELM) for integration. |
+| cas_number | character varying(200) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `medchemexpress` table and related target/ligand pages for context. |
 
 **Primary Keys**: cat_no
 
@@ -3303,13 +3434,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 132. **multimer**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Oligomeric assembly notes (dimers, heteromers).
+**Purpose**: Short commentary on receptor multimerization per `object_id`.
+**Size**: ~3 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| subunit_specific_agents_comments | text | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| subunit_specific_agents_comments | text | YES | Curator prose for the `subunit_specific_agents` section on the portal. |
 
 **Primary Keys**: object_id
 
@@ -3321,19 +3453,20 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 133. **mutation**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Disease- and pharmacology-relevant mutations.
+**Purpose**: Mutation descriptions with pathophysiology linkage to targets.
+**Size**: ~1,308 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **208 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| mutation_id | integer | NO | Default: sequence: mutation_mutation_id_seq |
-| pathophysiology_id | integer | YES | *To be documented* |
-| object_id | integer | NO | *To be documented* |
-| type | character varying(100) | NO | *To be documented* |
-| amino_acid_change | character varying(100) | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| description | character varying(1000) | YES | *To be documented* |
-| nucleotide_change | character varying(100) | YES | *To be documented* |
+| mutation_id | integer | NO | Surrogate primary key. Default: sequence: mutation_mutation_id_seq |
+| pathophysiology_id | integer | YES | Foreign key to `pathophysiology.pathophysiology_id`. |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| type | character varying(100) | NO | Controlled type label (ligand class, interaction type, etc.). |
+| amino_acid_change | character varying(100) | YES | Mutation or sequence representation (variant or protein). |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| description | character varying(1000) | YES | Free-text description field. |
+| nucleotide_change | character varying(100) | YES | Mutation or sequence representation (variant or protein). |
 
 **Primary Keys**: mutation_id
 
@@ -3351,13 +3484,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 134. **mutation_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for mutation entries.
+**Purpose**: Links `mutation` to `reference`.
+**Size**: ~1,656 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **152 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| mutation_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| mutation_id | integer | NO | Foreign key to `mutation.mutation_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: mutation_id, reference_id
 
@@ -3369,17 +3503,18 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 135. **nhr**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Nuclear hormone receptor specific commentary blocks.
+**Purpose**: NHR transactivation, DNA binding, co-regulator sections per target.
+**Size**: ~49 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **88 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| ligand | character varying(500) | YES | *To be documented* |
-| binding_partner_comments | text | YES | *To be documented* |
-| coregulator_comments | text | YES | *To be documented* |
-| dna_binding_comments | text | YES | *To be documented* |
-| target_gene_comments | text | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| ligand | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `nhr` table and related target/ligand pages for context. |
+| binding_partner_comments | text | YES | Curator prose for the `binding_partner` section on the portal. |
+| coregulator_comments | text | YES | Curator prose for the `coregulator` section on the portal. |
+| dna_binding_comments | text | YES | Curator prose for the `dna_binding` section on the portal. |
+| target_gene_comments | text | YES | Curator prose for the `target_gene` section on the portal. |
 
 **Primary Keys**: object_id
 
@@ -3395,16 +3530,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 136. **nucleic_acid**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Oligonucleotide / siRNA / aptamer ligand details.
+**Purpose**: Sequence, HELM, and target mRNA for nucleic-acid therapeutics.
+**Size**: ~42 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| subclass | character varying(2000) | YES | *To be documented* |
-| target | character varying(2000) | YES | *To be documented* |
-| seq | character varying(2000) | YES | *To be documented* |
-| helm | character varying(2000) | YES | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| subclass | character varying(2000) | YES | Subclass label (e.g. siRNA, ASO). |
+| target | character varying(2000) | YES | Intended mRNA/protein target of a nucleic-acid drug. |
+| seq | character varying(2000) | YES | Nucleotide / HELM-style sequence display. |
+| helm | character varying(2000) | YES | HELM notation for biopolymers when used. |
 
 **Primary Keys**: ligand_id
 
@@ -3419,31 +3555,32 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 137. **object**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Pharmacological targets — receptors, channels, enzymes, transporters.
+**Purpose**: Primary target entity for nearly all GtoPdb content; one row per curated target page.
+**Size**: ~3,275 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1664 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | Default: sequence: object_object_id_seq |
-| name | character varying(1000) | NO | *To be documented* |
-| last_modified | date | YES | *To be documented* |
-| comments | text | YES | *To be documented* |
-| structural_info_comments | text | YES | *To be documented* |
-| old_object_id | integer | YES | *To be documented* |
+| object_id | integer | NO | Surrogate primary key. Default: sequence: object_object_id_seq |
+| name | character varying(1000) | NO | Primary display name (target, ligand, family, etc.). |
+| last_modified | date | YES | Last editorial modification date for the row or text block. |
+| comments | text | YES | Free-text curator comments. |
+| structural_info_comments | text | YES | Summary structure commentary on the target page. |
+| old_object_id | integer | YES | Legacy object ID before merges or rekeys. |
 | annotation_status | integer | NO | Default: 5 |
-| only_iuphar | boolean | YES | *To be documented* |
-| grac_comments | text | YES | *To be documented* |
-| only_grac | boolean | YES | *To be documented* |
+| only_iuphar | boolean | YES | Target appears only in IUPHAR views. |
+| grac_comments | text | YES | Legacy GRAC-only commentary on targets. |
+| only_grac | boolean | YES | Target appears only in GRAC legacy slices. |
 | no_contributor_list | boolean | NO | Default: true |
-| abbreviation | character varying(100) | YES | *To be documented* |
-| systematic_name | character varying(100) | YES | *To be documented* |
-| quaternary_structure_comments | text | YES | *To be documented* |
+| abbreviation | character varying(100) | YES | Short abbreviation or gene-style shorthand. |
+| systematic_name | character varying(100) | YES | Systematic or gene-based name (e.g. HGNC). |
+| quaternary_structure_comments | text | YES | Quaternary structure / complex assembly notes. |
 | in_cgtp | boolean | NO | Default: false |
 | in_gtip | boolean | YES | Default: false |
-| gtip_comment | text | YES | *To be documented* |
+| gtip_comment | text | YES | Comments fields to capture early curator notes on GtoImmPdb targets |
 | in_gtmp | boolean | YES | Default: false |
-| gtmp_comment | text | YES | *To be documented* |
-| cite_id | character varying(20) | YES | *To be documented* |
+| gtmp_comment | text | YES | Comments fields to capture curator notes on GtoMPdb targets |
+| cite_id | character varying(20) | YES | Used to shows the ID of the GtoPdb CITE family for citation purposes. |
 
 **Primary Keys**: object_id
 
@@ -3473,16 +3610,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 138. **object2go_process**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: GO process annotations on targets.
+**Purpose**: Many-to-many with evidence codes and optional curator comments.
+**Size**: ~4,862 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **592 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| go_process_id | integer | NO | *To be documented* |
-| go_evidence | character varying(5) | YES | *To be documented* |
-| comment | character varying(500) | YES | *To be documented* |
-| comment_vector | tsvector | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| go_process_id | integer | NO | Foreign key to `go_process.go_process_id`. |
+| go_evidence | character varying(5) | YES | Gene Ontology evidence code (EXP, ISS, IEA, …). |
+| comment | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `object2go_process` table and related target/ligand pages for context. |
+| comment_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: object_id, go_process_id
 
@@ -3497,13 +3635,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 139. **object2reaction**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Targets participating in curated reaction schemes.
+**Purpose**: Links `object` to `reaction` rows (enzymology).
+**Size**: ~1,317 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **128 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| reaction_id | integer | NO | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| reaction_id | integer | NO | Foreign key to `reaction.reaction_id`. |
 
 **Primary Keys**: object_id, reaction_id
 
@@ -3515,43 +3654,44 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 140. **object_vectors**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Precomputed tsvectors for full-text search across target text fields.
+**Purpose**: Search acceleration: aggregates many comment fields into `tsvector` columns per `object_id`.
+**Size**: ~3,275 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **7032 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| name | tsvector | YES | *To be documented* |
-| abbreviation | tsvector | YES | *To be documented* |
-| comments | tsvector | YES | *To be documented* |
-| grac_comments | tsvector | YES | *To be documented* |
-| gtip_comments | tsvector | YES | *To be documented* |
-| gtmp_comments | tsvector | YES | *To be documented* |
-| structural_info_comments | tsvector | YES | *To be documented* |
-| associated_proteins_comments | tsvector | YES | *To be documented* |
-| functional_assay_comments | tsvector | YES | *To be documented* |
-| tissue_distribution_comments | tsvector | YES | *To be documented* |
-| functions_comments | tsvector | YES | *To be documented* |
-| altered_expression_comments | tsvector | YES | *To be documented* |
-| expression_pathophysiology_comments | tsvector | YES | *To be documented* |
-| mutations_pathophysiology_comments | tsvector | YES | *To be documented* |
-| variants_comments | tsvector | YES | *To be documented* |
-| xenobiotic_expression_comments | tsvector | YES | *To be documented* |
-| antibody_comments | tsvector | YES | *To be documented* |
-| agonists_comments | tsvector | YES | *To be documented* |
-| antagonists_comments | tsvector | YES | *To be documented* |
-| allosteric_modulators_comments | tsvector | YES | *To be documented* |
-| activators_comments | tsvector | YES | *To be documented* |
-| inhibitors_comments | tsvector | YES | *To be documented* |
-| channel_blockers_comments | tsvector | YES | *To be documented* |
-| gating_inhibitors_comments | tsvector | YES | *To be documented* |
-| subunit_specific_agents_comments | tsvector | YES | *To be documented* |
-| selectivity_comments | tsvector | YES | *To be documented* |
-| voltage_dependence_comments | tsvector | YES | *To be documented* |
-| target_gene_comments | tsvector | YES | *To be documented* |
-| dna_binding_comments | tsvector | YES | *To be documented* |
-| coregulator_comments | tsvector | YES | *To be documented* |
-| binding_partner_comments | tsvector | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| name | tsvector | YES | Primary display name (target, ligand, family, etc.). |
+| abbreviation | tsvector | YES | Short abbreviation or gene-style shorthand. |
+| comments | tsvector | YES | Free-text curator comments. |
+| grac_comments | tsvector | YES | Legacy GRAC-only commentary on targets. |
+| gtip_comments | tsvector | YES | Curator prose for the `gtip` section on the portal. |
+| gtmp_comments | tsvector | YES | Malaria-portal-specific ligand commentary. |
+| structural_info_comments | tsvector | YES | Summary structure commentary on the target page. |
+| associated_proteins_comments | tsvector | YES | Curator prose for the `associated_proteins` section on the portal. |
+| functional_assay_comments | tsvector | YES | Curator prose for the `functional_assay` section on the portal. |
+| tissue_distribution_comments | tsvector | YES | Curator prose for the `tissue_distribution` section on the portal. |
+| functions_comments | tsvector | YES | Curator prose for the `functions` section on the portal. |
+| altered_expression_comments | tsvector | YES | Curator prose for the `altered_expression` section on the portal. |
+| expression_pathophysiology_comments | tsvector | YES | Curator prose for the `expression_pathophysiology` section on the portal. |
+| mutations_pathophysiology_comments | tsvector | YES | Curator prose for the `mutations_pathophysiology` section on the portal. |
+| variants_comments | tsvector | YES | Curator prose for the `variants` section on the portal. |
+| xenobiotic_expression_comments | tsvector | YES | Curator prose for the `xenobiotic_expression` section on the portal. |
+| antibody_comments | tsvector | YES | Curator prose for the `antibody` section on the portal. |
+| agonists_comments | tsvector | YES | Curator prose for the `agonists` section on the portal. |
+| antagonists_comments | tsvector | YES | Curator prose for the `antagonists` section on the portal. |
+| allosteric_modulators_comments | tsvector | YES | Curator prose for the `allosteric_modulators` section on the portal. |
+| activators_comments | tsvector | YES | Curator prose for the `activators` section on the portal. |
+| inhibitors_comments | tsvector | YES | Curator prose for the `inhibitors` section on the portal. |
+| channel_blockers_comments | tsvector | YES | Curator prose for the `channel_blockers` section on the portal. |
+| gating_inhibitors_comments | tsvector | YES | Curator prose for the `gating_inhibitors` section on the portal. |
+| subunit_specific_agents_comments | tsvector | YES | Curator prose for the `subunit_specific_agents` section on the portal. |
+| selectivity_comments | tsvector | YES | Curator prose for the `selectivity` section on the portal. |
+| voltage_dependence_comments | tsvector | YES | Curator prose for the `voltage_dependence` section on the portal. |
+| target_gene_comments | tsvector | YES | Curator prose for the `target_gene` section on the portal. |
+| dna_binding_comments | tsvector | YES | Curator prose for the `dna_binding` section on the portal. |
+| coregulator_comments | tsvector | YES | Curator prose for the `coregulator` section on the portal. |
+| binding_partner_comments | tsvector | YES | Curator prose for the `binding_partner` section on the portal. |
 
 **Primary Keys**: object_id
 
@@ -3593,14 +3733,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 141. **ontology**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ontology registry (MP, CL, GO namespaces).
+**Purpose**: Metadata about ontologies used in phenotype and cell-type columns.
+**Size**: ~1 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ontology_id | integer | NO | Default: sequence: ontology_ontology_id_seq |
-| name | character varying(100) | NO | *To be documented* |
-| short_name | character varying(100) | YES | *To be documented* |
+| ontology_id | integer | NO | Surrogate primary key. Default: sequence: ontology_ontology_id_seq |
+| name | character varying(100) | NO | Primary display name (target, ligand, family, etc.). |
+| short_name | character varying(100) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `ontology` table and related target/ligand pages for context. |
 
 **Primary Keys**: ontology_id
 
@@ -3613,15 +3754,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 142. **ontology_term**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ontology term cache (IDs and labels).
+**Purpose**: Lookup for OBO-style terms used in alleles and phenotypes.
+**Size**: ~8,233 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **3216 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
 | ontology_id | integer | NO | Default: 1 |
-| term_id | character varying(100) | NO | *To be documented* |
-| term | character varying(1000) | YES | *To be documented* |
-| description | character varying(3000) | YES | *To be documented* |
+| term_id | character varying(100) | NO | Ontology term identifier (e.g. MP:… phenotype ID). |
+| term | character varying(1000) | YES | Ontology or controlled vocabulary term string. |
+| description | character varying(3000) | YES | Free-text description field. |
 
 **Primary Keys**: ontology_id, term_id
 
@@ -3635,13 +3777,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 143. **other_ic**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Miscellaneous ion channel targets not in VGIC/LGIC classes.
+**Purpose**: Catch-all ion channel family extension.
+**Size**: ~55 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| selectivity_comments | text | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| selectivity_comments | text | YES | Curator prose for the `selectivity` section on the portal. |
 
 **Primary Keys**: object_id
 
@@ -3653,12 +3796,13 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 144. **other_protein**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Other protein targets (non-enzyme, non-receptor categories).
+**Purpose**: Class bucket for miscellaneous protein pharmacology.
+**Size**: ~329 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **56 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
 
 **Primary Keys**: object_id
 
@@ -3669,27 +3813,28 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 145. **pathophysiology**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Pathophysiology narrative tied to targets or diseases.
+**Purpose**: Clinical mechanism descriptions supporting disease linkage.
+**Size**: ~1,467 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **848 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| pathophysiology_id | integer | NO | Default: sequence: pathophysiology_pathophysiology_id_seq |
-| object_id | integer | NO | *To be documented* |
-| disease | character varying(2000) | YES | *To be documented* |
-| role | character varying(2000) | YES | *To be documented* |
-| drugs | character varying(2000) | YES | *To be documented* |
-| side_effects | character varying(2000) | YES | *To be documented* |
-| use | character varying(2000) | YES | *To be documented* |
-| omim | character varying(200) | YES | *To be documented* |
-| comments | text | YES | *To be documented* |
-| orphanet | character varying(200) | YES | *To be documented* |
-| disease_id | integer | YES | *To be documented* |
-| role_vector | tsvector | YES | *To be documented* |
-| drugs_vector | tsvector | YES | *To be documented* |
-| side_effects_vector | tsvector | YES | *To be documented* |
-| use_vector | tsvector | YES | *To be documented* |
-| comments_vector | tsvector | YES | *To be documented* |
+| pathophysiology_id | integer | NO | Surrogate primary key. Default: sequence: pathophysiology_pathophysiology_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| disease | character varying(2000) | YES | Disease label or free-text disease name in context. |
+| role | character varying(2000) | YES | Functional role label (e.g. agonist, antagonist in context). |
+| drugs | character varying(2000) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `pathophysiology` table and related target/ligand pages for context. |
+| side_effects | character varying(2000) | YES | Clinical indication, adverse effects, or medical relevance text. |
+| use | character varying(2000) | YES | Editorial teaser or overview text for a topic or contributor. |
+| omim | character varying(200) | YES | External database identifier for cross-referencing. |
+| comments | text | YES | Free-text curator comments. |
+| orphanet | character varying(200) | YES | External database identifier for cross-referencing. |
+| disease_id | integer | YES | Foreign key to `disease.disease_id`. |
+| role_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| drugs_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| side_effects_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| use_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| comments_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `comments`. |
 
 **Primary Keys**: pathophysiology_id
 
@@ -3715,13 +3860,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 146. **pathophysiology_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for pathophysiology text.
+**Purpose**: Links `pathophysiology` to `reference`.
+**Size**: ~1,080 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **104 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| pathophysiology_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| pathophysiology_id | integer | NO | Foreign key to `pathophysiology.pathophysiology_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: pathophysiology_id, reference_id
 
@@ -3733,13 +3879,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 147. **pdb_inchi**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: InChI keys for PDB ligand instances.
+**Purpose**: Maps PDB chemical components to InChI for structure–ligand integration.
+**Size**: ~47,414 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **2848 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| inchikey | character varying(50) | YES | *To be documented* |
-| pdb_id | character varying(50) | YES | *To be documented* |
+| inchikey | character varying(50) | YES | Structure representation (SMILES, InChI, HELM) for integration. |
+| pdb_id | character varying(50) | YES | External database identifier for cross-referencing. |
 
 **Primary Keys**: *None identified*
 
@@ -3751,20 +3898,21 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 148. **pdb_structure**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: PDB identifiers and metadata for experimental structures.
+**Purpose**: Structure table for target and ligand 3D views.
+**Size**: ~1,082 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **584 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| pdb_structure_id | integer | NO | Default: sequence: pdb_structure_pdb_structure_id_seq |
-| object_id | integer | NO | *To be documented* |
-| ligand_id | integer | YES | *To be documented* |
+| pdb_structure_id | integer | NO | Surrogate primary key. Default: sequence: pdb_structure_pdb_structure_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| ligand_id | integer | YES | Foreign key to `ligand.ligand_id`. |
 | endogenous | boolean | NO | Default: false |
-| pdb_code | character varying(4) | YES | *To be documented* |
-| description | character varying(1000) | YES | *To be documented* |
-| resolution | double precision | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| description_vector | tsvector | YES | *To be documented* |
+| pdb_code | character varying(4) | YES | External database identifier for cross-referencing. |
+| description | character varying(1000) | YES | Free-text description field. |
+| resolution | double precision | YES | Structural resolution (Å) for an experimental structure. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| description_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `description`. |
 
 **Primary Keys**: pdb_structure_id
 
@@ -3783,13 +3931,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 149. **pdb_structure_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Citations for structural entries.
+**Purpose**: Links `pdb_structure` to `reference`.
+**Size**: ~969 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **104 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| pdb_structure_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| pdb_structure_id | integer | NO | Foreign key to `pdb_structure.pdb_structure_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: pdb_structure_id, reference_id
 
@@ -3801,18 +3950,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 150. **peptide**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Peptide ligand sequence and classification.
+**Purpose**: One row per peptide-class ligand with sequence features.
+**Size**: ~2,816 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **840 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| one_letter_seq | text | YES | *To be documented* |
-| three_letter_seq | text | YES | *To be documented* |
-| post_translational_modifications | character varying(1000) | YES | *To be documented* |
-| chemical_modifications | character varying(1000) | YES | *To be documented* |
-| medical_relevance | character varying(2000) | YES | *To be documented* |
-| helm_notation | character varying(1000) | YES | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| one_letter_seq | text | YES | Mutation or sequence representation (variant or protein). |
+| three_letter_seq | text | YES | Mutation or sequence representation (variant or protein). |
+| post_translational_modifications | character varying(1000) | YES | Protein domain or modification notes. |
+| chemical_modifications | character varying(1000) | YES | Protein domain or modification notes. |
+| medical_relevance | character varying(2000) | YES | Clinical indication, adverse effects, or medical relevance text. |
+| helm_notation | character varying(1000) | YES | Structure representation (SMILES, InChI, HELM) for integration. |
 
 **Primary Keys**: ligand_id
 
@@ -3829,13 +3979,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 151. **peptide_ligand_cluster**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Clusters of peptide ligands by pharmacophore.
+**Purpose**: Grouping for peptide browsing.
+**Size**: ~64 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| cluster | character varying(10) | YES | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| cluster | character varying(10) | YES | Cluster identifier (short code) for analogue or scaffold grouping. |
 
 **Primary Keys**: ligand_id
 
@@ -3847,13 +3998,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 152. **peptide_ligand_sequence_cluster**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Sequence similarity clusters for peptides.
+**Purpose**: Clusters derived from sequence alignment.
+**Size**: ~1,168 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **152 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| ligand_id | integer | NO | *To be documented* |
-| cluster | integer | NO | *To be documented* |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| cluster | integer | NO | Cluster identifier (short code) for analogue or scaffold grouping. |
 
 **Primary Keys**: ligand_id
 
@@ -3865,18 +4017,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 153. **physiological_function**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Physiological roles of the target (short narratives).
+**Purpose**: Normal physiology text used on target pages.
+**Size**: ~2,482 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1176 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| physiological_function_id | integer | NO | Default: sequence: physiological_function_physiological_function_id_seq |
-| object_id | integer | NO | *To be documented* |
-| description | text | NO | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| tissue | text | NO | *To be documented* |
-| description_vector | tsvector | YES | *To be documented* |
-| tissue_vector | tsvector | YES | *To be documented* |
+| physiological_function_id | integer | NO | Surrogate primary key. Default: sequence: physiological_function_physiological_function_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| description | text | NO | Free-text description field. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| tissue | text | NO | Tissue or organ context for expression data. |
+| description_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `description`. |
+| tissue_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `tissue`. |
 
 **Primary Keys**: physiological_function_id
 
@@ -3893,13 +4046,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 154. **physiological_function_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for physiological function text.
+**Purpose**: Links `physiological_function` to `reference`.
+**Size**: ~3,696 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **272 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| physiological_function_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| physiological_function_id | integer | NO | Foreign key to `physiological_function.physiological_function_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: physiological_function_id, reference_id
 
@@ -3911,19 +4065,20 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 155. **precursor**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Peptide hormone precursors (preproproteins).
+**Purpose**: Precursor proteins that yield bioactive peptides.
+**Size**: ~721 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **424 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| precursor_id | integer | NO | Default: sequence: precursor_precursor_id_seq |
-| gene_name | character varying(100) | YES | *To be documented* |
-| official_gene_id | character varying(100) | YES | *To be documented* |
-| protein_name | character varying(200) | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| gene_long_name | character varying(2000) | YES | *To be documented* |
-| protein_name_vector | tsvector | YES | *To be documented* |
-| gene_long_name_vector | tsvector | YES | *To be documented* |
+| precursor_id | integer | NO | Surrogate primary key. Default: sequence: precursor_precursor_id_seq |
+| gene_name | character varying(100) | YES | Gene or protein naming for display and search. |
+| official_gene_id | character varying(100) | YES | External database identifier for cross-referencing. |
+| protein_name | character varying(200) | YES | Gene or protein naming for display and search. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| gene_long_name | character varying(2000) | YES | Gene or protein naming for display and search. |
+| protein_name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| gene_long_name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: precursor_id
 
@@ -3941,13 +4096,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 156. **precursor2peptide**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Cleavage relationships from precursor to mature peptide ligands.
+**Purpose**: Many-to-many linking `precursor` to peptide `ligand` rows.
+**Size**: ~1,001 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **104 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| precursor_id | integer | NO | *To be documented* |
-| ligand_id | integer | NO | *To be documented* |
+| precursor_id | integer | NO | Foreign key to `precursor.precursor_id`. |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
 
 **Primary Keys**: precursor_id, ligand_id
 
@@ -3959,15 +4115,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 157. **precursor2synonym**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Synonyms for precursor names.
+**Purpose**: Alternate names for precursors via `synonym` linkage.
+**Size**: ~2,894 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **544 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| precursor2synonym_id | integer | NO | Default: sequence: precursor2synonym_precursor2synonym_id_seq |
-| precursor_id | integer | NO | *To be documented* |
-| synonym | character varying(2000) | NO | *To be documented* |
-| synonym_vector | tsvector | YES | *To be documented* |
+| precursor2synonym_id | integer | NO | Surrogate primary key. Default: sequence: precursor2synonym_precursor2synonym_id_seq |
+| precursor_id | integer | NO | Foreign key to `precursor.precursor_id`. |
+| synonym | character varying(2000) | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `precursor2synonym` table and related target/ligand pages for context. |
+| synonym_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: precursor2synonym_id
 
@@ -3981,45 +4138,48 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 158. **primary_regulator**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Primary transcriptional regulators of the target gene.
+**Purpose**: Regulatory relationships for nuclear receptors and signalling genes.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **16 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| primary_regulator_id | integer | NO | Default: sequence: primary_regulator_primary_regulator_id_seq |
-| object_id | integer | NO | *To be documented* |
-| name | character varying(1000) | YES | *To be documented* |
-| regulatory_effect | character varying(2000) | YES | *To be documented* |
-| regulator_object_id | integer | YES | *To be documented* |
+| primary_regulator_id | integer | NO | Surrogate primary key. Default: sequence: primary_regulator_primary_regulator_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| name | character varying(1000) | YES | Primary display name (target, ligand, family, etc.). |
+| regulatory_effect | character varying(2000) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `primary_regulator` table and related target/ligand pages for context. |
+| regulator_object_id | integer | YES | Related `object_id` for complexes, partners, or regulated genes. |
 
 **Primary Keys**: primary_regulator_id
 
 **Sample Data**: *No data available or table is empty*
 ### 159. **primary_regulator_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for primary regulator commentary.
+**Purpose**: Links `primary_regulator` to `reference`.
+**Size**: ~0 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **8192 bytes** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| primary_regulator_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| primary_regulator_id | integer | NO | Foreign key to `primary_regulator.primary_regulator_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: primary_regulator_id, reference_id
 
 **Sample Data**: *No data available or table is empty*
 ### 160. **process_assoc**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Biological process associations beyond GO (curated prose).
+**Purpose**: Process linkage with optional GO provenance flags.
+**Size**: ~3,586 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **504 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| gtip_process_id | integer | NO | *To be documented* |
-| comment | character varying(500) | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| gtip_process_id | integer | NO | Foreign key to `gtip_process.gtip_process_id`. |
+| comment | character varying(500) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `process_assoc` table and related target/ligand pages for context. |
 | direct_annotation | boolean | NO | Default: false |
 | go_annotation | integer | NO | Default: 0 |
-| process_assoc_id | integer | NO | Default: sequence: process_assoc_process_assoc_id_seq |
-| comment_vector | tsvector | YES | *To be documented* |
+| process_assoc_id | integer | NO | Surrogate primary key. Default: sequence: process_assoc_process_assoc_id_seq |
+| comment_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: process_assoc_id
 
@@ -4036,13 +4196,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 161. **process_assoc_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for process association text.
+**Purpose**: Links `process_assoc` to `reference`.
+**Size**: ~20 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| process_assoc_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| process_assoc_id | integer | NO | Foreign key to `process_assoc.process_assoc_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: process_assoc_id, reference_id
 
@@ -4054,13 +4215,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 162. **prodrug**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Prodrug relationships (inactive parent → active metabolite).
+**Purpose**: Maps prodrug ligands to active forms.
+**Size**: ~136 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| prodrug_ligand_id | integer | NO | *To be documented* |
-| drug_ligand_id | integer | NO | *To be documented* |
+| prodrug_ligand_id | integer | NO | Active metabolite or parent ligand id in prodrug relationships. |
+| drug_ligand_id | integer | NO | Antibacterial resource: compound name, class, or regulatory metadata. |
 
 **Primary Keys**: prodrug_ligand_id, drug_ligand_id
 
@@ -4072,20 +4234,21 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 163. **product**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Formulation / product-level information for ligands.
+**Purpose**: Trade products and formulation notes where distinct from ligand entity.
+**Size**: ~49 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **40 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| product_id | integer | NO | Default: sequence: product_product_id_seq |
-| object_id | integer | NO | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| ligand_id | integer | YES | *To be documented* |
-| name | character varying(1000) | YES | *To be documented* |
+| product_id | integer | NO | Surrogate primary key. Default: sequence: product_product_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| ligand_id | integer | YES | Foreign key to `ligand.ligand_id`. |
+| name | character varying(1000) | YES | Primary display name (target, ligand, family, etc.). |
 | endogenous | boolean | NO | Default: true |
 | in_iuphar | boolean | NO | Default: true |
 | in_grac | boolean | NO | Default: false |
-| name_vector | tsvector | YES | *To be documented* |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
 
 **Primary Keys**: product_id
 
@@ -4104,13 +4267,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 164. **product_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for product information.
+**Purpose**: Links `product` to `reference`.
+**Size**: ~3 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| product_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| product_id | integer | NO | Foreign key to `product.product_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: product_id, reference_id
 
@@ -4122,14 +4286,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 165. **reaction**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Biochemical reaction schemes (substrates/products).
+**Purpose**: Reaction nodes for enzyme targets and pathway context.
+**Size**: ~464 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **128 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| reaction_id | integer | NO | Default: sequence: reaction_reaction_id_seq |
-| ec_number | character varying(50) | NO | *To be documented* |
-| reaction | character varying(3000) | YES | *To be documented* |
+| reaction_id | integer | NO | Surrogate primary key. Default: sequence: reaction_reaction_id_seq |
+| ec_number | character varying(50) | NO | Enzyme Commission (EC) number. |
+| reaction | character varying(3000) | YES | Reaction label or narrative (enzymology). |
 
 **Primary Keys**: reaction_id
 
@@ -4142,14 +4307,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 166. **receptor2family**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Target-to-family membership (many targets per family).
+**Purpose**: Core graph edge placing each `object` in a `family` hierarchy.
+**Size**: ~3,339 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **336 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| family_id | integer | NO | *To be documented* |
-| display_order | integer | NO | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
+| display_order | integer | NO | Sort order for lists or navigation. |
 
 **Primary Keys**: object_id, family_id
 
@@ -4162,14 +4328,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 167. **receptor2subunit**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Subunit composition of heteromeric receptors.
+**Purpose**: Which gene products form the channel/receptor complex.
+**Size**: ~189 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **56 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| receptor_id | integer | NO | *To be documented* |
-| subunit_id | integer | NO | *To be documented* |
-| type | character varying(200) | YES | *To be documented* |
+| receptor_id | integer | NO | Target id (`object_id` of the receptor) in screening or pairing data. |
+| subunit_id | integer | NO | Subunit `object_id` within a multimeric receptor. |
+| type | character varying(200) | YES | Controlled type label (ligand class, interaction type, etc.). |
 
 **Primary Keys**: receptor_id, subunit_id
 
@@ -4182,30 +4349,31 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 168. **receptor_basic**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Compact ‘basic information’ block per target.
+**Purpose**: Gene names, HGNC, localization snippets — summary card data.
+**Size**: ~3,265 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **912 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| list_comments | character varying(1000) | YES | *To be documented* |
-| associated_proteins_comments | text | YES | *To be documented* |
-| functional_assay_comments | text | YES | *To be documented* |
-| tissue_distribution_comments | text | YES | *To be documented* |
-| functions_comments | text | YES | *To be documented* |
-| altered_expression_comments | text | YES | *To be documented* |
-| expression_pathophysiology_comments | text | YES | *To be documented* |
-| mutations_pathophysiology_comments | text | YES | *To be documented* |
-| variants_comments | text | YES | *To be documented* |
-| xenobiotic_expression_comments | text | YES | *To be documented* |
-| antibody_comments | text | YES | *To be documented* |
-| agonists_comments | text | YES | *To be documented* |
-| antagonists_comments | text | YES | *To be documented* |
-| allosteric_modulators_comments | text | YES | *To be documented* |
-| activators_comments | text | YES | *To be documented* |
-| inhibitors_comments | text | YES | *To be documented* |
-| channel_blockers_comments | text | YES | *To be documented* |
-| gating_inhibitors_comments | text | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| list_comments | character varying(1000) | YES | Curator prose for the `list` section on the portal. |
+| associated_proteins_comments | text | YES | Curator prose for the `associated_proteins` section on the portal. |
+| functional_assay_comments | text | YES | Curator prose for the `functional_assay` section on the portal. |
+| tissue_distribution_comments | text | YES | Curator prose for the `tissue_distribution` section on the portal. |
+| functions_comments | text | YES | Curator prose for the `functions` section on the portal. |
+| altered_expression_comments | text | YES | Curator prose for the `altered_expression` section on the portal. |
+| expression_pathophysiology_comments | text | YES | Curator prose for the `expression_pathophysiology` section on the portal. |
+| mutations_pathophysiology_comments | text | YES | Curator prose for the `mutations_pathophysiology` section on the portal. |
+| variants_comments | text | YES | Curator prose for the `variants` section on the portal. |
+| xenobiotic_expression_comments | text | YES | Curator prose for the `xenobiotic_expression` section on the portal. |
+| antibody_comments | text | YES | Curator prose for the `antibody` section on the portal. |
+| agonists_comments | text | YES | Curator prose for the `agonists` section on the portal. |
+| antagonists_comments | text | YES | Curator prose for the `antagonists` section on the portal. |
+| allosteric_modulators_comments | text | YES | Curator prose for the `allosteric_modulators` section on the portal. |
+| activators_comments | text | YES | Curator prose for the `activators` section on the portal. |
+| inhibitors_comments | text | YES | Curator prose for the `inhibitors` section on the portal. |
+| channel_blockers_comments | text | YES | Curator prose for the `channel_blockers` section on the portal. |
+| gating_inhibitors_comments | text | YES | Curator prose for the `gating_inhibitors` section on the portal. |
 
 **Primary Keys**: object_id
 
@@ -4234,42 +4402,43 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 169. **reference**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Bibliography — PubMed and full citations.
+**Purpose**: Central publications table cited across the entire database via `*_refs` tables.
+**Size**: ~47,380 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **38 MB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| reference_id | integer | NO | Default: sequence: reference_reference_id_seq |
-| type | character varying(50) | NO | *To be documented* |
-| title | character varying(2000) | YES | *To be documented* |
-| article_title | character varying(1000) | NO | *To be documented* |
-| year | smallint | YES | *To be documented* |
-| issue | character varying(50) | YES | *To be documented* |
-| volume | character varying(50) | YES | *To be documented* |
-| pages | character varying(50) | YES | *To be documented* |
-| publisher | character varying(500) | YES | *To be documented* |
-| publisher_address | character varying(2000) | YES | *To be documented* |
-| editors | character varying(2000) | YES | *To be documented* |
-| pubmed_id | bigint | YES | *To be documented* |
-| isbn | character varying(13) | YES | *To be documented* |
-| pub_status | character varying(100) | YES | *To be documented* |
-| topics | character varying(250) | YES | *To be documented* |
-| comments | character varying(500) | YES | *To be documented* |
-| read | boolean | YES | *To be documented* |
-| useful | boolean | YES | *To be documented* |
-| website | character varying(500) | YES | *To be documented* |
-| url | character varying(2000) | YES | *To be documented* |
-| doi | character varying(500) | YES | *To be documented* |
-| accessed | date | YES | *To be documented* |
-| modified | date | YES | *To be documented* |
-| patent_number | character varying(250) | YES | *To be documented* |
-| priority | date | YES | *To be documented* |
-| publication | date | YES | *To be documented* |
-| authors | text | YES | *To be documented* |
-| assignee | character varying(500) | YES | *To be documented* |
-| pmc_id | character varying(50) | YES | *To be documented* |
-| authors_vector | tsvector | YES | *To be documented* |
-| article_title_vector | tsvector | YES | *To be documented* |
+| reference_id | integer | NO | Surrogate primary key. Default: sequence: reference_reference_id_seq |
+| type | character varying(50) | NO | Controlled type label (ligand class, interaction type, etc.). |
+| title | character varying(2000) | YES | Short title or heading for UI display. |
+| article_title | character varying(1000) | NO | Authorship or title fields for citations or Concise Guide content. |
+| year | smallint | YES | Bibliographic metadata for journal articles or books. |
+| issue | character varying(50) | YES | Bibliographic metadata for journal articles or books. |
+| volume | character varying(50) | YES | Bibliographic metadata for journal articles or books. |
+| pages | character varying(50) | YES | Bibliographic metadata for journal articles or books. |
+| publisher | character varying(500) | YES | Book or report publication metadata. |
+| publisher_address | character varying(2000) | YES | Book or report publication metadata. |
+| editors | character varying(2000) | YES | Editorial or authorship attribution for publications. |
+| pubmed_id | bigint | YES | PubMed identifier (PMID). |
+| isbn | character varying(13) | YES | Book or report publication metadata. |
+| pub_status | character varying(100) | YES | Publication status (in press, published, …). |
+| topics | character varying(250) | YES | Topic tags or keywords. |
+| comments | character varying(500) | YES | Free-text curator comments. |
+| read | boolean | YES | Editorial teaser or overview text for a topic or contributor. |
+| useful | boolean | YES | Internal editorial or QA flag. |
+| website | character varying(500) | YES | External website URL. |
+| url | character varying(2000) | YES | HTTP(S) link for external resources or Immunopaedia pages. |
+| doi | character varying(500) | YES | Digital Object Identifier for the cited publication. |
+| accessed | date | YES | Publication, access, or modification date. |
+| modified | date | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `reference` table and related target/ligand pages for context. |
+| patent_number | character varying(250) | YES | Patent reference or assignee (intellectual property). |
+| priority | date | YES | Sort order for lists or navigation. |
+| publication | date | YES | Authorship or title fields for citations or Concise Guide content. |
+| authors | text | YES | Authorship or title fields for citations or Concise Guide content. |
+| assignee | character varying(500) | YES | Patent reference or assignee (intellectual property). |
+| pmc_id | character varying(50) | YES | PubMed Central identifier. |
+| authors_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| article_title_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: reference_id
 
@@ -4310,13 +4479,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 170. **reference2immuno**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References flagged for immunopharmacology relevance.
+**Purpose**: Subset tagging for immune portal bibliography.
+**Size**: ~83 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| reference_id | integer | NO | *To be documented* |
-| type | character varying(50) | NO | *To be documented* |
+| reference_id | integer | NO | ID of reference from reference table |
+| type | character varying(50) | NO | Controlled type label (ligand class, interaction type, etc.). |
 
 **Primary Keys**: reference_id, type
 
@@ -4328,13 +4498,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 171. **reference2ligand**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Direct ligand–reference associations (non-interaction).
+**Purpose**: General citations attached to ligands (reviews, discovery papers).
+**Size**: ~14,978 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **912 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| reference_id | integer | NO | *To be documented* |
-| ligand_id | integer | NO | *To be documented* |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
 
 **Primary Keys**: reference_id, ligand_id
 
@@ -4346,18 +4517,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 172. **screen**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: High-throughput screening campaign metadata.
+**Purpose**: Screening project headers for large bioactivity dumps.
+**Size**: ~3 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **32 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| screen_id | integer | NO | Default: sequence: screen_screen_id_seq |
-| name | character varying(500) | NO | *To be documented* |
-| description | text | YES | *To be documented* |
-| url | character varying(1000) | YES | *To be documented* |
-| affinity_cut_off_nm | integer | YES | *To be documented* |
-| company_logo_filename | character varying(250) | YES | *To be documented* |
-| technology_logo_filename | character varying(250) | YES | *To be documented* |
+| screen_id | integer | NO | Surrogate primary key. Default: sequence: screen_screen_id_seq |
+| name | character varying(500) | NO | Primary display name (target, ligand, family, etc.). |
+| description | text | YES | Free-text description field. |
+| url | character varying(1000) | YES | HTTP(S) link for external resources or Immunopaedia pages. |
+| affinity_cut_off_nm | integer | YES | Affinity cutoff used when filtering screening hits (nM). |
+| company_logo_filename | character varying(250) | YES | Image asset filename for sponsor or technology logo. |
+| technology_logo_filename | character varying(250) | YES | Image asset filename for sponsor or technology logo. |
 
 **Primary Keys**: screen_id
 
@@ -4374,33 +4546,34 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 173. **screen_interaction**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Screen-derived bioactivity measurements at scale.
+**Purpose**: Very large fact table of assay results linking ligands and targets from screens.
+**Size**: ~158,551 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **45 MB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| screen_interaction_id | integer | NO | Default: sequence: screen_interaction_screen_interaction_id_seq |
-| screen_id | integer | NO | *To be documented* |
-| ligand_id | integer | NO | *To be documented* |
-| object_id | integer | NO | *To be documented* |
-| type | character varying(100) | NO | *To be documented* |
-| action | character varying(1000) | NO | *To be documented* |
-| action_comment | character varying(2000) | NO | *To be documented* |
-| species_id | integer | NO | *To be documented* |
+| screen_interaction_id | integer | NO | Surrogate primary key. Default: sequence: screen_interaction_screen_interaction_id_seq |
+| screen_id | integer | NO | Foreign key to `screen.screen_id`. |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| type | character varying(100) | NO | Controlled type label (ligand class, interaction type, etc.). |
+| action | character varying(1000) | NO | Pharmacological action (agonist, antagonist, inhibitor, …). |
+| action_comment | character varying(2000) | NO | Curator prose for the `action` section on the portal. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
 | endogenous | boolean | NO | Default: false |
 | affinity_units | character varying(100) | NO | Default: -::character varying |
-| affinity_high | double precision | YES | *To be documented* |
-| affinity_median | double precision | YES | *To be documented* |
-| affinity_low | double precision | YES | *To be documented* |
-| concentration_range | character varying(200) | YES | *To be documented* |
-| original_affinity_low_nm | double precision | YES | *To be documented* |
-| original_affinity_median_nm | double precision | YES | *To be documented* |
-| original_affinity_high_nm | double precision | YES | *To be documented* |
-| original_affinity_units | character varying(20) | YES | *To be documented* |
-| original_affinity_relation | character varying(10) | YES | *To be documented* |
-| assay_description | character varying(1000) | YES | *To be documented* |
-| percent_activity | double precision | YES | *To be documented* |
-| assay_url | character varying(500) | YES | *To be documented* |
+| affinity_high | double precision | YES | Upper bound of reported affinity (numeric). |
+| affinity_median | double precision | YES | Median or most representative affinity value. |
+| affinity_low | double precision | YES | Lower bound of reported affinity (numeric). |
+| concentration_range | character varying(200) | YES | Range of concentrations tested in the assay. |
+| original_affinity_low_nm | double precision | YES | Original literature affinity (low) in nM space. |
+| original_affinity_median_nm | double precision | YES | Original literature affinity (median) in nM space. |
+| original_affinity_high_nm | double precision | YES | Original literature affinity (high) converted or in nM. |
+| original_affinity_units | character varying(20) | YES | Units as stated in the primary publication. |
+| original_affinity_relation | character varying(10) | YES | Inequality relation (<, >, =) for original affinity. |
+| assay_description | character varying(1000) | YES | Short assay description (binding, functional, …). |
+| percent_activity | double precision | YES | Functional assay percent activity (e.g. agonist screen). |
+| assay_url | character varying(500) | YES | Link to assay protocol or external assay record. |
 
 **Primary Keys**: screen_interaction_id
 
@@ -4432,13 +4605,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 174. **screen_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Publications for screening datasets.
+**Purpose**: Links `screen` to `reference`.
+**Size**: ~4 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| screen_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| screen_id | integer | NO | Foreign key to `screen.screen_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: screen_id, reference_id
 
@@ -4450,19 +4624,20 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 175. **selectivity**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Ligand selectivity profiles across targets.
+**Purpose**: Selectivity commentary and rankings for ligands.
+**Size**: ~303 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **64 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| selectivity_id | integer | NO | Default: sequence: selectivity_selectivity_id_seq |
-| object_id | integer | NO | *To be documented* |
-| ion | character varying(20) | NO | *To be documented* |
-| conductance_high | real | YES | *To be documented* |
-| conductance_low | real | YES | *To be documented* |
-| conductance_median | real | YES | *To be documented* |
-| hide_conductance | boolean | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
+| selectivity_id | integer | NO | Surrogate primary key. Default: sequence: selectivity_selectivity_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| ion | character varying(20) | NO | Permeant ion species for channel conductance. |
+| conductance_high | real | YES | Channel conductance parameter (numeric or descriptive). |
+| conductance_low | real | YES | Channel conductance parameter (numeric or descriptive). |
+| conductance_median | real | YES | Channel conductance parameter (numeric or descriptive). |
+| hide_conductance | boolean | YES | Suppress conductance block from the default target view. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
 
 **Primary Keys**: selectivity_id
 
@@ -4480,13 +4655,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 176. **selectivity_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for selectivity statements.
+**Purpose**: Links `selectivity` to `reference`.
+**Size**: ~291 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **56 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| selectivity_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| selectivity_id | integer | NO | Foreign key to `selectivity.selectivity_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: selectivity_id, reference_id
 
@@ -4498,20 +4674,21 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 177. **species**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Species taxonomy for orthologs and assay species.
+**Purpose**: Species list (human, mouse, rat, …) used in interactions and expression.
+**Size**: ~118 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **128 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| species_id | integer | NO | Default: sequence: species_species_id_seq |
-| name | character varying(100) | NO | *To be documented* |
-| short_name | character varying(15) | NO | *To be documented* |
-| scientific_name | character varying(200) | YES | *To be documented* |
-| ncbi_taxonomy_id | integer | YES | *To be documented* |
-| comments | text | YES | *To be documented* |
-| description | text | YES | *To be documented* |
-| name_vector | tsvector | YES | *To be documented* |
-| short_name_vector | tsvector | YES | *To be documented* |
+| species_id | integer | NO | Surrogate primary key. Default: sequence: species_species_id_seq |
+| name | character varying(100) | NO | Primary display name (target, ligand, family, etc.). |
+| short_name | character varying(15) | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `species` table and related target/ligand pages for context. |
+| scientific_name | character varying(200) | YES | Taxonomic classification for species rows. |
+| ncbi_taxonomy_id | integer | YES | Taxonomic classification for species rows. |
+| comments | text | YES | Free-text curator comments. |
+| description | text | YES | Detailed description of the species for display on species page - added for MMV |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
+| short_name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: species_id
 
@@ -4530,16 +4707,17 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 178. **specific_reaction**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Fine-grained enzyme reactions (substrate-specific EC variants).
+**Purpose**: Specific catalytic forms as described in PostgreSQL comment on this table. Database comment: provides a place to enter specific forms of reactions described by EC numbers, e.g. with different chemical substrates/products
+**Size**: ~79 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **64 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| specific_reaction_id | integer | NO | Default: sequence: specific_reaction_specific_reaction_id_seq |
-| object_id | integer | NO | *To be documented* |
-| reaction_id | integer | NO | *To be documented* |
-| description | character varying(1000) | YES | *To be documented* |
-| reaction | character varying(3000) | NO | *To be documented* |
+| specific_reaction_id | integer | NO | Surrogate primary key. Default: sequence: specific_reaction_specific_reaction_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| reaction_id | integer | NO | Foreign key to `reaction.reaction_id`. |
+| description | character varying(1000) | YES | Free-text description field. |
+| reaction | character varying(3000) | NO | Reaction label or narrative (enzymology). |
 
 **Primary Keys**: specific_reaction_id
 
@@ -4554,13 +4732,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 179. **specific_reaction_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for specific reaction entries.
+**Purpose**: Links `specific_reaction` to `reference`.
+**Size**: ~8 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| specific_reaction_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| specific_reaction_id | integer | NO | Foreign key to `specific_reaction.specific_reaction_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: specific_reaction_id, reference_id
 
@@ -4572,23 +4751,24 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 180. **structural_info**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Structural biology commentary (domains, folds, PDB overview).
+**Purpose**: Long-form structure section for targets.
+**Size**: ~9,047 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **3400 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| structural_info_id | integer | NO | Default: sequence: structural_info_structural_info_id_seq |
-| object_id | integer | NO | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| transmembrane_domains | integer | YES | *To be documented* |
-| amino_acids | integer | YES | *To be documented* |
-| pore_loops | integer | YES | *To be documented* |
-| genomic_location | character varying(50) | YES | *To be documented* |
-| gene_name | character varying(100) | YES | *To be documented* |
-| official_gene_id | character varying(100) | YES | *To be documented* |
-| molecular_weight | integer | YES | *To be documented* |
-| gene_long_name | character varying(2000) | YES | *To be documented* |
-| gene_long_name_vector | tsvector | YES | *To be documented* |
+| structural_info_id | integer | NO | Surrogate primary key. Default: sequence: structural_info_structural_info_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| transmembrane_domains | integer | YES | Protein domain or modification notes. |
+| amino_acids | integer | YES | Mutation or sequence representation (variant or protein). |
+| pore_loops | integer | YES | Protein domain or modification notes. |
+| genomic_location | character varying(50) | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `structural_info` table and related target/ligand pages for context. |
+| gene_name | character varying(100) | YES | Gene or protein naming for display and search. |
+| official_gene_id | character varying(100) | YES | External database identifier for cross-referencing. |
+| molecular_weight | integer | YES | Physicochemical descriptor (Lipinski / drug-likeness related). |
+| gene_long_name | character varying(2000) | YES | Gene or protein naming for display and search. |
+| gene_long_name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: structural_info_id
 
@@ -4610,13 +4790,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 181. **structural_info_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for structural information text.
+**Purpose**: Links `structural_info` to `reference`.
+**Size**: ~1,996 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **168 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| structural_info_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| structural_info_id | integer | NO | Foreign key to `structural_info.structural_info_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: structural_info_id, reference_id
 
@@ -4628,15 +4809,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 182. **subcommittee**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Subcommittees under NC-IUPHAR committees.
+**Purpose**: Finer editorial structure for contributor assignment.
+**Size**: ~603 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **88 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| contributor_id | integer | NO | *To be documented* |
-| family_id | integer | NO | *To be documented* |
-| role | character varying(50) | YES | *To be documented* |
-| display_order | integer | NO | *To be documented* |
+| contributor_id | integer | NO | Foreign key to `contributor.contributor_id`. |
+| family_id | integer | NO | Foreign key to `family.family_id`. |
+| role | character varying(50) | YES | Functional role label (e.g. agonist, antagonist in context). |
+| display_order | integer | NO | Sort order for lists or navigation. |
 
 **Primary Keys**: contributor_id, family_id
 
@@ -4650,28 +4832,29 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 183. **substrate**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Enzyme substrate commentary.
+**Purpose**: Substrate specificity and reaction context for enzymes.
+**Size**: ~1,015 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **312 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| substrate_id | integer | NO | Default: sequence: substrate_substrate_id_seq |
-| object_id | integer | NO | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| ligand_id | integer | YES | *To be documented* |
+| substrate_id | integer | NO | Surrogate primary key. Default: sequence: substrate_substrate_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| ligand_id | integer | YES | Foreign key to `ligand.ligand_id`. |
 | property | character varying(20) | NO | Default: -::character varying |
-| value | double precision | YES | *To be documented* |
-| units | character varying(100) | YES | *To be documented* |
-| assay_description | character varying(1000) | YES | *To be documented* |
-| assay_conditions | character varying(1000) | YES | *To be documented* |
-| comments | character varying(1000) | YES | *To be documented* |
-| name | character varying(1000) | YES | *To be documented* |
+| value | double precision | YES | Numeric or textual property value. |
+| units | character varying(100) | YES | Screening assay value, unit, or activity readout. |
+| assay_description | character varying(1000) | YES | Short assay description (binding, functional, …). |
+| assay_conditions | character varying(1000) | YES | Buffer, temperature, co-factors, cell line, etc. |
+| comments | character varying(1000) | YES | Free-text curator comments. |
+| name | character varying(1000) | YES | Primary display name (target, ligand, family, etc.). |
 | endogenous | boolean | NO | Default: true |
 | in_iuphar | boolean | NO | Default: true |
 | in_grac | boolean | NO | Default: false |
 | standard_property | character varying(100) | YES | Default: -::character varying |
-| standard_value | double precision | YES | *To be documented* |
-| name_vector | tsvector | YES | *To be documented* |
+| standard_value | double precision | YES | Screening assay value, unit, or activity readout. |
+| name_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `name`. |
 
 **Primary Keys**: substrate_id
 
@@ -4698,13 +4881,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 184. **substrate_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for substrate commentary.
+**Purpose**: Links `substrate` to `reference`.
+**Size**: ~627 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **80 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| substrate_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| substrate_id | integer | NO | Foreign key to `substrate.substrate_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: substrate_id, reference_id
 
@@ -4716,18 +4900,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 185. **synonym**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: General synonym strings for targets, ligands, and diseases.
+**Purpose**: Large vocabulary table for alternate spellings and names.
+**Size**: ~31,019 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **7456 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| synonym_id | integer | NO | Default: sequence: synonym_synonym_id_seq |
-| object_id | integer | NO | *To be documented* |
-| synonym | character varying(2000) | NO | *To be documented* |
+| synonym_id | integer | NO | Surrogate primary key. Default: sequence: synonym_synonym_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| synonym | character varying(2000) | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `synonym` table and related target/ligand pages for context. |
 | display | boolean | NO | Default: true |
 | from_grac | boolean | NO | Default: false |
 | display_order | integer | NO | Default: 0 |
-| synonym_vector | tsvector | YES | *To be documented* |
+| synonym_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: synonym_id
 
@@ -4744,13 +4929,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 186. **synonym_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for synonym entries.
+**Purpose**: Links `synonym` to `reference`.
+**Size**: ~162 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| synonym_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| synonym_id | integer | NO | Foreign key to `synonym.synonym_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: synonym_id, reference_id
 
@@ -4762,18 +4948,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 187. **target_candidate_profile**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Candidate therapeutic target profiles (industry-style summaries).
+**Purpose**: Brief profiles for prioritised targets.
+**Size**: ~5 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **56 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| tcp_id | integer | NO | Default: sequence: target_candidate_profile_tcp_id_seq |
-| profile | character varying(50) | NO | *To be documented* |
-| intended_use | character varying(500) | NO | *To be documented* |
-| target_stage | character varying(500) | NO | *To be documented* |
-| profile_vector | tsvector | YES | *To be documented* |
-| intended_use_vector | tsvector | YES | *To be documented* |
-| target_stage_vector | tsvector | YES | *To be documented* |
+| tcp_id | integer | NO | Surrogate primary key. Default: sequence: target_candidate_profile_tcp_id_seq |
+| profile | character varying(50) | NO | Editorial teaser or overview text for a topic or contributor. |
+| intended_use | character varying(500) | NO | Educational or editorial intended use statement. |
+| target_stage | character varying(500) | NO | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `target_candidate_profile` table and related target/ligand pages for context. |
+| profile_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| intended_use_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| target_stage_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: tcp_id
 
@@ -4790,23 +4977,24 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 188. **target_gene**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Gene-level targets and regulation for NHRs/signalling.
+**Purpose**: Downstream genes regulated by the target (esp. nuclear receptors).
+**Size**: ~259 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **232 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| target_gene_id | integer | NO | Default: sequence: target_gene_target_gene_id_seq |
-| object_id | integer | NO | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| description | character varying(1000) | YES | *To be documented* |
-| official_gene_id | character varying(100) | YES | *To be documented* |
-| effect | character varying(300) | YES | *To be documented* |
-| technique | character varying(500) | YES | *To be documented* |
-| comments | character varying(2000) | YES | *To be documented* |
-| description_vector | tsvector | YES | *To be documented* |
-| effect_vector | tsvector | YES | *To be documented* |
-| technique_vector | tsvector | YES | *To be documented* |
-| comments_vector | tsvector | YES | *To be documented* |
+| target_gene_id | integer | NO | Surrogate primary key. Default: sequence: target_gene_target_gene_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| description | character varying(1000) | YES | Free-text description field. |
+| official_gene_id | character varying(100) | YES | External database identifier for cross-referencing. |
+| effect | character varying(300) | YES | Described pharmacological or phenotypic effect. |
+| technique | character varying(500) | YES | Experimental method (knockout, qPCR, microarray, …). |
+| comments | character varying(2000) | YES | Free-text curator comments. |
+| description_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `description`. |
+| effect_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| technique_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `technique`. |
+| comments_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `comments`. |
 
 **Primary Keys**: target_gene_id
 
@@ -4828,13 +5016,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 189. **target_gene_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for target gene commentary.
+**Purpose**: Links `target_gene` to `reference`.
+**Size**: ~349 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **56 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| target_gene_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| target_gene_id | integer | NO | Foreign key to `target_gene.target_gene_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: target_gene_id, reference_id
 
@@ -4846,13 +5035,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 190. **target_ligand_same_entity**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Cases where target and ligand denote the same biological entity.
+**Purpose**: Edge-case linking (e.g. peptide hormone as both).
+**Size**: ~14 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| ligand_id | integer | NO | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| ligand_id | integer | NO | Foreign key to `ligand.ligand_id`. |
 
 **Primary Keys**: object_id, ligand_id
 
@@ -4864,13 +5054,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 191. **tissue**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Controlled tissue / organ vocabulary.
+**Purpose**: Tissue terms for expression and localization.
+**Size**: ~41 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| tissue_id | integer | NO | Default: sequence: tissue_tissue_id_seq |
-| name | character varying(100) | NO | *To be documented* |
+| tissue_id | integer | NO | Surrogate primary key. Default: sequence: tissue_tissue_id_seq |
+| name | character varying(100) | NO | Primary display name (target, ligand, family, etc.). |
 
 **Primary Keys**: tissue_id
 
@@ -4882,19 +5073,20 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 192. **tissue_distribution**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Where targets are expressed (tissue-level narratives).
+**Purpose**: Tissue distribution text per `object_id` and species.
+**Size**: ~3,813 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1944 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| tissue_distribution_id | integer | NO | Default: sequence: tissue_distribution_tissue_distribution_id_seq |
-| object_id | integer | NO | *To be documented* |
-| tissues | character varying(10000) | NO | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| technique | character varying(1000) | YES | *To be documented* |
-| expression_level | integer | YES | *To be documented* |
-| tissues_vector | tsvector | YES | *To be documented* |
-| technique_vector | tsvector | YES | *To be documented* |
+| tissue_distribution_id | integer | NO | Surrogate primary key. Default: sequence: tissue_distribution_tissue_distribution_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| tissues | character varying(10000) | NO | Tissue list or narrative for expression. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| technique | character varying(1000) | YES | Experimental method (knockout, qPCR, microarray, …). |
+| expression_level | integer | YES | Curated field in the IUPHAR/BPS Guide to PHARMACOLOGY database ([guidetopharmacology.org](https://www.guidetopharmacology.org/)); see the `tissue_distribution` table and related target/ligand pages for context. |
+| tissues_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| technique_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `technique`. |
 
 **Primary Keys**: tissue_distribution_id
 
@@ -4912,13 +5104,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 193. **tissue_distribution_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for tissue distribution statements.
+**Purpose**: Links `tissue_distribution` to `reference`.
+**Size**: ~5,140 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **352 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| tissue_distribution_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| tissue_distribution_id | integer | NO | Foreign key to `tissue_distribution.tissue_distribution_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: tissue_distribution_id, reference_id
 
@@ -4930,18 +5123,19 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 194. **tocris_update**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Tocris (Bio-Techne) catalog update snapshots.
+**Purpose**: Supplier batch updates for commercial ligand tooling.
+**Size**: ~4,073 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **1016 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| cat_no | character varying(100) | YES | *To be documented* |
-| url | character varying(500) | YES | *To be documented* |
-| name | character varying(1000) | YES | *To be documented* |
-| smiles | character varying(2000) | YES | *To be documented* |
-| pubchem_cid | character varying(100) | YES | *To be documented* |
-| inchi | character varying(200) | YES | *To be documented* |
-| cas | character varying(100) | YES | *To be documented* |
+| cat_no | character varying(100) | YES | Commercial catalog or product code (DiscoverX, MCE, …). |
+| url | character varying(500) | YES | HTTP(S) link for external resources or Immunopaedia pages. |
+| name | character varying(1000) | YES | Primary display name (target, ligand, family, etc.). |
+| smiles | character varying(2000) | YES | SMILES line notation for the structure (may include salts). |
+| pubchem_cid | character varying(100) | YES | External database identifier for cross-referencing. |
+| inchi | character varying(200) | YES | Structure representation (SMILES, InChI, HELM) for integration. |
+| cas | character varying(100) | YES | Chemical Abstracts Service registry number. |
 
 **Primary Keys**: *None identified*
 
@@ -4958,14 +5152,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 195. **transduction**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Signal transduction mechanisms (G proteins, β-arrestin, etc.).
+**Purpose**: Downstream signalling text for receptors.
+**Size**: ~418 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **480 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| transduction_id | integer | NO | Default: sequence: transduction_transduction_id_seq |
-| object_id | integer | NO | *To be documented* |
-| secondary | boolean | NO | *To be documented* |
+| transduction_id | integer | NO | Surrogate primary key. Default: sequence: transduction_transduction_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| secondary | boolean | NO | Secondary catalogue or alternate naming for commercial ligands. |
 | t01 | boolean | NO | Default: false |
 | t02 | boolean | NO | Default: false |
 | t03 | boolean | NO | Default: false |
@@ -4981,8 +5176,8 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 | e07 | boolean | NO | Default: false |
 | e08 | boolean | NO | Default: false |
 | e09 | boolean | NO | Default: false |
-| comments | character varying(10000) | YES | *To be documented* |
-| comments_vector | tsvector | YES | *To be documented* |
+| comments | character varying(10000) | YES | Free-text curator comments. |
+| comments_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `comments`. |
 
 **Primary Keys**: transduction_id
 
@@ -5012,13 +5207,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 196. **transduction_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for transduction commentary.
+**Purpose**: Links `transduction` to `reference`.
+**Size**: ~973 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **104 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| transduction_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| transduction_id | integer | NO | Foreign key to `transduction.transduction_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: transduction_id, reference_id
 
@@ -5030,14 +5226,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 197. **transporter**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Transporter-class specific commentary.
+**Purpose**: SLC/ABC transporter blocks per `object_id`.
+**Size**: ~557 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **128 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| grac_stoichiometry | character varying(1000) | YES | *To be documented* |
-| grac_stoichiometry_vector | tsvector | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| grac_stoichiometry | character varying(1000) | YES | GRAC stoichiometry narrative for receptor complexes. |
+| grac_stoichiometry_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
 
 **Primary Keys**: object_id
 
@@ -5050,25 +5247,26 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 198. **variant**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Genetic variants affecting drug response or protein function.
+**Purpose**: Variant annotations with clinical/pharmacogenomic notes.
+**Size**: ~977 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **848 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| variant_id | integer | NO | Default: sequence: variant_variant_id_seq |
-| object_id | integer | NO | *To be documented* |
-| description | character varying(2000) | YES | *To be documented* |
-| type | character varying(100) | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| amino_acids | integer | YES | *To be documented* |
-| amino_acid_change | character varying(500) | YES | *To be documented* |
-| validation | character varying(1000) | YES | *To be documented* |
-| global_maf | character varying(100) | YES | *To be documented* |
-| subpop_maf | character varying(1000) | YES | *To be documented* |
-| minor_allele_count | character varying(500) | YES | *To be documented* |
-| frequency_comment | character varying(1000) | YES | *To be documented* |
-| nucleotide_change | character varying(500) | YES | *To be documented* |
-| description_vector | tsvector | YES | *To be documented* |
+| variant_id | integer | NO | Surrogate primary key. Default: sequence: variant_variant_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| description | character varying(2000) | YES | Free-text description field. |
+| type | character varying(100) | YES | Controlled type label (ligand class, interaction type, etc.). |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| amino_acids | integer | YES | Mutation or sequence representation (variant or protein). |
+| amino_acid_change | character varying(500) | YES | Mutation or sequence representation (variant or protein). |
+| validation | character varying(1000) | YES | Validation status for a mapping or submission. |
+| global_maf | character varying(100) | YES | Population allele frequency metadata (variant tables). |
+| subpop_maf | character varying(1000) | YES | Population allele frequency metadata (variant tables). |
+| minor_allele_count | character varying(500) | YES | Population allele frequency metadata (variant tables). |
+| frequency_comment | character varying(1000) | YES | Curator prose for the `frequency` section on the portal. |
+| nucleotide_change | character varying(500) | YES | Mutation or sequence representation (variant or protein). |
+| description_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `description`. |
 
 **Primary Keys**: variant_id
 
@@ -5092,14 +5290,15 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 199. **variant2database_link**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: External variant IDs (ClinVar, dbSNP…).
+**Purpose**: Cross-references for `variant` rows.
+**Size**: ~921 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **112 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| variant_id | integer | NO | *To be documented* |
-| database_link_id | integer | NO | *To be documented* |
-| type | character varying(50) | NO | *To be documented* |
+| variant_id | integer | NO | Foreign key to `variant.variant_id`. |
+| database_link_id | integer | NO | Foreign key to `database_link.database_link_id`. |
+| type | character varying(50) | NO | Controlled type label (ligand class, interaction type, etc.). |
 
 **Primary Keys**: variant_id, database_link_id
 
@@ -5112,13 +5311,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 200. **variant_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for variant entries.
+**Purpose**: Links `variant` to `reference`.
+**Size**: ~1,232 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **152 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| variant_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| variant_id | integer | NO | Foreign key to `variant.variant_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: variant_id, reference_id
 
@@ -5130,13 +5330,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 201. **version**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Database release version metadata.
+**Purpose**: Tracks GtoPdb release numbers (e.g. 2026.1) for reproducibility.
+**Size**: ~1 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| version_number | character varying(100) | NO | *To be documented* |
-| publish_date | date | YES | *To be documented* |
+| version_number | character varying(100) | NO | Software or content version number. |
+| publish_date | date | YES | Publication, access, or modification date. |
 
 **Primary Keys**: version_number
 
@@ -5148,15 +5349,16 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 202. **vgic**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Voltage-gated ion channel specific fields.
+**Purpose**: VGIC gating and auxiliary subunit commentary per target.
+**Size**: ~145 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **80 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| object_id | integer | NO | *To be documented* |
-| physiological_ion | character varying(100) | YES | *To be documented* |
-| selectivity_comments | text | YES | *To be documented* |
-| voltage_dependence_comments | text | YES | *To be documented* |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| physiological_ion | character varying(100) | YES | Permeant ion species for channel conductance. |
+| selectivity_comments | text | YES | Curator prose for the `selectivity` section on the portal. |
+| voltage_dependence_comments | text | YES | Curator prose for the `voltage_dependence` section on the portal. |
 
 **Primary Keys**: object_id
 
@@ -5170,13 +5372,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 203. **voltage_dep_activation_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for voltage-dependent activation curves.
+**Purpose**: Citations for activation gating data.
+**Size**: ~224 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| voltage_dependence_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| voltage_dependence_id | integer | NO | Foreign key to `voltage_dependence.voltage_dependence_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: voltage_dependence_id, reference_id
 
@@ -5188,13 +5391,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 204. **voltage_dep_deactivation_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for voltage-dependent deactivation.
+**Purpose**: Citations for deactivation gating data.
+**Size**: ~10 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| voltage_dependence_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| voltage_dependence_id | integer | NO | Foreign key to `voltage_dependence.voltage_dependence_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: voltage_dependence_id, reference_id
 
@@ -5206,13 +5410,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 205. **voltage_dep_inactivation_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for voltage-dependent inactivation.
+**Purpose**: Citations for inactivation gating data.
+**Size**: ~132 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| voltage_dependence_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| voltage_dependence_id | integer | NO | Foreign key to `voltage_dependence.voltage_dependence_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: voltage_dependence_id, reference_id
 
@@ -5224,33 +5429,34 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 206. **voltage_dependence**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Voltage-dependence parameters for ion channels.
+**Purpose**: V½, slope factors, and narrative for channel gating.
+**Size**: ~172 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **136 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| voltage_dependence_id | integer | NO | Default: sequence: voltage_dependence_voltage_dependence_id_seq |
-| object_id | integer | NO | *To be documented* |
-| cell_type | character varying(500) | NO | *To be documented* |
-| comments | text | YES | *To be documented* |
-| activation_v_high | double precision | YES | *To be documented* |
-| activation_v_median | double precision | YES | *To be documented* |
-| activation_v_low | double precision | YES | *To be documented* |
-| activation_t_high | double precision | YES | *To be documented* |
-| activation_t_low | double precision | YES | *To be documented* |
-| inactivation_v_high | double precision | YES | *To be documented* |
-| inactivation_v_median | double precision | YES | *To be documented* |
-| inactivation_v_low | double precision | YES | *To be documented* |
-| inactivation_t_high | double precision | YES | *To be documented* |
-| inactivation_t_low | double precision | YES | *To be documented* |
-| deactivation_v_high | double precision | YES | *To be documented* |
-| deactivation_v_median | double precision | YES | *To be documented* |
-| deactivation_v_low | double precision | YES | *To be documented* |
-| deactivation_t_high | double precision | YES | *To be documented* |
-| deactivation_t_low | double precision | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| cell_type_vector | tsvector | YES | *To be documented* |
-| comments_vector | tsvector | YES | *To be documented* |
+| voltage_dependence_id | integer | NO | Surrogate primary key. Default: sequence: voltage_dependence_voltage_dependence_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| cell_type | character varying(500) | NO | Cell type label (expression or immunology context). |
+| comments | text | YES | Free-text curator comments. |
+| activation_v_high | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| activation_v_median | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| activation_v_low | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| activation_t_high | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| activation_t_low | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| inactivation_v_high | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| inactivation_v_median | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| inactivation_v_low | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| inactivation_t_high | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| inactivation_t_low | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| deactivation_v_high | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| deactivation_v_median | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| deactivation_v_low | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| deactivation_t_high | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| deactivation_t_low | double precision | YES | Ion channel gating parameter (voltage V or time/temperature T dependence). |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| cell_type_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| comments_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `comments`. |
 
 **Primary Keys**: voltage_dependence_id
 
@@ -5282,20 +5488,21 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 207. **xenobiotic_expression**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: Expression changes induced by drugs or xenobiotics.
+**Purpose**: Contrasts with `altered_expression`; focuses on chemical induction.
+**Size**: ~78 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **120 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| xenobiotic_expression_id | integer | NO | Default: sequence: xenobiotic_expression_xenobiotic_expression_id_seq |
-| object_id | integer | NO | *To be documented* |
-| change | character varying(2000) | YES | *To be documented* |
-| technique | character varying(500) | YES | *To be documented* |
-| tissue | character varying(1000) | YES | *To be documented* |
-| species_id | integer | NO | *To be documented* |
-| change_vector | tsvector | YES | *To be documented* |
-| tissue_vector | tsvector | YES | *To be documented* |
-| technique_vector | tsvector | YES | *To be documented* |
+| xenobiotic_expression_id | integer | NO | Surrogate primary key. Default: sequence: xenobiotic_expression_xenobiotic_expression_id_seq |
+| object_id | integer | NO | Foreign key to `object.object_id`. |
+| change | character varying(2000) | YES | Narrative of the measured change (expression, phenotype, or assay readout vs baseline). |
+| technique | character varying(500) | YES | Experimental method (knockout, qPCR, microarray, …). |
+| tissue | character varying(1000) | YES | Tissue or organ context for expression data. |
+| species_id | integer | NO | Foreign key to `species.species_id`. |
+| change_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search (see companion text column). |
+| tissue_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `tissue`. |
+| technique_vector | tsvector | YES | PostgreSQL `tsvector` for full-text search on `technique`. |
 
 **Primary Keys**: xenobiotic_expression_id
 
@@ -5314,13 +5521,14 @@ This document provides a comprehensive reference for all tables in the Guide2Pha
 }
 ```
 ### 208. **xenobiotic_expression_refs**
-**Purpose**: *To be documented*
-**Size**: *To be determined*
+**Summary**: References for xenobiotic expression statements.
+**Purpose**: Links `xenobiotic_expression` to `reference`.
+**Size**: ~90 rows (PostgreSQL `pg_class.reltuples` estimate); total on-disk **24 kB** (`pg_total_relation_size`, includes heap, indexes, and TOAST).
 
 | Column | Type | Nullable | Description |
 |--------|------|----------|-------------|
-| xenobiotic_expression_id | integer | NO | *To be documented* |
-| reference_id | integer | NO | *To be documented* |
+| xenobiotic_expression_id | integer | NO | Foreign key to `xenobiotic_expression.xenobiotic_expression_id`. |
+| reference_id | integer | NO | Foreign key to `reference.reference_id`. |
 
 **Primary Keys**: xenobiotic_expression_id, reference_id
 
@@ -5391,7 +5599,7 @@ This schema reference was generated using the MCP Toolbox with the `guide2pharma
 |----------------|--------|---------|
 | **Primary Keys** | ✅ **Identified** | Primary keys found for all documented tables |
 | **Foreign Key Constraints** | ⚠️ **Not formally defined** | Relationships appear to be logical based on column names |
-| **Data Volume** | ⏳ **Pending** | Table row counts not yet determined |
+| **Data Volume** | ✅ **Populated** | Row estimates from `pg_class.reltuples` and on-disk sizes from `pg_total_relation_size` (see per-table **Size**) |
 | **Join Relationships** | ✅ **Logical patterns identified** | Common relationship patterns documented |
 
 ### Critical Findings
@@ -5401,7 +5609,7 @@ This schema reference was generated using the MCP Toolbox with the `guide2pharma
 4. **Hierarchical data**: ISA relationships for taxonomies and classifications
 
 ## Validation Date
-*Generated: December 11, 2024 using MCP Toolbox*
+*Schema doc text generated April 5, 2026; sizes queried live from PostgreSQL (`pg_class`, `pg_total_relation_size`).*
 
 ---
 
