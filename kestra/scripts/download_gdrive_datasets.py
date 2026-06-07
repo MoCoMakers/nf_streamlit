@@ -39,7 +39,6 @@ def download_folder(folder_id: str, output_dir: Path, quiet: bool = False) -> No
         output=str(output_dir),
         quiet=quiet,
         use_cookies=False,
-        remaining_ok=True,
     )
     print("Download complete.")
 

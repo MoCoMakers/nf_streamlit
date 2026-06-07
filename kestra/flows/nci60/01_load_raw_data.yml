@@ -16,15 +16,27 @@ inputs:
     defaults: main
     description: Branch to clone (use feature/NCI60 until merged)
 
+  - id: data_cache_path
+    type: STRING
+    defaults: /datasets/nf-streamlit
+    description: |
+      Persistent CSV cache (compose mount /var/lib/kestra/nf-datasets → this path).
+      Script uses local files first; downloads only if CSVs for this run are missing.
+
   - id: skip_download
     type: BOOLEAN
     defaults: false
-    description: Skip Google Drive download (data already on worker under ./data)
+    description: Never download from Drive (fail if local CSVs missing). Default is local-first auto.
+
+  - id: force_download
+    type: BOOLEAN
+    defaults: false
+    description: Always re-download from Drive even when local cache has the CSVs
 
   - id: nci_only
     type: BOOLEAN
-    defaults: false
-    description: Download only GDRIVE_NCI_FOLDER_ID instead of full Datasets folder
+    defaults: true
+    description: When downloading, use GDRIVE_NCI_FOLDER_ID (not full Datasets folder)
 
   - id: only_tables
     type: STRING
@@ -56,10 +68,25 @@ tasks:
         warningOnStdErr: false
         taskRunner:
           type: io.kestra.plugin.scripts.runner.docker.Docker
+          volumes:
+            - /var/lib/kestra/nf-datasets:/datasets/nf-streamlit:rw
         containerImage: python:3.11-slim
         beforeCommands:
           - apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
           - pip install --no-cache-dir psycopg[binary] pyyaml gdown tqdm
+          # Hotfix cloned main scripts until git catches up (mirror fixes back to repo)
+          - |
+            python3 -c "from pathlib import Path
+            loader=Path('nf_streamlit/kestra/scripts/load_nci60_raw.py')
+            lines=loader.read_text().splitlines(); out=[]; skip=False
+            for line in lines:
+                if line=='def main() -> None:':
+                    out.append(line); out.append('    global REPO_ROOT'); skip=True; continue
+                if skip and line.strip()=='global REPO_ROOT': skip=False; continue
+                out.append(line)
+            loader.write_text('\n'.join(out)+'\n')
+            gdrive=Path('nf_streamlit/kestra/scripts/download_gdrive_datasets.py')
+            gdrive.write_text(gdrive.read_text().replace('        remaining_ok=True,\n', ''))"
         env:
           PGHOST: "{{ secret('PG_HOST') }}"
           PGPORT: "{{ secret('PG_PORT') }}"
@@ -69,15 +96,19 @@ tasks:
           PGSSLMODE: "{{ secret('PG_SSLMODE') }}"
           GDRIVE_DATASETS_FOLDER_ID: "{{ secret('GDRIVE_DATASETS_FOLDER_ID') }}"
           GDRIVE_NCI_FOLDER_ID: "{{ secret('GDRIVE_NCI_FOLDER_ID') }}"
+          DATA_ROOT: "{{ inputs.data_cache_path }}"
           ONLY_TABLES: "{{ inputs.only_tables }}"
           SKIP_DOWNLOAD: "{{ inputs.skip_download }}"
+          FORCE_DOWNLOAD: "{{ inputs.force_download }}"
           NCI_ONLY: "{{ inputs.nci_only }}"
           DRY_RUN: "{{ inputs.dry_run }}"
         commands:
           - cd {{ vars.repo_dir }}
           - |
             python kestra/scripts/load_nci60_raw.py \
+              --data-root "$DATA_ROOT" \
               $( [ "$SKIP_DOWNLOAD" = "true" ] && echo --skip-download ) \
+              $( [ "$FORCE_DOWNLOAD" = "true" ] && echo --force-download ) \
               $( [ "$NCI_ONLY" = "true" ] && echo --nci-only ) \
               $( [ "$DRY_RUN" = "true" ] && echo --dry-run )
         retry:

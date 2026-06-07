@@ -5,7 +5,9 @@ Orchestrate NCI-60 raw CSV download (Google Drive) + PostgreSQL bulk load.
 Designed for Kestra (PG* env vars) and local runs (--config scripts/config.yaml).
 
   python kestra/scripts/load_nci60_raw.py
-  python kestra/scripts/load_nci60_raw.py --skip-download --only doseresp
+  python kestra/scripts/load_nci60_raw.py --only doseresp          # local-first; downloads if missing
+  python kestra/scripts/load_nci60_raw.py --skip-download          # never download (fail if missing)
+  python kestra/scripts/load_nci60_raw.py --force-download         # always re-fetch from Drive
   python kestra/scripts/load_nci60_raw.py --dry-run
 
 Requires repo root as cwd (or pass --repo-root) so scripts/csv_to_datawarehouse.py
@@ -26,8 +28,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_DEFAULT = Path(__file__).resolve().parent / "nci60_manifest.yaml"
 
 
-def _import_loader():
-    scripts_dir = str(REPO_ROOT / "scripts")
+def _import_loader(repo_root: Path):
+    scripts_dir = str(repo_root / "scripts")
     if scripts_dir not in sys.path:
         sys.path.insert(0, scripts_dir)
     from csv_to_datawarehouse import load_config, load_csv  # noqa: WPS433
@@ -80,7 +82,60 @@ def preprocess_clean_names(repo_root: Path, csv_path: Path) -> Path:
     raise FileNotFoundError(f"Expected cleaned CSV at {cleaned}")
 
 
-def run_download(manifest: dict, data_root: Path, nci_only: bool) -> None:
+def _env_bool(name: str) -> bool | None:
+    raw = os.environ.get(name)
+    if raw is None or not str(raw).strip():
+        return None
+    return str(raw).strip().lower() in ("1", "true", "yes")
+
+
+def missing_local_csvs(
+    data_root: Path, loads: list[dict], path_variant: str | None
+) -> list[str]:
+    """Manifest entry ids with no resolvable CSV under data_root."""
+    missing: list[str] = []
+    for entry in loads:
+        path = resolve_csv_path(data_root, entry, path_variant)
+        if not path.exists():
+            missing.append(entry["id"])
+    return missing
+
+
+def should_download(
+    *,
+    data_root: Path,
+    loads: list[dict],
+    path_variant: str | None,
+    skip_download: bool,
+    force_download: bool,
+    dry_run: bool,
+) -> tuple[bool, list[str]]:
+    """Local-first: download only when CSVs are missing unless forced or skipped."""
+    if skip_download and force_download:
+        raise SystemExit("ERROR: --skip-download and --force-download are mutually exclusive.")
+
+    if skip_download:
+        missing = missing_local_csvs(data_root, loads, path_variant)
+        if missing:
+            print(
+                f"SKIP_DOWNLOAD set; missing local CSVs for: {', '.join(missing)}",
+                file=sys.stderr,
+            )
+        return False, missing
+
+    if force_download:
+        print(f"FORCE_DOWNLOAD: re-fetching from Drive into {data_root}")
+        return True, []
+
+    missing = missing_local_csvs(data_root, loads, path_variant)
+    if not missing:
+        print(f"Local data present under {data_root}; skipping Drive download.")
+        return False, []
+    print(f"Missing local CSVs ({', '.join(missing)}); downloading from Drive.")
+    return True, missing
+
+
+def run_download(manifest: dict, data_root: Path, nci_only: bool, repo_root: Path) -> None:
     drive = manifest.get("drive") or {}
     folder_id = drive.get("datasets_folder_id")
     if nci_only and drive.get("nci_only_folder_id"):
@@ -88,7 +143,7 @@ def run_download(manifest: dict, data_root: Path, nci_only: bool) -> None:
 
     cmd = [
         sys.executable,
-        str(REPO_ROOT / "kestra" / "scripts" / "download_gdrive_datasets.py"),
+        str(repo_root / "kestra" / "scripts" / "download_gdrive_datasets.py"),
         "--output",
         str(data_root),
         "--folder-id",
@@ -97,7 +152,7 @@ def run_download(manifest: dict, data_root: Path, nci_only: bool) -> None:
     if nci_only:
         cmd.append("--nci-only")
     print("Running:", " ".join(cmd))
-    subprocess.run(cmd, cwd=REPO_ROOT, check=True)
+    subprocess.run(cmd, cwd=repo_root, check=True)
 
 
 def main() -> None:
@@ -105,7 +160,27 @@ def main() -> None:
     parser.add_argument("--manifest", type=Path, default=MANIFEST_DEFAULT)
     parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
     parser.add_argument("--config", help="YAML config (optional if PG* env set)")
-    parser.add_argument("--skip-download", action="store_true")
+    parser.add_argument(
+        "--data-root",
+        type=Path,
+        default=None,
+        help="CSV tree root (default: {repo}/data). Use a host path e.g. /tmp/kestra-wd/nf-datasets to persist across runs.",
+    )
+    parser.add_argument(
+        "--skip-download",
+        action="store_true",
+        help="Never download; fail at load if local CSVs are missing.",
+    )
+    parser.add_argument(
+        "--force-download",
+        action="store_true",
+        help="Always download from Drive, even when local CSVs exist.",
+    )
+    parser.add_argument(
+        "--download-only",
+        action="store_true",
+        help="Download to data-root and exit (no PostgreSQL load).",
+    )
     parser.add_argument("--nci-only", action="store_true", help="Download NCI subfolder only")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
@@ -116,14 +191,17 @@ def main() -> None:
     )
     parser.add_argument("--path-variant", choices=["flat_nci60", "flat_nsc"], default=None)
     args = parser.parse_args()
-
-    global REPO_ROOT
-    REPO_ROOT = args.repo_root.resolve()
+    repo_root = args.repo_root.resolve()
 
     with open(args.manifest, encoding="utf-8") as f:
         manifest = yaml.safe_load(f)
 
-    data_root = REPO_ROOT / manifest.get("data_root", "data")
+    if args.data_root is not None:
+        data_root = args.data_root.resolve()
+    elif os.environ.get("DATA_ROOT"):
+        data_root = Path(os.environ["DATA_ROOT"]).resolve()
+    else:
+        data_root = (repo_root / manifest.get("data_root", "data")).resolve()
     loads = manifest.get("loads") or []
     only_ids = list(args.only or [])
     if os.environ.get("ONLY_TABLES"):
@@ -132,13 +210,34 @@ def main() -> None:
         allowed = set(only_ids)
         loads = [e for e in loads if e["id"] in allowed]
 
-    if not args.skip_download:
+    skip_download = args.skip_download or _env_bool("SKIP_DOWNLOAD") is True
+    force_download = args.force_download or _env_bool("FORCE_DOWNLOAD") is True
+
+    do_download, missing = should_download(
+        data_root=data_root,
+        loads=loads,
+        path_variant=args.path_variant,
+        skip_download=skip_download,
+        force_download=force_download,
+        dry_run=args.dry_run,
+    )
+
+    if do_download:
         if args.dry_run:
             print(f"DRY RUN: would download to {data_root}")
         else:
-            run_download(manifest, data_root, args.nci_only)
+            run_download(manifest, data_root, args.nci_only, repo_root)
+    elif missing and skip_download:
+        raise SystemExit(1)
 
-    load_config_fn, load_csv_fn = _import_loader()
+    if args.download_only:
+        if do_download and not args.dry_run:
+            print(f"Download-only complete. CSVs under {data_root}")
+        elif not do_download:
+            print(f"Download-only: local cache sufficient under {data_root}")
+        return
+
+    load_config_fn, load_csv_fn = _import_loader(repo_root)
     config = load_config_fn(args.config)
 
     for entry in loads:
@@ -157,7 +256,7 @@ def main() -> None:
             continue
 
         if entry.get("preprocess") == "clean_nsc_chemical_names":
-            csv_path = preprocess_clean_names(REPO_ROOT, csv_path)
+            csv_path = preprocess_clean_names(repo_root, csv_path)
 
         if args.dry_run:
             print(f"DRY RUN: would load into {table} replace={replace}")

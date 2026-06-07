@@ -1,0 +1,83 @@
+id: download_nci60_datasets
+namespace: prod.nci60
+
+description: |
+  One-time (or rare) Google Drive download into the persistent host cache at
+  /datasets/nf-streamlit (host: /var/lib/kestra/nf-datasets). After this succeeds, run load_raw_nci60 with
+  load_raw_nci60 uses the same local-first logic automatically on later runs.
+
+labels:
+  pipeline: nci60
+  stage: download
+
+inputs:
+  - id: git_branch
+    type: STRING
+    defaults: main
+
+  - id: data_cache_path
+    type: STRING
+    defaults: /datasets/nf-streamlit
+    description: Container path; host bind /var/lib/kestra/nf-datasets (see kestra/infrastructure/)
+
+  - id: nci_only
+    type: BOOLEAN
+    defaults: true
+    description: |
+      Download only the NCI subtree (requires GDRIVE_NCI_FOLDER_ID secret).
+      Strongly recommended — full Datasets folder includes unrelated projects and
+      can hit gdown permission/rate limits.
+
+  - id: force_download
+    type: BOOLEAN
+    defaults: false
+    description: |
+      Re-download even when local cache already has the CSVs. Default skips download
+      when local data is sufficient.
+
+variables:
+  repo_dir: nf_streamlit
+
+tasks:
+  - id: workspace
+    type: io.kestra.plugin.core.flow.WorkingDirectory
+    tasks:
+      - id: clone_repo
+        type: io.kestra.plugin.git.Clone
+        url: https://github.com/mocomakers/nf_streamlit
+        branch: "{{ inputs.git_branch }}"
+        directory: "{{ vars.repo_dir }}"
+
+      - id: download
+        type: io.kestra.plugin.scripts.python.Commands
+        warningOnStdErr: false
+        taskRunner:
+          type: io.kestra.plugin.scripts.runner.docker.Docker
+          volumes:
+            - /var/lib/kestra/nf-datasets:/datasets/nf-streamlit:rw
+        containerImage: python:3.11-slim
+        beforeCommands:
+          - apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
+          - pip install --no-cache-dir gdown tqdm
+        env:
+          GDRIVE_DATASETS_FOLDER_ID: "{{ secret('GDRIVE_DATASETS_FOLDER_ID') }}"
+          GDRIVE_NCI_FOLDER_ID: "{{ secret('GDRIVE_NCI_FOLDER_ID') }}"
+          DATA_ROOT: "{{ inputs.data_cache_path }}"
+          NCI_ONLY: "{{ inputs.nci_only }}"
+          FORCE_DOWNLOAD: "{{ inputs.force_download }}"
+        commands:
+          - cd {{ vars.repo_dir }}
+          - mkdir -p "$DATA_ROOT"
+          - |
+            python kestra/scripts/load_nci60_raw.py \
+              --data-root "$DATA_ROOT" \
+              --download-only \
+              $( [ "$FORCE_DOWNLOAD" = "true" ] && echo --force-download ) \
+              $( [ "$NCI_ONLY" = "true" ] && echo --nci-only )
+        retry:
+          type: constant
+          interval: PT5M
+          maxAttempt: 2
+        timeout: PT12H
+
+triggers: []
