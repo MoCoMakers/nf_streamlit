@@ -42,9 +42,9 @@ tasks:
   - id: clone_repo
     type: io.kestra.plugin.git.Clone
     description: Fetch pipeline scripts from GitHub (flows alone do not include Python).
-    uri: https://github.com/mocomakers/nf_streamlit
+    url: https://github.com/mocomakers/nf_streamlit
     branch: "{{ inputs.git_branch }}"
-    cloneDirectory: "{{ vars.repo_dir }}"
+    directory: "{{ vars.repo_dir }}"
 
   - id: load_raw
     type: io.kestra.plugin.scripts.python.Commands

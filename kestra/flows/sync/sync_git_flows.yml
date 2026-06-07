@@ -15,6 +15,7 @@ tasks:
     includeChildNamespaces: true
     delete: false
     failOnMissingDirectory: false
+    ignoreInvalidFlows: true
 
 triggers:
   - id: gh_webhook

@@ -24,9 +24,9 @@ variables:
 tasks:
   - id: clone_repo
     type: io.kestra.plugin.git.Clone
-    uri: https://github.com/mocomakers/nf_streamlit
+    url: https://github.com/mocomakers/nf_streamlit
     branch: "{{ inputs.git_branch }}"
-    cloneDirectory: "{{ vars.repo_dir }}"
+    directory: "{{ vars.repo_dir }}"
 
   - id: run_build_sql
     type: io.kestra.plugin.scripts.shell.Commands
