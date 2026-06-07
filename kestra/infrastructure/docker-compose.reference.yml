@@ -1,0 +1,5 @@
+# OPTIONAL snapshot for diffing against ~/Projects/kestra/docker-compose.yml on comp.
+# Do NOT replace your live file from git — merge the two additions documented in README.md:
+#   1) kestra volumes: /var/lib/kestra/nf-datasets:/datasets/nf-streamlit:rw
+#   2) kestra.plugins.configurations volume-enabled: true
+# Keep your live passwords and comments on comp.

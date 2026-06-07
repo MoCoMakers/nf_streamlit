@@ -1,0 +1,39 @@
+id: volume_mount_test
+namespace: prod.nci60
+
+description: |
+  Smoke test — script container can read/write /datasets/nf-streamlit
+  (host /var/lib/kestra/nf-datasets). Safe to delete after compose validation.
+
+labels:
+  pipeline: nci60
+  stage: test
+
+inputs:
+  - id: mode
+    type: STRING
+    defaults: write
+    description: write = create marker file; read = verify marker persists
+
+tasks:
+  - id: volume_check
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.scripts.runner.docker.Docker
+      volumes:
+        - /var/lib/kestra/nf-datasets:/datasets/nf-streamlit:rw
+    containerImage: alpine:3.20
+    commands:
+      - mkdir -p /datasets/nf-streamlit
+      - |
+        if [ "{{ inputs.mode }}" = "write" ]; then
+          echo "volume-ok-$(date -u +%Y%m%dT%H%M%SZ)" | tee /datasets/nf-streamlit/.agent_volume_test
+          echo "WRITE OK"
+        else
+          echo "READ contents:"
+          cat /datasets/nf-streamlit/.agent_volume_test
+          echo "READ OK"
+        fi
+      - ls -la /datasets/nf-streamlit | head -20
+
+triggers: []

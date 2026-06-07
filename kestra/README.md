@@ -10,6 +10,15 @@ We are migrating the NCI-60 / sprime data-warehouse migrations (see
 [`RUNBOOK_KESTRA_NCI60_DEPLOY.md`](../docs/runbooks/RUNBOOK_KESTRA_NCI60_DEPLOY.md))
 from the manual runbook + `scripts/` into orchestrated Kestra flows.
 
+**Deep dive:** [docs/KESTRA_STRATEGY_AND_TECHNIQUES.md](docs/KESTRA_STRATEGY_AND_TECHNIQUES.md)
+— learning guide, **Docker Compose stack on `comp`**, **large static datasets (§6.6)**,
+**single admin login (UI = API = agent curl)**, deployment strategies (git vs API-first),
+sync plugin pitfalls, WorkingDirectory patterns, secrets, debugging playbook, and NCI pipeline strategy.
+
+**Large datasets on comp:** [infrastructure/README.md](infrastructure/README.md) — two
+compose additions for `/var/lib/kestra/nf-datasets`; download once via
+`download_nci60_datasets`; `load_nci60_raw.py` is **local-first** (auto-skips download when cache hit).
+
 ---
 
 ## How flows reach Kestra (deployment model)
@@ -19,8 +28,11 @@ edit kestra/flows/**.yml  ->  git push origin main  ->  GitHub webhook
    ->  Kestra runs the sync flow  ->  flows appear/update under their namespace
 ```
 
-1. **Git is authoritative.** Flows live under `kestra/flows/`. The UI is read-only
-   in practice — treat any UI edit as a scratchpad that will be lost on next sync.
+1. **Git is authoritative long-term.** Flows live under `kestra/flows/`. For rapid
+   iteration, flows can be updated live via the Kestra API (`PUT /api/v1/main/flows/{namespace}/{id}`
+   with `Content-Type: application/x-yaml`), then mirrored back into this repo from the
+   response `source` field. The next `sync_git_flows` run will overwrite live edits unless
+   the same YAML is pushed to `main`.
 2. **A GitHub webhook on `main` is already configured**, so a merge to `main`
    triggers the sync automatically. You should not need to run anything by hand.
 3. Two git-sync flows coexist in the repo (see layout below). **Webhook target:**
@@ -38,7 +50,7 @@ or a `Clone`/`SyncNamespaceFiles` task at a new repo.
 | Repository | Purpose | Synced by |
 |---|---|---|
 | `https://github.com/kestra-io/kestra.git` | Upstream Kestra — plugin source, blueprints, and example flows. Reference only; we do **not** deploy from it. | — (manual reference) |
-| `https://github.com/mocomakers/nf_streamlit` | **This project.** Flows under `kestra/flows/` are synced to Kestra on push to `main`. | `flows/sync/sync_git_flows.yml` (active); `flows/infrastructure/sync_git.yml` (legacy) |
+| `https://github.com/mocomakers/nf_streamlit` | **This project.** Flows under `kestra/flows/` are synced to Kestra on push to `main`. | `flows/sync/sync_git_flows.yml`; legacy copy in `legacy/infrastructure/sync_git.yml` |
 
 > When you add a repo here, also document *which flow* syncs it and *into which
 > namespace*, so the mapping from git → Kestra stays traceable.
@@ -50,24 +62,31 @@ or a `Clone`/`SyncNamespaceFiles` task at a new repo.
 ```
 kestra/
 ├── README.md                      # this file
+├── docs/
+│   └── KESTRA_STRATEGY_AND_TECHNIQUES.md
 ├── flows/
 │   ├── sync/                      # active git sync (prod.sync.sync_git_flows)
 │   │   └── sync_git_flows.yml
-│   ├── infrastructure/            # legacy git sync (prod.sync.sync_git) — kept as-is
-│   │   └── sync_git.yml
-│   ├── example/                   # throwaway examples
+│   ├── example/
 │   │   └── hello_world.yml
 │   └── nci60/                     # NCI-60 pipeline (see RUNBOOK_KESTRA_NCI60_DEPLOY.md)
-│       ├── 01_load_raw_data.yml   # Drive → raw_nci_* tables
-│       ├── 02_build_tables.yml    # SQL → im_* tables
-│       ├── 03_run_sprime_fit.yml  # (planned)
+│       ├── 00_download_datasets.yml  # Drive → Tier 2 host cache (rare)
+│       ├── 01_load_raw_data.yml      # Tier 2 → raw_nci_* tables
+│       ├── 02_build_tables.yml       # SQL → im_* tables
+│       ├── 03_run_sprime_fit.yml     # (planned)
+│       └── 99_volume_mount_test.yml  # compose volume smoke test
+├── infrastructure/                # comp docker-compose diffs (dataset volume)
+│   └── README.md
+├── legacy/                        # old flows — outside flows/ so sync_git_flows skips them
+│   └── infrastructure/
+│       └── sync_git.yml           # legacy TenantSync (prod.sync.sync_git)
 ├── resources/                     # shared SQL / config pulled in by flows
 └── scripts/                       # Python invoked by script tasks (or reuse ../scripts)
 ```
 
 Subfolders under `kestra/flows/` map to child namespaces via `includeChildNamespaces`:
-`sync/` → `prod.sync`, `nci60/` → `prod.nci60`, etc. Folder name must match the
-namespace suffix (not `infrastructure/` for `prod.sync`).
+`sync/` → `prod.sync`, `nci60/` → `prod.nci60`, etc. Legacy `sync_git.yml` lives under
+`kestra/legacy/` so `sync_git_flows` does not try to import it on every run.
 
 - One flow per file; **filename = flow `id`** (`sync_git_flows.yml` → `id: sync_git_flows`).
 - Group by pipeline/domain folder; folder name = namespace suffix under `prod.*`.
@@ -82,7 +101,7 @@ parents, so use the hierarchy deliberately.
 | Namespace | Use |
 |---|---|
 | `prod.nci60` | The production migration pipeline (load, build, fit, enrich). |
-| `prod.sync` | Infrastructure flows — `flows/sync/` (active) and `flows/infrastructure/` (legacy). |
+| `prod.sync` | Infrastructure — `flows/sync/` (active webhook). Legacy flow in `legacy/infrastructure/`. |
 | `dev.*` | Experiments and smoke tests. Safe to break. |
 | `example` | Vendor/example flows. Nothing in `prod.*` may call into `example`. |
 

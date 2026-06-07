@@ -14,3 +14,22 @@ tools.yaml
 scripts/config.yaml
 # How to check all the files that will be ignored
 # find . -not -path './.git/*' | git check-ignore --stdin -v
+
+# Runtime logs
+logs/
+
+# Session journal notes (internal dev notes, not for public repo)
+docs/sessions/
+
+# GMM research assets (heavy binaries + nested clone)
+analysis/GMM/docs-for-ai/PDFs/
+analysis/GMM/reference/
+
+# Local infra config (credentials)
+infra/config.yaml
+
+# Kestra local secret fills (never commit real passwords)
+kestra/secrets.env
+
+.claude/
+docs-for-ai/*

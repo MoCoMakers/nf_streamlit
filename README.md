@@ -22,10 +22,14 @@ A sister repo to this project is: [https://github.com/MoCoMakers/hack4nf-2022](h
 | Path | What lives here |
 |------|-----------------|
 | `app/` | The core Streamlit web tool (DREA) — pages, views, services, assets. |
-| `kestra/` | Kestra flow definitions that orchestrate the data pipelines (see `kestra/README.md`). |
-| `scripts/` | Pipeline + operational scripts (data-warehouse ETL, deploy, MCP toolbox launchers). Being split into a dedicated `pipelines/` area over time. |
-| `analysis/` | Exploratory / R&D analyses (e.g. `dbscan_clustering/`). Not part of the deployed app. |
-| `docs/` | Public project documentation — schema references, setup guides, migration notes. |
+| `kestra/` | Kestra flow definitions that orchestrate the data pipelines (see `kestra/README.md` and `kestra/docs/KESTRA_STRATEGY_AND_TECHNIQUES.md`). |
+| `scripts/` | Pipeline + operational scripts (data-warehouse ETL, deploy, MCP toolbox launchers). See `scripts/README.md`; pipeline scripts are migrating to Kestra. |
+| `infra/` | Infrastructure definitions (Docker, compose, deployment config) for the data warehouse and tools image. |
+| `analysis/` | Exploratory / R&D analyses — `analysis/dbscan_clustering/` and `analysis/GMM/` research. Not part of the deployed app. |
+| `docs/schema/` | Data-warehouse schema references (table and column documentation). |
+| `docs/runbooks/` | Operational runbooks (e.g. the NCI-60 / sprime fit pipeline). Kestra learning/strategy guide: `kestra/docs/KESTRA_STRATEGY_AND_TECHNIQUES.md`. |
+| `docs/investigations/` | Historical bug reports and investigation write-ups. |
+| `docs/` | Other public documentation — setup guides, migration notes. |
 | `.devcontainer/`, `.github/` | Dev container and CI/deploy. |
 
 ### Developer notes
@@ -36,7 +40,7 @@ A sister repo to this project is: [https://github.com/MoCoMakers/hack4nf-2022](h
 
 ### Kestra deployment concept
 
-Data pipelines are migrating from the manual runbook into **Kestra flows** under `kestra/flows/`. Deployment is **git-driven**: flows are authored in this repo, and on push to `main` a GitHub webhook triggers the `sync_git` flow, which syncs `kestra/flows/` onto the Kestra server — keeping the repo as the single source of truth for orchestration. See `kestra/README.md` for namespaces, the sync flow, and authoring conventions. This is independent of the Streamlit app's own deployment (see "Deploying to a server" below).
+Data pipelines are migrating from the manual runbook into **Kestra flows** under `kestra/flows/`. Deployment is **git-driven**: flows are authored in this repo, and on push to `main` a GitHub webhook triggers the **`sync_git_flows`** flow, which syncs `kestra/flows/` onto the Kestra server — keeping the repo as the single source of truth for orchestration. Large static CSVs use a **download-once host cache** on `comp` (`kestra/infrastructure/README.md`); load flows read the cache and do not re-fetch from Google Drive every run. See `kestra/README.md` for namespaces and authoring; see `kestra/docs/KESTRA_STRATEGY_AND_TECHNIQUES.md` §6.6 for the full pattern. This is independent of the Streamlit app's own deployment (see "Deploying to a server" below).
 
 # 🚀 **High-Performance Database Setup with MCP Integration**
 
