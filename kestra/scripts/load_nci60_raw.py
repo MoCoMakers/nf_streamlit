@@ -10,8 +10,7 @@ Designed for Kestra (PG* env vars) and local runs (--config scripts/config.yaml)
   python kestra/scripts/load_nci60_raw.py --force-download         # always re-fetch from Drive
   python kestra/scripts/load_nci60_raw.py --dry-run
 
-Requires repo root as cwd (or pass --repo-root) so scripts/csv_to_datawarehouse.py
-is importable.
+csv_to_datawarehouse.py lives alongside this script in kestra/scripts/.
 """
 
 from __future__ import annotations
@@ -29,7 +28,7 @@ MANIFEST_DEFAULT = Path(__file__).resolve().parent / "nci60_manifest.yaml"
 
 
 def _import_loader(repo_root: Path):
-    scripts_dir = str(repo_root / "scripts")
+    scripts_dir = str(Path(__file__).resolve().parent)
     if scripts_dir not in sys.path:
         sys.path.insert(0, scripts_dir)
     from csv_to_datawarehouse import load_config, load_csv  # noqa: WPS433
@@ -71,7 +70,7 @@ def preprocess_clean_names(repo_root: Path, csv_path: Path) -> Path:
         print(f"  Using existing cleaned file: {cleaned}")
         return cleaned
 
-    cmd = [sys.executable, str(repo_root / "scripts" / "clean_nsc_chemical_names.py")]
+    cmd = [sys.executable, str(Path(__file__).resolve().parent / "clean_nsc_chemical_names.py")]
     result = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True)
     if result.returncode != 0:
         print(result.stdout)
