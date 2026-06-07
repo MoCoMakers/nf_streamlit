@@ -126,7 +126,7 @@ After adding the MCP configuration, restart Cursor to establish the connection.
 After restarting Cursor, you should see the MCP server connected successfully in the settings:
 
 ![Successful MCP Connection](successful_mcp.png)
-*Note: Place the `successful_mcp.png` screenshot in the project root directory*
+*Note: the `successful_mcp.png` screenshot lives alongside this doc in the `docs/` directory.*
 
 **What you should see:**
 - ✅ **datawarehouse-toolbox** with a green status dot

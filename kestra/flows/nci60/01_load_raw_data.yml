@@ -1,0 +1,95 @@
+id: load_raw_nci60
+namespace: prod.nci60
+
+description: |
+  Download NCI-60 raw CSVs from the public Google Drive "Datasets" folder and
+  bulk-load into PostgreSQL raw tables (raw_nci_nci60_* , raw_nci_nsc_*).
+  Requires Kestra secrets for Postgres. Clones this repo on the worker first.
+
+labels:
+  pipeline: nci60
+  stage: load
+
+inputs:
+  - id: git_branch
+    type: STRING
+    defaults: main
+    description: Branch to clone (use feature/NCI60 until merged)
+
+  - id: skip_download
+    type: BOOLEAN
+    defaults: false
+    description: Skip Google Drive download (data already on worker under ./data)
+
+  - id: nci_only
+    type: BOOLEAN
+    defaults: false
+    description: Download only GDRIVE_NCI_FOLDER_ID instead of full Datasets folder
+
+  - id: only_tables
+    type: STRING
+    required: false
+    description: Comma-separated manifest ids (e.g. doseresp). Empty = all.
+
+  - id: dry_run
+    type: BOOLEAN
+    defaults: false
+
+variables:
+  repo_dir: nf_streamlit
+
+tasks:
+  - id: clone_repo
+    type: io.kestra.plugin.git.Clone
+    description: Fetch pipeline scripts from GitHub (flows alone do not include Python).
+    uri: https://github.com/mocomakers/nf_streamlit
+    branch: "{{ inputs.git_branch }}"
+    cloneDirectory: "{{ vars.repo_dir }}"
+
+  - id: load_raw
+    type: io.kestra.plugin.scripts.python.Commands
+    description: Install deps and run load_nci60_raw.py
+    warningOnStdErr: false
+    taskRunner:
+      type: io.kestra.plugin.scripts.runner.docker.Docker
+    containerImage: python:3.11-slim
+    beforeCommands:
+      - apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+      - pip install --no-cache-dir psycopg[binary] pyyaml gdown tqdm
+    env:
+      PGHOST: "{{ secret('PG_HOST') }}"
+      PGPORT: "{{ secret('PG_PORT') }}"
+      PGUSER: "{{ secret('PG_USER') }}"
+      PGDATABASE: "{{ secret('PG_DATABASE') }}"
+      PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
+      PGSSLMODE: "{{ secret('PG_SSLMODE') }}"
+      GDRIVE_DATASETS_FOLDER_ID: "{{ secret('GDRIVE_DATASETS_FOLDER_ID') }}"
+      GDRIVE_NCI_FOLDER_ID: "{{ secret('GDRIVE_NCI_FOLDER_ID') }}"
+      ONLY_TABLES: "{{ inputs.only_tables }}"
+      SKIP_DOWNLOAD: "{{ inputs.skip_download }}"
+      NCI_ONLY: "{{ inputs.nci_only }}"
+      DRY_RUN: "{{ inputs.dry_run }}"
+    commands:
+      - cd {{ vars.repo_dir }}
+      - |
+        python kestra/scripts/load_nci60_raw.py \
+          $( [ "$SKIP_DOWNLOAD" = "true" ] && echo --skip-download ) \
+          $( [ "$NCI_ONLY" = "true" ] && echo --nci-only ) \
+          $( [ "$DRY_RUN" = "true" ] && echo --dry-run )
+    retry:
+      type: constant
+      interval: PT2M
+      maxAttempt: 2
+    timeout: PT6H
+
+  - id: verify_doseresp
+    type: io.kestra.plugin.jdbc.postgresql.Query
+    description: Sanity check row count on primary raw table
+    url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
+    username: "{{ secret('PG_USER') }}"
+    password: "{{ secret('PG_PASSWORD') }}"
+    sql: |
+      SELECT count(*) AS doseresp_rows FROM raw_nci_nci60_doseresp;
+    fetchType: FETCH_ONE
+
+triggers: []

@@ -1,0 +1,97 @@
+# NCI-60 raw CSV → PostgreSQL table mapping for load_nci60_raw.py
+#
+# Paths are relative to data_root (default: {repo}/data after Google Drive download).
+# Adjust relative_path if your Drive folder layout differs — list files after download:
+#   find data/NCI -name '*.csv' | head
+#
+# Source layout (MoCo Makers shared drive):
+#   https://drive.google.com/drive/folders/1e0_UQzU-LksJxMEN5zJRikL0QbsWrJej
+#   Datasets/NCI/NCI60/NCI60/...  and  Datasets/NCI/NSC_Compounds/...
+#
+# After gdown, we expect files under data/NCI/... (see download_gdrive_datasets.py).
+
+data_root: data
+
+# Google Drive folder IDs (public). Override with env GDRIVE_DATASETS_FOLDER_ID.
+drive:
+  datasets_folder_id: "1e0_UQzU-LksJxMEN5zJRikL0QbsWrJej"
+  # Optional: download only NCI subtree if you have a direct subfolder link.
+  nci_only_folder_id: null
+
+loads:
+  # --- NCI-60 growth inhibition (April 2026 bulk release) ---
+  - id: doseresp
+    relative_path: NCI/NCI60/NCI60/DOSERESP/DOSERESP.csv
+    table: raw_nci_nci60_doseresp
+    replace: true
+    required: true
+
+  - id: gi50
+    relative_path: NCI/NCI60/NCI60/GI50.csv
+    table: raw_nci_nci60_gi50
+    replace: true
+    required: false
+
+  - id: tgi
+    relative_path: NCI/NCI60/NCI60/TGI.csv
+    table: raw_nci_nci60_tgi
+    replace: true
+    required: false
+
+  - id: lc50
+    relative_path: NCI/NCI60/NCI60/LC50.csv
+    table: raw_nci_nci60_lc50
+    replace: true
+    required: false
+
+  - id: ic50
+    relative_path: NCI/NCI60/NCI60/IC50.csv
+    table: raw_nci_nci60_ic50
+    replace: true
+    required: false
+
+  - id: oneconc
+    relative_path: NCI/NCI60/NCI60/ONECONC.csv
+    table: raw_nci_nci60_oneconc
+    replace: true
+    required: false
+
+  # --- NSC compound metadata (for im_nci_nsc_compounds build) ---
+  - id: nsc_cas
+    relative_path: NCI/NSC_Compounds/nsc_cas.csv
+    table: raw_nci_nsc_cas
+    replace: true
+    required: false
+
+  - id: nsc_chemical_names
+    relative_path: NCI/NSC_Compounds/nsc_chemical_names.csv
+    table: raw_nci_nsc_chemical_names
+    replace: true
+    required: false
+    preprocess: clean_nsc_chemical_names
+
+  - id: nsc_mw_mf
+    relative_path: NCI/NSC_Compounds/nsc_mw_mf.csv
+    table: raw_nci_nsc_mw_mf
+    replace: true
+    required: false
+
+  - id: nsc_sid_cid
+    relative_path: NCI/NSC_Compounds/nsc_sid_cid.csv
+    table: raw_nci_nsc_sid_cid
+    replace: true
+    required: false
+
+  - id: nsc_smiles
+    relative_path: NCI/NSC_Compounds/nsc_smiles.csv
+    table: raw_nci_nsc_smiles
+    replace: true
+    required: false
+
+# Alternate paths if Drive mirrors flat layout (uncomment in loader via --path-variant flat)
+path_variants:
+  flat_nci60:
+    doseresp: NCI/NCI60/DOSERESP/DOSERESP.csv
+    gi50: NCI/NCI60/GI50.csv
+  flat_nsc:
+    nsc_cas: NSC_Compounds/nsc_cas.csv

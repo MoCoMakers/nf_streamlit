@@ -10,5 +10,5 @@ tasks:
 
 triggers:
   - id: gh_webhook
-    type: io.kestra.core.models.triggers.types.Webhook
-    key: GoKeyGo432L
+    type: io.kestra.plugin.core.trigger.Webhook
+    key: "{{ secret('WEBHOOK_KEY') }}"

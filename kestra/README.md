@@ -6,8 +6,9 @@ no flow should ever be authored only in the Kestra UI, because the next git sync
 will overwrite or orphan it.
 
 We are migrating the NCI-60 / sprime data-warehouse migrations (see
-[`RUNBOOK_NCI60_SPRIME_FIT.md`](../RUNBOOK_NCI60_SPRIME_FIT.md)) from the manual
-runbook + `scripts/` into orchestrated Kestra flows.
+[`RUNBOOK_NCI60_SPRIME_FIT.md`](../docs/runbooks/RUNBOOK_NCI60_SPRIME_FIT.md) and
+[`RUNBOOK_KESTRA_NCI60_DEPLOY.md`](../docs/runbooks/RUNBOOK_KESTRA_NCI60_DEPLOY.md))
+from the manual runbook + `scripts/` into orchestrated Kestra flows.
 
 ---
 
@@ -22,9 +23,9 @@ edit kestra/flows/**.yml  ->  git push origin main  ->  GitHub webhook
    in practice — treat any UI edit as a scratchpad that will be lost on next sync.
 2. **A GitHub webhook on `main` is already configured**, so a merge to `main`
    triggers the sync automatically. You should not need to run anything by hand.
-3. The sync itself is a Kestra flow (`io.kestra.plugin.git.*`). See
-   [Known issues](#known-issues--cleanup) — we currently have **two** sync flows
-   and they need to be reconciled to exactly one.
+3. Two git-sync flows coexist in the repo (see layout below). **Webhook target:**
+   `flows/sync/sync_git_flows.yml` (`prod.sync.sync_git_flows`). Legacy
+   `flows/infrastructure/sync_git.yml` (`prod.sync.sync_git`) is unchanged.
 
 ---
 
@@ -37,7 +38,7 @@ or a `Clone`/`SyncNamespaceFiles` task at a new repo.
 | Repository | Purpose | Synced by |
 |---|---|---|
 | `https://github.com/kestra-io/kestra.git` | Upstream Kestra — plugin source, blueprints, and example flows. Reference only; we do **not** deploy from it. | — (manual reference) |
-| `https://github.com/mocomakers/nf_streamlit` | **This project.** Flows under `kestra/flows/` are synced to Kestra on push to `main`. | `flows/infrastructure/sync_git.yml` |
+| `https://github.com/mocomakers/nf_streamlit` | **This project.** Flows under `kestra/flows/` are synced to Kestra on push to `main`. | `flows/sync/sync_git_flows.yml` (active); `flows/infrastructure/sync_git.yml` (legacy) |
 
 > When you add a repo here, also document *which flow* syncs it and *into which
 > namespace*, so the mapping from git → Kestra stays traceable.
@@ -50,17 +51,26 @@ or a `Clone`/`SyncNamespaceFiles` task at a new repo.
 kestra/
 ├── README.md                      # this file
 ├── flows/
-│   ├── infrastructure/            # platform plumbing (git sync, KV setup)
+│   ├── sync/                      # active git sync (prod.sync.sync_git_flows)
+│   │   └── sync_git_flows.yml
+│   ├── infrastructure/            # legacy git sync (prod.sync.sync_git) — kept as-is
 │   │   └── sync_git.yml
-│   ├── example/                   # throwaway examples — never depended on by prod
+│   ├── example/                   # throwaway examples
 │   │   └── hello_world.yml
-│   └── nci60/                     # the migration pipeline (load → build → fit)
+│   └── nci60/                     # NCI-60 pipeline (see RUNBOOK_KESTRA_NCI60_DEPLOY.md)
+│       ├── 01_load_raw_data.yml   # Drive → raw_nci_* tables
+│       ├── 02_build_tables.yml    # SQL → im_* tables
+│       ├── 03_run_sprime_fit.yml  # (planned)
 ├── resources/                     # shared SQL / config pulled in by flows
 └── scripts/                       # Python invoked by script tasks (or reuse ../scripts)
 ```
 
-- One flow per file; **filename = flow `id`** (`sync_git.yml` → `id: sync_git`).
-- Group by pipeline/domain folder, and mirror the folder in the `namespace`.
+Subfolders under `kestra/flows/` map to child namespaces via `includeChildNamespaces`:
+`sync/` → `prod.sync`, `nci60/` → `prod.nci60`, etc. Folder name must match the
+namespace suffix (not `infrastructure/` for `prod.sync`).
+
+- One flow per file; **filename = flow `id`** (`sync_git_flows.yml` → `id: sync_git_flows`).
+- Group by pipeline/domain folder; folder name = namespace suffix under `prod.*`.
 
 ---
 
@@ -72,7 +82,7 @@ parents, so use the hierarchy deliberately.
 | Namespace | Use |
 |---|---|
 | `prod.nci60` | The production migration pipeline (load, build, fit, enrich). |
-| `prod.sync` | Infrastructure flows (git sync) — matches `flows/infrastructure/`. |
+| `prod.sync` | Infrastructure flows — `flows/sync/` (active) and `flows/infrastructure/` (legacy). |
 | `dev.*` | Experiments and smoke tests. Safe to break. |
 | `example` | Vendor/example flows. Nothing in `prod.*` may call into `example`. |
 
@@ -97,9 +107,9 @@ This is the most important rule for us, because the pipeline holds DB credential
   git.
 - Store credentials as **Kestra Secrets** (env `SECRET_*`) or **KV store** values
   and reference them: `{{ secret('PG_PASSWORD') }}` / `{{ kv('PG_HOST') }}`.
-- The webhook example key (`GoKeyGo432L` in `example/hello_world.yml`) is a
-  **secret** — a real webhook key must come from `{{ secret(...) }}`, not be
-  committed in plaintext. Rotate that example key; it is now public in git history.
+- Webhook keys must come from `{{ secret(...) }}`, not be committed in plaintext.
+  `sync_git.yml` now uses `{{ secret('WEBHOOK_KEY') }}`; rotate the old key on the
+  GitHub webhook side — `GoKeyGo432L` is public in git history.
 
 ### Idempotency
 Our build SQL is already idempotent (`DROP TABLE IF EXISTS`, `CREATE … AS`,
@@ -166,7 +176,7 @@ paths are preferred; the old `io.kestra.core.models.*` paths are deprecated alia
 
 | Purpose | Preferred type | Deprecated alias seen in repo |
 |---|---|---|
-| Webhook trigger | `io.kestra.plugin.core.trigger.Webhook` | `io.kestra.core.models.triggers.types.Webhook` (in `example/hello_world.yml`) |
+| Webhook trigger | `io.kestra.plugin.core.trigger.Webhook` | `io.kestra.core.models.triggers.types.Webhook` (was in `sync_git.yml`, now fixed) |
 | Schedule trigger | `io.kestra.plugin.core.trigger.Schedule` | — |
 | Subflow | `io.kestra.plugin.core.flow.Subflow` | — |
 | Postgres query / DDL | `io.kestra.plugin.jdbc.postgresql.Query`, `.Queries` | — |
@@ -177,29 +187,15 @@ paths are preferred; the old `io.kestra.core.models.*` paths are deprecated alia
 
 ## Known issues / cleanup
 
-These exist in the repo right now and should be fixed as part of the migration:
+1. ~~**Two competing sync flows**~~ — resolved. Only `flows/infrastructure/sync_git.yml`
+   exists; the second flow referenced in earlier notes was never on disk.
 
-1. **Two competing sync flows.**
-   - `flows/sync_flows_from_git.yml` — namespace `system`, `SyncFlows`,
-     `targetNamespace: git`, **`dryRun: true`** (so it never actually syncs), and
-     **no trigger** (so it never runs on its own).
-   - `flows/infrastructure/sync_git.yml` — namespace `prod.sync`, `TenantSync`,
-     no trigger shown.
-   Keep exactly one, give it the webhook trigger, and set `dryRun: false` once
-   verified.
+2. ~~**Malformed trigger in `hello_world.yml`**~~ — not present on disk. `hello_world.yml`
+   has no trigger block; it is valid YAML. No fix needed.
 
-2. **`example/hello_world.yml` trigger block is malformed YAML.** The `type:` and
-   `key:` under `triggers:` are under-indented — they must align with `id:` inside
-   the list item:
-   ```yaml
-   triggers:
-     - id: gh_webhook
-       type: io.kestra.plugin.core.trigger.Webhook   # 4-space indent, aligns with id
-       key: "{{ secret('WEBHOOK_KEY') }}"            # not a plaintext literal
-   ```
+3. ~~**Plaintext webhook key `GoKeyGo432L`** in `sync_git.yml`~~ — fixed in repo:
+   trigger now uses `{{ secret('WEBHOOK_KEY') }}`. **Action still required**: rotate
+   the old key on the GitHub webhook settings page — it is in public git history.
 
-3. **Plaintext webhook key `GoKeyGo432L`** is committed. Move it to a secret and
-   rotate it.
-
-4. **Hardcoded repo URL / no KV for sync.** `sync_git.yml` hardcodes the repo URL;
-   fine for now, but credentials for private syncs must come from secrets.
+4. **Hardcoded repo URL in `sync_git.yml`.** The URI is hardcoded; fine for now, but
+   credentials for private syncs must come from secrets.

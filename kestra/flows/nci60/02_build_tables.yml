@@ -1,0 +1,66 @@
+id: build_nci60_tables
+namespace: prod.nci60
+
+description: |
+  SQL transforms after raw load: sprime list, fit columns, NSC compounds, cell xref.
+  Run after prod.nci60.load_raw_nci60 succeeds.
+
+labels:
+  pipeline: nci60
+  stage: build
+
+inputs:
+  - id: git_branch
+    type: STRING
+    defaults: main
+
+variables:
+  repo_dir: nf_streamlit
+  pg_host: "{{ secret('PG_HOST') }}"
+  pg_port: "{{ secret('PG_PORT') }}"
+  pg_db: "{{ secret('PG_DATABASE') }}"
+  pg_user: "{{ secret('PG_USER') }}"
+
+tasks:
+  - id: clone_repo
+    type: io.kestra.plugin.git.Clone
+    uri: https://github.com/mocomakers/nf_streamlit
+    branch: "{{ inputs.git_branch }}"
+    cloneDirectory: "{{ vars.repo_dir }}"
+
+  - id: run_build_sql
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.scripts.runner.docker.Docker
+    containerImage: postgres:16
+    env:
+      PGHOST: "{{ secret('PG_HOST') }}"
+      PGPORT: "{{ secret('PG_PORT') }}"
+      PGUSER: "{{ secret('PG_USER') }}"
+      PGDATABASE: "{{ secret('PG_DATABASE') }}"
+      PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
+    commands:
+      - cd {{ vars.repo_dir }}
+      - psql -v ON_ERROR_STOP=1 -f scripts/build_nci60_doseresp_sprime_list.sql
+      - psql -v ON_ERROR_STOP=1 -f scripts/alter_sprime_list_add_fit_columns.sql
+      - psql -v ON_ERROR_STOP=1 -f scripts/build_nci_nsc_compounds.sql
+      - psql -v ON_ERROR_STOP=1 -f scripts/build_nci_cell_line_xref.sql
+    timeout: PT2H
+    retry:
+      type: constant
+      interval: PT1M
+      maxAttempt: 2
+
+  - id: verify_list
+    type: io.kestra.plugin.jdbc.postgresql.Query
+    url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
+    username: "{{ secret('PG_USER') }}"
+    password: "{{ secret('PG_PASSWORD') }}"
+    sql: |
+      SELECT
+        count(*) AS total_curves,
+        count(*) FILTER (WHERE load_eligible) AS eligible
+      FROM im_nci_nci60_doseresp_sprime_list;
+    fetchType: FETCH_ONE
+
+triggers: []

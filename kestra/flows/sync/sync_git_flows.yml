@@ -1,0 +1,22 @@
+id: sync_git_flows
+namespace: prod.sync
+
+description: |
+  Sync prod.* flows from Git subfolders (includeChildNamespaces).
+  Requires kestra/flows/sync/ not infrastructure/.
+
+tasks:
+  - id: sync_prod
+    type: io.kestra.plugin.git.SyncFlows
+    url: https://github.com/mocomakers/nf_streamlit
+    branch: main
+    gitDirectory: kestra/flows
+    targetNamespace: prod
+    includeChildNamespaces: true
+    delete: false
+    failOnMissingDirectory: false
+
+triggers:
+  - id: gh_webhook
+    type: io.kestra.plugin.core.trigger.Webhook
+    key: "{{ secret('WEBHOOK_KEY') }}"
