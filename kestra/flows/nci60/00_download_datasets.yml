@@ -58,7 +58,7 @@ tasks:
         containerImage: python:3.11-slim
         beforeCommands:
           - apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
-          - pip install --no-cache-dir gdown tqdm
+          - pip install --no-cache-dir gdown tqdm pyyaml
         env:
           GDRIVE_DATASETS_FOLDER_ID: "{{ secret('GDRIVE_DATASETS_FOLDER_ID') }}"
           GDRIVE_NCI_FOLDER_ID: "{{ secret('GDRIVE_NCI_FOLDER_ID') }}"
