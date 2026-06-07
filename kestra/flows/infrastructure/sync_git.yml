@@ -1,0 +1,14 @@
+id: sync_git
+namespace: prod.sync
+
+tasks:
+  - id: sync
+    type: io.kestra.plugin.git.TenantSync
+    uri: https://github.com/mocomakers/nf_streamlit
+    branch: main
+    directory: kestra/flows
+
+triggers:
+  - id: gh_webhook
+    type: io.kestra.core.models.triggers.types.Webhook
+    key: GoKeyGo432L

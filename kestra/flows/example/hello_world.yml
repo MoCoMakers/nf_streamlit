@@ -1,0 +1,8 @@
+id: hello_world_python
+namespace: example
+
+tasks:
+  - id: say_hello
+    type: io.kestra.plugin.scripts.python.Script
+    script: |
+      print("Hello from Kestra + Python!")
