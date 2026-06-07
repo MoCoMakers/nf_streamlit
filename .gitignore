@@ -6,5 +6,11 @@ __pycache__/
 data/
 venv/
 
+reference/*
+references/
+
+tools.yaml
+.mcp.json
+scripts/config.yaml
 # How to check all the files that will be ignored
 # find . -not -path './.git/*' | git check-ignore --stdin -v

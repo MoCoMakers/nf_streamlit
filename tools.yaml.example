@@ -1,0 +1,209 @@
+sources:
+  postgres-readonly:
+    kind: postgres
+    host: your-remote-postgres-host.com  # Replace with your remote PostgreSQL host
+    port: 5432
+    database: data_warehouse
+    user: compbio_dw_readonly # Replace with your remote user
+    password: PASSWORD_HERE  # Replace with your remote password
+
+tools:
+  list-tables:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: List all table names in the public schema.
+    statement: |
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public';
+
+  describe-table-columns:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Describe columns of a given table.
+    parameters:
+      - name: table_name
+        type: string
+        description: Name of the table to describe.
+    statement: |
+      SELECT 
+        column_name,
+        data_type,
+        character_maximum_length,
+        column_default,
+        is_nullable
+      FROM information_schema.columns
+      WHERE table_name = $1;
+
+  get-delta-sprime:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get pooled delta S′ values.
+    statement: SELECT * FROM public.fnl_sprime_pooled_delta_sprime;
+
+  get-mutation-counts:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get cell line to gene mutation counts.
+    statement: SELECT * FROM public.im_sprime_s_prime_with_mutations;
+
+  get-drug-response:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get raw cell line to drug response data.
+    statement: SELECT * FROM public.im_dep_raw_secondary_dose_curve;
+
+  get-damaging-mutations:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get raw damaging mutation data.
+    statement: SELECT * FROM public.im_dep_sprime_damaging_mutations;
+
+  get-single-s-values:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get single S values.
+    statement: SELECT * FROM public.im_sprime_solved_s_prime;
+
+  get-gene-translation:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Translate gene IDs to gene names.
+    statement: SELECT * FROM public.im_omics_genes;
+
+  # Exploration tools for data inspection (limited results)
+  explore-drug-response-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample drug response data for inspection (limited to 100 rows)
+    statement: |
+      SELECT name, moa, target, lower_limit, upper_limit, ec50, auc, ccle_name, row_name, screen_id
+      FROM im_dep_raw_secondary_dose_curve 
+      ORDER BY name
+      LIMIT 100;
+
+  explore-s-prime-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample pre-calculated S' data for inspection (limited to 100 rows)
+    statement: |
+      SELECT name, moa, target, lower_limit, upper_limit, ec50, auc, eff, eff_100, eff_ec50, s_prime
+      FROM im_sprime_solved_s_prime 
+      ORDER BY name
+      LIMIT 100;
+
+  explore-mutations-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample mutation data for inspection (limited to 100 rows)
+    statement: |
+      SELECT cell_line, gene_id, mutation_value
+      FROM im_dep_sprime_damaging_mutations 
+      ORDER BY cell_line
+      LIMIT 100;
+
+  explore-aggregated-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample aggregated results for inspection (limited to 100 rows)
+    statement: |
+      SELECT name, gene_id, delta_s_prime, sensitivity, tissue, ref_pooled_s_prime, test_pooled_s_prime
+      FROM fnl_sprime_pooled_delta_sprime 
+      ORDER BY name
+      LIMIT 100;
+
+  explore-gene-ontology-sample:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get sample gene ontology data for inspection
+    statement: |
+      SELECT id, name
+      FROM im_omics_genes 
+      ORDER BY name
+      LIMIT 100;
+
+  # Schema analysis tools
+  get-primary-keys:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get primary key information for all tables
+    statement: |
+      SELECT 
+        tc.table_name,
+        kcu.column_name,
+        tc.constraint_name
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu 
+        ON tc.constraint_name = kcu.constraint_name
+        AND tc.table_schema = kcu.table_schema
+      WHERE tc.constraint_type = 'PRIMARY KEY'
+        AND tc.table_schema = 'public'
+      ORDER BY tc.table_name, kcu.ordinal_position;
+
+  get-foreign-keys:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get foreign key relationships between tables
+    statement: |
+      SELECT
+        tc.table_name AS source_table,
+        kcu.column_name AS source_column,
+        ccu.table_name AS target_table,
+        ccu.column_name AS target_column,
+        tc.constraint_name
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu
+        ON tc.constraint_name = kcu.constraint_name
+        AND tc.table_schema = kcu.table_schema
+      JOIN information_schema.constraint_column_usage ccu
+        ON ccu.constraint_name = tc.constraint_name
+        AND ccu.table_schema = tc.table_schema
+      WHERE tc.constraint_type = 'FOREIGN KEY'
+        AND tc.table_schema = 'public'
+      ORDER BY tc.table_name, kcu.ordinal_position;
+
+  get-table-indexes:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Get index information for all tables
+    statement: |
+      SELECT
+        schemaname,
+        tablename,
+        indexname,
+        indexdef
+      FROM pg_indexes
+      WHERE schemaname = 'public'
+      ORDER BY tablename, indexname;
+
+  # Dynamic SQL execution - full power for read-only account
+  run-query:
+    kind: postgres-sql
+    source: postgres-readonly
+    description: Execute arbitrary SQL queries with full power (read-only account, no row limits)
+    templateParameters:
+      - name: query
+        type: string
+        description: SQL query to execute. Full SQL support including JOINs, subqueries, CTEs, etc. No row limits.
+    statement: |
+      {{.query}}
+
+toolsets:
+  tools:
+    - list-tables
+    - describe-table-columns
+    - get-delta-sprime
+    - get-mutation-counts
+    - get-drug-response
+    - get-damaging-mutations
+    - get-single-s-values
+    - get-gene-translation
+    - explore-drug-response-sample
+    - explore-s-prime-sample
+    - explore-mutations-sample
+    - explore-aggregated-sample
+    - explore-gene-ontology-sample
+    - get-primary-keys
+    - get-foreign-keys
+    - get-table-indexes
+    - run-query
