@@ -22,34 +22,37 @@ variables:
   pg_user: "{{ secret('PG_USER') }}"
 
 tasks:
-  - id: clone_repo
-    type: io.kestra.plugin.git.Clone
-    url: https://github.com/mocomakers/nf_streamlit
-    branch: "{{ inputs.git_branch }}"
-    directory: "{{ vars.repo_dir }}"
+  - id: workspace
+    type: io.kestra.plugin.core.flow.WorkingDirectory
+    tasks:
+      - id: clone_repo
+        type: io.kestra.plugin.git.Clone
+        url: https://github.com/mocomakers/nf_streamlit
+        branch: "{{ inputs.git_branch }}"
+        directory: "{{ vars.repo_dir }}"
 
-  - id: run_build_sql
-    type: io.kestra.plugin.scripts.shell.Commands
-    taskRunner:
-      type: io.kestra.plugin.scripts.runner.docker.Docker
-    containerImage: postgres:16
-    env:
-      PGHOST: "{{ secret('PG_HOST') }}"
-      PGPORT: "{{ secret('PG_PORT') }}"
-      PGUSER: "{{ secret('PG_USER') }}"
-      PGDATABASE: "{{ secret('PG_DATABASE') }}"
-      PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
-    commands:
-      - cd {{ vars.repo_dir }}
-      - psql -v ON_ERROR_STOP=1 -f scripts/build_nci60_doseresp_sprime_list.sql
-      - psql -v ON_ERROR_STOP=1 -f scripts/alter_sprime_list_add_fit_columns.sql
-      - psql -v ON_ERROR_STOP=1 -f scripts/build_nci_nsc_compounds.sql
-      - psql -v ON_ERROR_STOP=1 -f scripts/build_nci_cell_line_xref.sql
-    timeout: PT2H
-    retry:
-      type: constant
-      interval: PT1M
-      maxAttempt: 2
+      - id: run_build_sql
+        type: io.kestra.plugin.scripts.shell.Commands
+        taskRunner:
+          type: io.kestra.plugin.scripts.runner.docker.Docker
+        containerImage: postgres:16
+        env:
+          PGHOST: "{{ secret('PG_HOST') }}"
+          PGPORT: "{{ secret('PG_PORT') }}"
+          PGUSER: "{{ secret('PG_USER') }}"
+          PGDATABASE: "{{ secret('PG_DATABASE') }}"
+          PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
+        commands:
+          - cd {{ vars.repo_dir }}
+          - psql -v ON_ERROR_STOP=1 -f scripts/build_nci60_doseresp_sprime_list.sql
+          - psql -v ON_ERROR_STOP=1 -f scripts/alter_sprime_list_add_fit_columns.sql
+          - psql -v ON_ERROR_STOP=1 -f scripts/build_nci_nsc_compounds.sql
+          - psql -v ON_ERROR_STOP=1 -f scripts/build_nci_cell_line_xref.sql
+        timeout: PT2H
+        retry:
+          type: constant
+          interval: PT1M
+          maxAttempt: 2
 
   - id: verify_list
     type: io.kestra.plugin.jdbc.postgresql.Query

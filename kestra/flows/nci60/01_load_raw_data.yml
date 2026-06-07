@@ -39,48 +39,52 @@ variables:
   repo_dir: nf_streamlit
 
 tasks:
-  - id: clone_repo
-    type: io.kestra.plugin.git.Clone
-    description: Fetch pipeline scripts from GitHub (flows alone do not include Python).
-    url: https://github.com/mocomakers/nf_streamlit
-    branch: "{{ inputs.git_branch }}"
-    directory: "{{ vars.repo_dir }}"
+  - id: workspace
+    type: io.kestra.plugin.core.flow.WorkingDirectory
+    description: Share worker filesystem so clone_repo and load_raw see the same repo tree.
+    tasks:
+      - id: clone_repo
+        type: io.kestra.plugin.git.Clone
+        description: Fetch pipeline scripts from GitHub (flows alone do not include Python).
+        url: https://github.com/mocomakers/nf_streamlit
+        branch: "{{ inputs.git_branch }}"
+        directory: "{{ vars.repo_dir }}"
 
-  - id: load_raw
-    type: io.kestra.plugin.scripts.python.Commands
-    description: Install deps and run load_nci60_raw.py
-    warningOnStdErr: false
-    taskRunner:
-      type: io.kestra.plugin.scripts.runner.docker.Docker
-    containerImage: python:3.11-slim
-    beforeCommands:
-      - apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
-      - pip install --no-cache-dir psycopg[binary] pyyaml gdown tqdm
-    env:
-      PGHOST: "{{ secret('PG_HOST') }}"
-      PGPORT: "{{ secret('PG_PORT') }}"
-      PGUSER: "{{ secret('PG_USER') }}"
-      PGDATABASE: "{{ secret('PG_DATABASE') }}"
-      PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
-      PGSSLMODE: "{{ secret('PG_SSLMODE') }}"
-      GDRIVE_DATASETS_FOLDER_ID: "{{ secret('GDRIVE_DATASETS_FOLDER_ID') }}"
-      GDRIVE_NCI_FOLDER_ID: "{{ secret('GDRIVE_NCI_FOLDER_ID') }}"
-      ONLY_TABLES: "{{ inputs.only_tables }}"
-      SKIP_DOWNLOAD: "{{ inputs.skip_download }}"
-      NCI_ONLY: "{{ inputs.nci_only }}"
-      DRY_RUN: "{{ inputs.dry_run }}"
-    commands:
-      - cd {{ vars.repo_dir }}
-      - |
-        python kestra/scripts/load_nci60_raw.py \
-          $( [ "$SKIP_DOWNLOAD" = "true" ] && echo --skip-download ) \
-          $( [ "$NCI_ONLY" = "true" ] && echo --nci-only ) \
-          $( [ "$DRY_RUN" = "true" ] && echo --dry-run )
-    retry:
-      type: constant
-      interval: PT2M
-      maxAttempt: 2
-    timeout: PT6H
+      - id: load_raw
+        type: io.kestra.plugin.scripts.python.Commands
+        description: Install deps and run load_nci60_raw.py
+        warningOnStdErr: false
+        taskRunner:
+          type: io.kestra.plugin.scripts.runner.docker.Docker
+        containerImage: python:3.11-slim
+        beforeCommands:
+          - apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+          - pip install --no-cache-dir psycopg[binary] pyyaml gdown tqdm
+        env:
+          PGHOST: "{{ secret('PG_HOST') }}"
+          PGPORT: "{{ secret('PG_PORT') }}"
+          PGUSER: "{{ secret('PG_USER') }}"
+          PGDATABASE: "{{ secret('PG_DATABASE') }}"
+          PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
+          PGSSLMODE: "{{ secret('PG_SSLMODE') }}"
+          GDRIVE_DATASETS_FOLDER_ID: "{{ secret('GDRIVE_DATASETS_FOLDER_ID') }}"
+          GDRIVE_NCI_FOLDER_ID: "{{ secret('GDRIVE_NCI_FOLDER_ID') }}"
+          ONLY_TABLES: "{{ inputs.only_tables }}"
+          SKIP_DOWNLOAD: "{{ inputs.skip_download }}"
+          NCI_ONLY: "{{ inputs.nci_only }}"
+          DRY_RUN: "{{ inputs.dry_run }}"
+        commands:
+          - cd {{ vars.repo_dir }}
+          - |
+            python kestra/scripts/load_nci60_raw.py \
+              $( [ "$SKIP_DOWNLOAD" = "true" ] && echo --skip-download ) \
+              $( [ "$NCI_ONLY" = "true" ] && echo --nci-only ) \
+              $( [ "$DRY_RUN" = "true" ] && echo --dry-run )
+        retry:
+          type: constant
+          interval: PT2M
+          maxAttempt: 2
+        timeout: PT6H
 
   - id: verify_doseresp
     type: io.kestra.plugin.jdbc.postgresql.Query
