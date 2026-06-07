@@ -17,9 +17,30 @@ Please visit this tool live here:
 
 A sister repo to this project is: [https://github.com/MoCoMakers/hack4nf-2022](https://github.com/MoCoMakers/hack4nf-2022)
 
+## 🗂️ Repository layout
+
+| Path | What lives here |
+|------|-----------------|
+| `app/` | The core Streamlit web tool (DREA) — pages, views, services, assets. |
+| `kestra/` | Kestra flow definitions that orchestrate the data pipelines (see `kestra/README.md`). |
+| `scripts/` | Pipeline + operational scripts (data-warehouse ETL, deploy, MCP toolbox launchers). Being split into a dedicated `pipelines/` area over time. |
+| `analysis/` | Exploratory / R&D analyses (e.g. `dbscan_clustering/`). Not part of the deployed app. |
+| `docs/` | Public project documentation — schema references, setup guides, migration notes. |
+| `.devcontainer/`, `.github/` | Dev container and CI/deploy. |
+
+### Developer notes
+
+- **Public vs. AI-context docs.** Everything under `docs/` is intentional, public documentation. Separately, we keep `docs-for-ai/`-style notes and cloned `references/` **gitignored on purpose** — they give an LLM working context but are deliberately not part of the public repo. Don't commit them, and don't delete them assuming they're stray.
+- **Config templates** ship as `*.example` / `*.template`; copy and fill them in locally. Never commit real secrets — `app/.streamlit/secrets.toml` and `scripts/config.yaml` are gitignored.
+- **The app currently reads its data from CSV files** (`app/data/…`, gitignored). The PostgreSQL + MCP path described below is the migration target, so treat DB-mode instructions as forward-looking until the app fully cuts over.
+
+### Kestra deployment concept
+
+Data pipelines are migrating from the manual runbook into **Kestra flows** under `kestra/flows/`. Deployment is **git-driven**: flows are authored in this repo, and on push to `main` a GitHub webhook triggers the `sync_git` flow, which syncs `kestra/flows/` onto the Kestra server — keeping the repo as the single source of truth for orchestration. See `kestra/README.md` for namespaces, the sync flow, and authoring conventions. This is independent of the Streamlit app's own deployment (see "Deploying to a server" below).
+
 # 🚀 **High-Performance Database Setup with MCP Integration**
 
-> **✅ MCP Toolbox Ready**: The project now uses PostgreSQL with MCP (Model Context Protocol) integration for significantly improved performance. See [MIGRATION_STRATEGY.md](MIGRATION_STRATEGY.md) for details.
+> **✅ MCP Toolbox Ready**: The project now uses PostgreSQL with MCP (Model Context Protocol) integration for significantly improved performance. See [MIGRATION_STRATEGY.md](docs/MIGRATION_STRATEGY.md) for details.
 
 ## 🛠️ **Prerequisites**
 
@@ -60,7 +81,7 @@ streamlit run Home.py
 - **Streamlit App**: http://localhost:8501
 
 ### **5. MCP Integration (Optional)**
-For MCP (Model Context Protocol) setup and database integration using HTTP mode, see [MCP_INTEGRATION.md](MCP_INTEGRATION.md)
+For MCP (Model Context Protocol) setup and database integration using HTTP mode, see [MCP_INTEGRATION.md](docs/MCP_INTEGRATION.md)
 
 ## 📊 **Performance Comparison**
 
@@ -81,11 +102,11 @@ The application connects to a PostgreSQL database with the following key tables:
 - **`im_dep_sprime_damaging_mutations`** - Mutation data
 - **`im_omics_genes`** - Gene information
 
-For detailed schema information and MCP integration, see **[MCP_INTEGRATION.md](MCP_INTEGRATION.md)**.
+For detailed schema information and MCP integration, see **[MCP_INTEGRATION.md](docs/MCP_INTEGRATION.md)**.
 
 ## 🐳 **Docker Setup**
 
-For MCP Toolbox setup and management, see the **[MCP Integration Guide](MCP_INTEGRATION.md)** which includes:
+For MCP Toolbox setup and management, see the **[MCP Integration Guide](docs/MCP_INTEGRATION.md)** which includes:
 
 - Docker container configuration
 - Management scripts for Linux/macOS and Windows
@@ -109,7 +130,7 @@ For MCP Toolbox setup and management, see the **[MCP Integration Guide](MCP_INTE
    - Check Python version compatibility (3.9+)
    - Verify database credentials in `tools.yaml`
 
-For MCP-specific troubleshooting, see the **[MCP Integration Guide](MCP_INTEGRATION.md)**.
+For MCP-specific troubleshooting, see the **[MCP Integration Guide](docs/MCP_INTEGRATION.md)**.
 
 ## 📚 **Legacy Setup (File-based)**
 
@@ -259,14 +280,14 @@ This project uses the following technologies:
 - **Streamlit** <small>([Custom container](https://github.com/MoCoMakers/nf_streamlit/blob/developer/environment/.devcontainer/Dockerfile) built from [Python base](https://hub.docker.com/_/python))</small> - Web application framework
 - **Git** <small>([download here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))</small> - Version control
 
-For detailed setup instructions for MCP integration, see **[MCP_INTEGRATION.md](MCP_INTEGRATION.md)**.
+For detailed setup instructions for MCP integration, see **[MCP_INTEGRATION.md](docs/MCP_INTEGRATION.md)**.
 
 # Troubleshooting for Mac users
 If you face errors upon running the `pip install -r requirements.txt`, the following [link](https://stackoverflow.com/questions/76876823/cannot-install-mysqlclient-on-macos) may be of help.
 
 ## 🔍 **MCP Integration for Database Introspection (Optional)**
 
-For advanced database exploration and analysis capabilities, see the dedicated **[MCP Integration Guide](MCP_INTEGRATION.md)** which covers:
+For advanced database exploration and analysis capabilities, see the dedicated **[MCP Integration Guide](docs/MCP_INTEGRATION.md)** which covers:
 
 - **MCP Toolbox Setup** - Docker container configuration
 - **Cursor IDE Integration** - MCP server configuration
@@ -278,8 +299,8 @@ The MCP integration provides powerful tools for exploring your data warehouse st
 
 ## 📖 **Additional Resources**
 
-- **[MCP_INTEGRATION.md](MCP_INTEGRATION.md)** - Complete MCP setup and usage guide
-- **[MIGRATION_STRATEGY.md](MIGRATION_STRATEGY.md)** - Detailed migration plan and technical specifications
+- **[MCP_INTEGRATION.md](docs/MCP_INTEGRATION.md)** - Complete MCP setup and usage guide
+- **[MIGRATION_STRATEGY.md](docs/MIGRATION_STRATEGY.md)** - Detailed migration plan and technical specifications
 - **[MCP Toolbox Documentation](https://github.com/googleapis/genai-toolbox)** - Official MCP Toolbox documentation
 - **[Cursor IDE Documentation](https://cursor.sh/docs)** - Cursor IDE setup and usage guide
 - **[PostgreSQL Documentation](https://www.postgresql.org/docs/)** - Database setup and optimization
