@@ -1,0 +1,5 @@
+# S' Sign Convention — Historical Note
+
+In June 2026 an investigation traced incorrect S' (delta S-prime) values to a sign-convention bug in the `sprime` library at versions below 0.3.0. For certain Hill-curve fits the library handled the curve sign incorrectly, producing S' values with the wrong polarity. The issue was reproduced and documented in detail (a full bug report plus per-curve row traces, including a trace of curve 26); those granular debug artifacts have since been removed because they are fully superseded by the library fix.
+
+The bug is resolved in `sprime` 0.3.0. Because every previously computed S' value was produced under the affected versions (0.2.2 and earlier), all S' values are considered invalid and require a full recomputation — the entire set of curves is to be re-fit from scratch under 0.3.0 via the Kestra pipeline. Going forward, fit results should record a `sprime_version` column and the pipeline should include a pre-flight check asserting the installed `sprime` version is 0.3.0 or newer.

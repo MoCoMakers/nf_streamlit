@@ -31,5 +31,11 @@ infra/config.yaml
 # Kestra local secret fills (never commit real passwords)
 kestra/secrets.env
 
+# Pipeline scripts parked here for local reference while kestra/scripts/ is authoritative
+scripts/deprecated/
+
+# Scratch / API error logs
+ns_upload.txt
+
 .claude/
 docs-for-ai/*

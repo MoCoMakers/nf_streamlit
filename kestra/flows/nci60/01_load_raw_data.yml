@@ -74,19 +74,6 @@ tasks:
         beforeCommands:
           - apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
           - pip install --no-cache-dir psycopg[binary] pyyaml gdown tqdm
-          # Hotfix cloned main scripts until git catches up (mirror fixes back to repo)
-          - |
-            python3 -c "from pathlib import Path
-            loader=Path('nf_streamlit/kestra/scripts/load_nci60_raw.py')
-            lines=loader.read_text().splitlines(); out=[]; skip=False
-            for line in lines:
-                if line=='def main() -> None:':
-                    out.append(line); out.append('    global REPO_ROOT'); skip=True; continue
-                if skip and line.strip()=='global REPO_ROOT': skip=False; continue
-                out.append(line)
-            loader.write_text('\n'.join(out)+'\n')
-            gdrive=Path('nf_streamlit/kestra/scripts/download_gdrive_datasets.py')
-            gdrive.write_text(gdrive.read_text().replace('        remaining_ok=True,\n', ''))"
         env:
           PGHOST: "{{ secret('PG_HOST') }}"
           PGPORT: "{{ secret('PG_PORT') }}"
@@ -117,14 +104,36 @@ tasks:
           maxAttempt: 2
         timeout: PT6H
 
-  - id: verify_doseresp
+  - id: verify_raw_tables
     type: io.kestra.plugin.jdbc.postgresql.Query
-    description: Sanity check row count on primary raw table
+    description: |
+      Row-count parity check against local-DB baseline (2026-06-07).
+      NCI60 core (required): doseresp=24492523. NSC: cas/mw_mf/smiles=331845, sid_cid=331186, names=268496.
+      HTS384 (optional, paths TBD): doseresp=444705, gi50/ic50/lc50/tgi=87921, oneconc=3494.
+      Tables missing from warehouse show NULL (not yet loaded).
     url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
     username: "{{ secret('PG_USER') }}"
     password: "{{ secret('PG_PASSWORD') }}"
     sql: |
-      SELECT count(*) AS doseresp_rows FROM raw_nci_nci60_doseresp;
+      SELECT
+        (SELECT count(*) FROM raw_nci_nci60_doseresp)                                    AS nci60_doseresp,
+        (SELECT count(*) FROM raw_nci_nci60_gi50)                                        AS nci60_gi50,
+        (SELECT count(*) FROM raw_nci_nci60_ic50)                                        AS nci60_ic50,
+        (SELECT count(*) FROM raw_nci_nci60_lc50)                                        AS nci60_lc50,
+        (SELECT count(*) FROM raw_nci_nci60_oneconc)                                     AS nci60_oneconc,
+        (SELECT count(*) FROM raw_nci_nci60_tgi)                                         AS nci60_tgi,
+        (SELECT count(*) FROM raw_nci_nsc_cas)                                           AS nsc_cas,
+        (SELECT count(*) FROM raw_nci_nsc_chemical_names)                                AS nsc_chemical_names,
+        (SELECT count(*) FROM raw_nci_nsc_mw_mf)                                        AS nsc_mw_mf,
+        (SELECT count(*) FROM raw_nci_nsc_sid_cid)                                       AS nsc_sid_cid,
+        (SELECT count(*) FROM raw_nci_nsc_smiles)                                        AS nsc_smiles,
+        (SELECT CASE WHEN to_regclass('raw_nci_hts384_doseresp') IS NOT NULL THEN count(*) END FROM raw_nci_hts384_doseresp) AS hts384_doseresp,
+        (SELECT CASE WHEN to_regclass('raw_nci_hts384_gi50')     IS NOT NULL THEN count(*) END FROM raw_nci_hts384_gi50)     AS hts384_gi50,
+        (SELECT CASE WHEN to_regclass('raw_nci_hts384_ic50')     IS NOT NULL THEN count(*) END FROM raw_nci_hts384_ic50)     AS hts384_ic50,
+        (SELECT CASE WHEN to_regclass('raw_nci_hts384_lc50')     IS NOT NULL THEN count(*) END FROM raw_nci_hts384_lc50)     AS hts384_lc50,
+        (SELECT CASE WHEN to_regclass('raw_nci_hts384_tgi')      IS NOT NULL THEN count(*) END FROM raw_nci_hts384_tgi)      AS hts384_tgi,
+        (SELECT CASE WHEN to_regclass('raw_nci_hts384_oneconc')  IS NOT NULL THEN count(*) END FROM raw_nci_hts384_oneconc)  AS hts384_oneconc,
+        (SELECT CASE WHEN to_regclass('raw_nci_dtp_nci_zscore')  IS NOT NULL THEN count(*) END FROM raw_nci_dtp_nci_zscore)  AS nci_dtp_zscore;
     fetchType: FETCH_ONE
 
 triggers: []

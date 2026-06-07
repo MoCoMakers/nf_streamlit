@@ -1,12 +1,13 @@
-# NCI-60 raw CSV → PostgreSQL table mapping for load_nci60_raw.py
+# NCI raw CSV → PostgreSQL table mapping for load_nci60_raw.py
 #
 # Paths are relative to data_root (default: {repo}/data after Google Drive download).
 # Adjust relative_path if your Drive folder layout differs — list files after download:
-#   find data/NCI -name '*.csv' | head
+#   find /datasets/nf-streamlit/NCI -name '*.csv' | sort
 #
 # Source layout (MoCo Makers shared drive):
 #   https://drive.google.com/drive/folders/1e0_UQzU-LksJxMEN5zJRikL0QbsWrJej
 #   Datasets/NCI/NCI60/NCI60/...  and  Datasets/NCI/NSC_Compounds/...
+#   Datasets/NCI/HTS384/...  (paths TBD — confirm after first NCI-parent download)
 #
 # After gdown, we expect files under data/NCI/... (see download_gdrive_datasets.py).
 
@@ -15,8 +16,10 @@ data_root: data
 # Google Drive folder IDs (public). Override with env GDRIVE_DATASETS_FOLDER_ID.
 drive:
   datasets_folder_id: "1e0_UQzU-LksJxMEN5zJRikL0QbsWrJej"
-  # Optional: download only NCI subtree if you have a direct subfolder link.
-  nci_only_folder_id: null
+  # NCI/ parent folder — contains NCI60/, NSC_Compounds/, HTS384/, DTP_NCI60_ZSCORE/
+  # Verified 2026-06-07 by gdown folder traversal.
+  # 15P41tpOPBfds9hWCuMsL_7X66ZLXwdQj was the inner NCI60/ folder — wrong level.
+  nci_only_folder_id: "1g2WvCwGxgi-GjU5XoMo8VwiDCYnqyFyo"
 
 loads:
   # --- NCI-60 growth inhibition (April 2026 bulk release) ---
@@ -85,6 +88,56 @@ loads:
   - id: nsc_smiles
     relative_path: NCI/NSC_Compounds/nsc_smiles.csv
     table: raw_nci_nsc_smiles
+    replace: true
+    required: false
+
+  # --- HTS384 high-throughput screen (same NSC compounds, 384-well format) ---
+  # Paths verified 2026-06-07 via gdown folder listing. Files are under NCI/NCI60/HTS384/
+  # with HTS384_ prefix. Local baseline: doseresp=444705, gi50/ic50/lc50/tgi=87921, oneconc=3494
+  - id: hts384_doseresp
+    relative_path: NCI/NCI60/HTS384/HTS384_DOSERESP.csv
+    table: raw_nci_hts384_doseresp
+    replace: true
+    required: false
+
+  - id: hts384_gi50
+    relative_path: NCI/NCI60/HTS384/HTS384_GI50.csv
+    table: raw_nci_hts384_gi50
+    replace: true
+    required: false
+
+  - id: hts384_tgi
+    relative_path: NCI/NCI60/HTS384/HTS384_TGI.csv
+    table: raw_nci_hts384_tgi
+    replace: true
+    required: false
+
+  - id: hts384_lc50
+    relative_path: NCI/NCI60/HTS384/HTS384_LC50.csv
+    table: raw_nci_hts384_lc50
+    replace: true
+    required: false
+
+  - id: hts384_ic50
+    relative_path: NCI/NCI60/HTS384/HTS384_IC50.csv
+    table: raw_nci_hts384_ic50
+    replace: true
+    required: false
+
+  - id: hts384_oneconc
+    relative_path: NCI/NCI60/HTS384/HTS384_ONECONC.csv
+    table: raw_nci_hts384_oneconc
+    replace: true
+    required: false
+
+  # --- NCI DTP z-score (CellMiner) ---
+  # Source XLSX verified at NCI/DTP_NCI60_ZSCORE/output/DTP_NCI60_ZSCORE.xlsx on Drive.
+  # Must be pre-converted by convert_nci60_zscore_xlsx.py before loading.
+  # Converted CSV lands alongside the XLSX at the same relative path with .csv extension.
+  # Local baseline: 25731 rows
+  - id: nci_dtp_zscore
+    relative_path: NCI/DTP_NCI60_ZSCORE/output/DTP_NCI60_ZSCORE.csv
+    table: raw_nci_dtp_nci_zscore
     replace: true
     required: false
 
