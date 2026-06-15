@@ -1,24 +1,35 @@
--- Build im_nci_cell_line_xref: bridge from NCI-60 raw cell_name values to
--- Cellosaurus CVCL primary IDs (and onward to DepMap ACH), using only
--- conservative matching (no edit-distance fuzzy).
+-- Build im_cellosaurus_nci60_to_depmap_bridge: bridge from NCI-60 raw cell_name
+-- values to Cellosaurus CVCL primary IDs (and onward to DepMap ACH), using ONLY
+-- EXACT string matching. No normalization, no fuzzy / edit-distance matching.
 --
 -- Match levels, highest-confidence first:
---     1 nci_dtp_exact            cell_name = any value in nci_dtp_name (|-split)
---     2 name_exact               cell_name = Cellosaurus display name
---     3 synonym_exact            cell_name = any value in synonyms (|-split)
---     4 normalized_nci_dtp       norm_key matches at the nci_dtp_name level
---     5 normalized_name          norm_key matches at the name level
---     6 normalized_synonym       norm_key matches at the synonym level
+--     1 nci_dtp_exact   cell_name = any value in nci_dtp_name (|-split)   [exact]
+--     2 name_exact      cell_name = Cellosaurus display name              [exact]
+--     3 synonym_exact   cell_name = any value in synonyms   (|-split)     [exact]
 --
--- norm_key = lowercase, strip [- _ . / and whitespace].
--- Each cell_name is assigned to the lowest-numbered (highest-confidence)
--- level that produces any match. If that level has >1 distinct CVCL hit,
--- match_source = 'ambiguous_<level>' and cvcl_id is NULL; n_matches and
--- candidate_cvcls let an operator review the ambiguity.
+-- Why exact-only (audit, Cellosaurus v55, 2026-06): the previously-present
+-- normalized levels (4-6: lowercase + strip [space . _ / -]) matched exactly ONE
+-- NCI-60 cell_name and resolved ZERO DepMap ACH -- i.e. they contributed nothing
+-- while carrying the entire false-positive surface (normalization collisions and
+-- parental/subclone drift). Removing them costs no coverage (pan-tissue TP53 arm
+-- stays 43 mut / 24 WT) and makes the bridge provably exact-match-only. Level 3
+-- (synonym_exact) is still exact equality but against a curated synonym, so it is
+-- the only tier that warrants a manual spot-check (filter match_source =
+-- 'synonym_exact'; ~13 rows on v55).
+--
+-- Each cell_name is assigned to the lowest-numbered (highest-confidence) level
+-- that produces any match. If that level has >1 distinct CVCL hit,
+-- match_source = 'ambiguous_lvl<N>' and cvcl_id / depmap_ach are NULL; n_matches
+-- and candidate_cvcls let an operator review the ambiguity.
+--
+-- Known caveat (unchanged from prior version): a handful of Cellosaurus entries
+-- carry merged/retired ACH accessions as a pipe-joined string (e.g.
+-- 'ACH-x|ACH-y'); for those, depmap_ach is emitted verbatim and will not satisfy
+-- an equality join downstream until split. See methodology doc.
 
-DROP TABLE IF EXISTS im_nci_cell_line_xref;
+DROP TABLE IF EXISTS im_cellosaurus_nci60_to_depmap_bridge;
 
-CREATE TABLE im_nci_cell_line_xref AS
+CREATE TABLE im_cellosaurus_nci60_to_depmap_bridge AS
 WITH our_cells AS (
     SELECT DISTINCT cell_name
     FROM raw_nci_nci60_doseresp
@@ -44,7 +55,7 @@ cello_candidates AS (
     FROM raw_cellosaurus_celllines
     WHERE synonyms <> ''
 ),
--- All hits with their priority levels.
+-- Exact hits only, with their priority levels.
 ranked AS (
     SELECT o.cell_name, c.cvcl_id, c.cellosaurus_name, c.src, c.candidate,
            CASE c.src
@@ -54,20 +65,6 @@ ranked AS (
            END AS lvl
     FROM our_cells o
     JOIN cello_candidates c ON c.candidate = o.cell_name
-
-  UNION ALL
-
-    SELECT o.cell_name, c.cvcl_id, c.cellosaurus_name, c.src, c.candidate,
-           CASE c.src
-                WHEN 'nci_dtp' THEN 4
-                WHEN 'name'    THEN 5
-                WHEN 'synonym' THEN 6
-           END AS lvl
-    FROM our_cells o
-    JOIN cello_candidates c
-      ON lower(regexp_replace(c.candidate, '[[:space:]._/-]+', '', 'g'))
-       = lower(regexp_replace(o.cell_name, '[[:space:]._/-]+', '', 'g'))
-    WHERE c.candidate <> o.cell_name        -- skip pairs already caught by levels 1-3
 ),
 best_level AS (
     SELECT cell_name, MIN(lvl) AS best_lvl
@@ -100,9 +97,6 @@ SELECT
         WHEN a.lvl = 1 THEN 'nci_dtp_exact'
         WHEN a.lvl = 2 THEN 'name_exact'
         WHEN a.lvl = 3 THEN 'synonym_exact'
-        WHEN a.lvl = 4 THEN 'normalized_nci_dtp'
-        WHEN a.lvl = 5 THEN 'normalized_name'
-        WHEN a.lvl = 6 THEN 'normalized_synonym'
     END                                                                    AS match_source,
     COALESCE(a.n_cvcl, 0)                                                  AS n_matches,
     a.cvcls                                                                AS candidate_cvcls,
@@ -112,5 +106,9 @@ LEFT JOIN agg a ON a.cell_name = o.cell_name
 LEFT JOIN raw_cellosaurus_celllines c
     ON a.n_cvcl = 1 AND c.cvcl_id = a.cvcls;
 
-CREATE UNIQUE INDEX ux_im_nci_cell_line_xref_cell_name
-    ON im_nci_cell_line_xref (cell_name);
+CREATE UNIQUE INDEX ux_im_cellosaurus_nci60_to_depmap_bridge_cell_name
+    ON im_cellosaurus_nci60_to_depmap_bridge (cell_name);
+
+-- NOTE: after a fresh build, grant read access to the analysis/MCP role (run
+-- separately so a role-name mismatch cannot abort the build):
+--     GRANT SELECT ON im_cellosaurus_nci60_to_depmap_bridge TO compbio_dw_readonly;

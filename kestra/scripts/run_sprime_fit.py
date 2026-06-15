@@ -16,7 +16,7 @@ WHAT THIS PRODUCES
 
 SCIENTIFIC NOTES (reproducibility — please do not change without recording why)
 
-    * sprime installed via infra/requirements.txt (unpinned — always latest).
+    * sprime installed via pip install "sprime>=0.3.0" in the fit flow beforeCommands.
     * Hill fitter: sprime.hill_fitting.fit_hill_curve, which wraps
       scipy.optimize.curve_fit. This is the same code path that
       SPrime.load() + RawDataset.to_screening_dataset() would call, just

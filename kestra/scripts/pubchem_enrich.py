@@ -2,6 +2,11 @@
 """
 pubchem_enrich.py
 =================
+STATUS: Manual/optional only — NOT a Kestra flow candidate.
+  Unique value: populates common_name from PubChem REST "Title" field.
+  ChEMBL fields are better handled by enrich_chembl_compounds.py (local DB, no rate limits).
+  Rate-limited to ~5 req/s → ~3-4 hours for 59k NSCs. Run locally when needed.
+
 Enriches im_nci_nci60_doseresp_sprime_list with compound metadata by
 querying the PubChem PUG REST API and joining to our local ChEMBL 37 database.
 

@@ -74,6 +74,20 @@ tasks:
         beforeCommands:
           - apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
           - pip install --no-cache-dir psycopg[binary] pyyaml gdown tqdm
+          - |
+            python3 - <<'PYEOF'
+            from pathlib import Path
+            p = Path('nf_streamlit/kestra/scripts/load_nci60_raw.py')
+            src = p.read_text()
+            old = '    elif missing and skip_download:\n        raise SystemExit(1)'
+            new = (
+                '    elif skip_download:\n'
+                '        req=[e for e in loads if e.get("id") in missing and e.get("required")]\n'
+                '        if req: raise SystemExit(1)'
+            )
+            p.write_text(src.replace(old, new))
+            print('patch ok' if old not in p.read_text() else 'PATCH FAILED')
+            PYEOF
         env:
           PGHOST: "{{ secret('PG_HOST') }}"
           PGPORT: "{{ secret('PG_PORT') }}"
@@ -116,24 +130,24 @@ tasks:
     password: "{{ secret('PG_PASSWORD') }}"
     sql: |
       SELECT
-        (SELECT count(*) FROM raw_nci_nci60_doseresp)                                    AS nci60_doseresp,
-        (SELECT count(*) FROM raw_nci_nci60_gi50)                                        AS nci60_gi50,
-        (SELECT count(*) FROM raw_nci_nci60_ic50)                                        AS nci60_ic50,
-        (SELECT count(*) FROM raw_nci_nci60_lc50)                                        AS nci60_lc50,
-        (SELECT count(*) FROM raw_nci_nci60_oneconc)                                     AS nci60_oneconc,
-        (SELECT count(*) FROM raw_nci_nci60_tgi)                                         AS nci60_tgi,
-        (SELECT count(*) FROM raw_nci_nsc_cas)                                           AS nsc_cas,
-        (SELECT count(*) FROM raw_nci_nsc_chemical_names)                                AS nsc_chemical_names,
-        (SELECT count(*) FROM raw_nci_nsc_mw_mf)                                        AS nsc_mw_mf,
-        (SELECT count(*) FROM raw_nci_nsc_sid_cid)                                       AS nsc_sid_cid,
-        (SELECT count(*) FROM raw_nci_nsc_smiles)                                        AS nsc_smiles,
-        (SELECT CASE WHEN to_regclass('raw_nci_hts384_doseresp') IS NOT NULL THEN count(*) END FROM raw_nci_hts384_doseresp) AS hts384_doseresp,
-        (SELECT CASE WHEN to_regclass('raw_nci_hts384_gi50')     IS NOT NULL THEN count(*) END FROM raw_nci_hts384_gi50)     AS hts384_gi50,
-        (SELECT CASE WHEN to_regclass('raw_nci_hts384_ic50')     IS NOT NULL THEN count(*) END FROM raw_nci_hts384_ic50)     AS hts384_ic50,
-        (SELECT CASE WHEN to_regclass('raw_nci_hts384_lc50')     IS NOT NULL THEN count(*) END FROM raw_nci_hts384_lc50)     AS hts384_lc50,
-        (SELECT CASE WHEN to_regclass('raw_nci_hts384_tgi')      IS NOT NULL THEN count(*) END FROM raw_nci_hts384_tgi)      AS hts384_tgi,
-        (SELECT CASE WHEN to_regclass('raw_nci_hts384_oneconc')  IS NOT NULL THEN count(*) END FROM raw_nci_hts384_oneconc)  AS hts384_oneconc,
-        (SELECT CASE WHEN to_regclass('raw_nci_dtp_nci_zscore')  IS NOT NULL THEN count(*) END FROM raw_nci_dtp_nci_zscore)  AS nci_dtp_zscore;
+        (SELECT count(*) FROM raw_nci_nci60_doseresp)                                                            AS nci60_doseresp,
+        (SELECT count(*) FROM raw_nci_nci60_gi50)                                                                AS nci60_gi50,
+        (SELECT count(*) FROM raw_nci_nci60_ic50)                                                                AS nci60_ic50,
+        (SELECT count(*) FROM raw_nci_nci60_lc50)                                                                AS nci60_lc50,
+        (SELECT count(*) FROM raw_nci_nci60_oneconc)                                                             AS nci60_oneconc,
+        (SELECT count(*) FROM raw_nci_nci60_tgi)                                                                 AS nci60_tgi,
+        (SELECT count(*) FROM raw_nci_nsc_cas)                                                                   AS nsc_cas,
+        (SELECT count(*) FROM raw_nci_nsc_chemical_names)                                                        AS nsc_chemical_names,
+        (SELECT count(*) FROM raw_nci_nsc_mw_mf)                                                                 AS nsc_mw_mf,
+        (SELECT count(*) FROM raw_nci_nsc_sid_cid)                                                               AS nsc_sid_cid,
+        (SELECT count(*) FROM raw_nci_nsc_smiles)                                                                AS nsc_smiles,
+        (SELECT n_live_tup FROM pg_stat_user_tables WHERE relname = 'raw_nci_hts384_doseresp')                   AS hts384_doseresp,
+        (SELECT n_live_tup FROM pg_stat_user_tables WHERE relname = 'raw_nci_hts384_gi50')                       AS hts384_gi50,
+        (SELECT n_live_tup FROM pg_stat_user_tables WHERE relname = 'raw_nci_hts384_ic50')                       AS hts384_ic50,
+        (SELECT n_live_tup FROM pg_stat_user_tables WHERE relname = 'raw_nci_hts384_lc50')                       AS hts384_lc50,
+        (SELECT n_live_tup FROM pg_stat_user_tables WHERE relname = 'raw_nci_hts384_tgi')                        AS hts384_tgi,
+        (SELECT n_live_tup FROM pg_stat_user_tables WHERE relname = 'raw_nci_hts384_oneconc')                    AS hts384_oneconc,
+        (SELECT n_live_tup FROM pg_stat_user_tables WHERE relname = 'raw_nci_dtp_nci_zscore')                    AS nci_dtp_zscore;
     fetchType: FETCH_ONE
 
 triggers: []

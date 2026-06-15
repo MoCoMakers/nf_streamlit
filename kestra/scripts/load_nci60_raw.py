@@ -226,8 +226,13 @@ def main() -> None:
             print(f"DRY RUN: would download to {data_root}")
         else:
             run_download(manifest, data_root, args.nci_only, repo_root)
-    elif missing and skip_download:
-        raise SystemExit(1)
+    elif skip_download:
+        required_missing = [eid for eid in missing if any(
+            e["id"] == eid and e.get("required") for e in loads
+        )]
+        if required_missing:
+            print(f"ERROR: required CSVs missing with --skip-download: {', '.join(required_missing)}", file=sys.stderr)
+            raise SystemExit(1)
 
     if args.download_only:
         if do_download and not args.dry_run:

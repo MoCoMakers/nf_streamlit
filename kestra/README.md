@@ -176,7 +176,7 @@ bind-mounted / available in the tools image) rather than rewriting them.
 | Load raw CSVs (×18) | `scripts/csv_to_datawarehouse.py` | `io.kestra.plugin.scripts.python.Commands` (subflow, one call per table) |
 | Build sprime list | `build_nci60_doseresp_sprime_list.sql` | `io.kestra.plugin.jdbc.postgresql.Queries` |
 | Build compound ref | `build_nci_nsc_compounds.sql` | `io.kestra.plugin.jdbc.postgresql.Queries` |
-| Cell-line xref | `build_nci_cell_line_xref.sql` | `io.kestra.plugin.jdbc.postgresql.Queries` |
+| Cell-line bridge | `build_im_cellosaurus_nci60_to_depmap_bridge.sql` | `io.kestra.plugin.jdbc.postgresql.Queries` |
 | Add fit columns | `alter_sprime_list_add_fit_columns.sql` | `io.kestra.plugin.jdbc.postgresql.Queries` |
 | Run Hill fit | `run_sprime_fit.py` | `io.kestra.plugin.scripts.python.Commands` (long-running, resumable) |
 | ChEMBL enrich | `enrich_chembl_compounds.py` | `io.kestra.plugin.scripts.python.Commands` |

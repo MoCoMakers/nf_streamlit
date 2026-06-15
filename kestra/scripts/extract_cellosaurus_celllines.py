@@ -26,12 +26,13 @@ Writes:  data/Cellosaurus/cellosaurus_celllines.csv
 
 from __future__ import annotations
 
+import argparse
 import csv
 import sys
 from pathlib import Path
 
-SRC = Path("data/Cellosaurus/cellosaurus.txt")
-DST = Path("data/Cellosaurus/cellosaurus_celllines.csv")
+DEFAULT_SRC = Path("data/Cellosaurus/cellosaurus.txt")
+DEFAULT_DST = Path("data/Cellosaurus/cellosaurus_celllines.csv")
 
 HEADERS = ["cvcl_id", "name", "synonyms", "depmap_ach", "nci_dtp_name"]
 
@@ -76,6 +77,27 @@ def parse_entries(path: Path):
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Parse Cellosaurus flat file into a flat cell-line/xref CSV."
+    )
+    parser.add_argument(
+        "--src", type=Path, default=DEFAULT_SRC,
+        help=f"Cellosaurus flat file (default: {DEFAULT_SRC})",
+    )
+    parser.add_argument(
+        "--dst", type=Path, default=DEFAULT_DST,
+        help=f"Output CSV (default: {DEFAULT_DST})",
+    )
+    parser.add_argument(
+        "--skip-if-exists", action="store_true",
+        help="No-op if the output CSV already exists (idempotent pipeline reruns).",
+    )
+    args = parser.parse_args()
+    SRC, DST = args.src, args.dst
+
+    if args.skip_if_exists and DST.exists():
+        print(f"Output already present, skipping extract: {DST}")
+        return 0
     if not SRC.exists():
         print(f"ERROR: source file not found: {SRC}", file=sys.stderr)
         return 1

@@ -2,10 +2,23 @@ id: build_nci60_cell_xref
 namespace: prod.nci60
 
 description: |
-  Build im_nci_cell_line_xref: Cellosaurus → NCI-60 cell-name bridge.
-  Requires raw_cellosaurus_celllines to exist (loaded separately — Cellosaurus flat file
-  must be downloaded once to Tier 2 and ingested via extract_cellosaurus_celllines.py).
-  Run after prod.nci60.load_raw_nci60 and prod.nci60.build_nci60_tables succeed.
+  Build im_cellosaurus_nci60_to_depmap_bridge: Cellosaurus → NCI-60 cell-name bridge
+  (and onward to DepMap ACH, the join key the genotype/S′ tables use). Exact-string
+  matching only (levels 1-3: nci_dtp / name / synonym); normalized levels were dropped
+  after an audit showed they added 0 ACH and all the false-positive risk.
+
+  Self-contained: this flow now loads raw_cellosaurus_celllines itself (previously
+  assumed "loaded separately"). It (1) extracts the Cellosaurus flat file to a flat
+  CSV if that CSV is not already cached, (2) bulk-loads it into raw_cellosaurus_celllines,
+  then (3) runs build_im_cellosaurus_nci60_to_depmap_bridge.sql.
+
+  The Cellosaurus flat file (data/Cellosaurus/cellosaurus.txt, ~120 MB) is gitignored
+  and is NOT in the git clone — it must live in the persistent Tier-2 data cache at
+  {{ inputs.data_cache_path }}/Cellosaurus/cellosaurus.txt (download once from
+  https://ftp.expasy.org/databases/cellosaurus/cellosaurus.txt). The extracted CSV is
+  written back beside it and reused on subsequent runs.
+
+  Run after prod.nci60.load_raw_nci60 (needs raw_nci_nci60_doseresp for the cell-name list).
 
 labels:
   pipeline: nci60
@@ -16,22 +29,25 @@ inputs:
     type: STRING
     defaults: main
 
+  - id: data_cache_path
+    type: STRING
+    defaults: /datasets/nf-streamlit
+    description: |
+      Persistent data cache (compose mount /var/lib/kestra/nf-datasets → this path).
+      Cellosaurus files are expected under {{ this }}/Cellosaurus/.
+
+  - id: force_extract
+    type: BOOLEAN
+    defaults: false
+    description: Re-parse cellosaurus.txt even if the extracted CSV is already cached.
+
 variables:
   repo_dir: nf_streamlit
 
 tasks:
-  - id: preflight_check
-    type: io.kestra.plugin.jdbc.postgresql.Query
-    description: Fail fast if raw_cellosaurus_celllines is absent or empty.
-    url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
-    username: "{{ secret('PG_USER') }}"
-    password: "{{ secret('PG_PASSWORD') }}"
-    sql: |
-      SELECT count(*) AS cellosaurus_rows FROM raw_cellosaurus_celllines;
-    fetchType: FETCH_ONE
-
   - id: workspace
     type: io.kestra.plugin.core.flow.WorkingDirectory
+    description: Share worker filesystem so clone, extract+load, and build SQL see the same tree.
     tasks:
       - id: clone_repo
         type: io.kestra.plugin.git.Clone
@@ -39,8 +55,52 @@ tasks:
         branch: "{{ inputs.git_branch }}"
         directory: "{{ vars.repo_dir }}"
 
+      - id: extract_and_load_cellosaurus
+        type: io.kestra.plugin.scripts.python.Commands
+        description: Extract cellosaurus.txt → CSV (if needed), then load raw_cellosaurus_celllines.
+        warningOnStdErr: false
+        taskRunner:
+          type: io.kestra.plugin.scripts.runner.docker.Docker
+          volumes:
+            - /var/lib/kestra/nf-datasets:/datasets/nf-streamlit:rw
+        containerImage: python:3.11-slim
+        beforeCommands:
+          - apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+          - pip install --no-cache-dir psycopg[binary] pyyaml
+        env:
+          PGHOST: "{{ secret('PG_HOST') }}"
+          PGPORT: "{{ secret('PG_PORT') }}"
+          PGUSER: "{{ secret('PG_USER') }}"
+          PGDATABASE: "{{ secret('PG_DATABASE') }}"
+          PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
+          PGSSLMODE: "{{ secret('PG_SSLMODE') }}"
+          CELLO_DIR: "{{ inputs.data_cache_path }}/Cellosaurus"
+          FORCE_EXTRACT: "{{ inputs.force_extract }}"
+        commands:
+          - cd {{ vars.repo_dir }}
+          - |
+            if [ ! -f "$CELLO_DIR/cellosaurus.txt" ]; then
+              echo "ERROR: $CELLO_DIR/cellosaurus.txt not found in data cache." >&2
+              echo "Download it once: curl -L -o '$CELLO_DIR/cellosaurus.txt' https://ftp.expasy.org/databases/cellosaurus/cellosaurus.txt" >&2
+              exit 1
+            fi
+          - |
+            python kestra/scripts/extract_cellosaurus_celllines.py \
+              --src "$CELLO_DIR/cellosaurus.txt" \
+              --dst "$CELLO_DIR/cellosaurus_celllines.csv" \
+              $( [ "$FORCE_EXTRACT" != "true" ] && echo --skip-if-exists )
+          - |
+            python kestra/scripts/csv_to_datawarehouse.py \
+              "$CELLO_DIR/cellosaurus_celllines.csv" raw_cellosaurus_celllines --replace
+        retry:
+          type: constant
+          interval: PT1M
+          maxAttempt: 2
+        timeout: PT1H
+
       - id: run_xref_sql
         type: io.kestra.plugin.scripts.shell.Commands
+        description: Build im_cellosaurus_nci60_to_depmap_bridge from raw_cellosaurus_celllines + raw_nci_nci60_doseresp.
         taskRunner:
           type: io.kestra.plugin.scripts.runner.docker.Docker
         containerImage: postgres:16
@@ -52,22 +112,26 @@ tasks:
           PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
         commands:
           - cd {{ vars.repo_dir }}
-          - psql -v ON_ERROR_STOP=1 -f kestra/scripts/sql/build_nci_cell_line_xref.sql
+          - psql -v ON_ERROR_STOP=1 -f kestra/scripts/sql/build_im_cellosaurus_nci60_to_depmap_bridge.sql
         timeout: PT30M
 
   - id: verify_xref
     type: io.kestra.plugin.jdbc.postgresql.Query
     description: |
-      Baseline (local DB 2026-06-07): 163 cell lines, 76.7% matched.
+      Exact-only baseline (Cellosaurus v55, 2026-06): 163 cell lines; ~124 match a
+      CVCL; ~79 carry a usable DepMap ACH; 0 ambiguous. with_ach is the count
+      usable as a DepMap join key.
     url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
     username: "{{ secret('PG_USER') }}"
     password: "{{ secret('PG_PASSWORD') }}"
     sql: |
       SELECT
-        count(*)                                          AS total_cell_lines,
-        count(*) FILTER (WHERE cvcl_id IS NOT NULL)      AS matched,
-        count(*) FILTER (WHERE match_source = 'unmatched') AS unmatched
-      FROM im_nci_cell_line_xref;
+        count(*)                                              AS total_cell_lines,
+        count(*) FILTER (WHERE cvcl_id IS NOT NULL)          AS matched,
+        count(*) FILTER (WHERE depmap_ach IS NOT NULL)       AS with_ach,
+        count(*) FILTER (WHERE match_source LIKE 'ambiguous%') AS ambiguous,
+        count(*) FILTER (WHERE match_source = 'synonym_exact') AS synonym_spotcheck
+      FROM im_cellosaurus_nci60_to_depmap_bridge;
     fetchType: FETCH_ONE
 
 triggers: []
