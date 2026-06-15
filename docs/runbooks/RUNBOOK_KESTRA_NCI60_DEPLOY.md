@@ -37,7 +37,7 @@ Kestra flow: prod.nci60.build_nci60_tables
   ├─ psql → build_nci60_doseresp_sprime_list.sql
   ├─ psql → alter_sprime_list_add_fit_columns.sql
   ├─ psql → build_nci_nsc_compounds.sql
-  └─ psql → build_nci_cell_line_xref.sql
+  └─ psql → build_im_cellosaurus_nci60_to_depmap_bridge.sql
         │
         ▼
 (Future) prod.nci60.run_sprime_fit → ~4.8M curves, ~10h
@@ -192,7 +192,7 @@ Requires raw tables loaded. Produces:
 |-------|-------------|
 | `im_nci_nci60_doseresp_sprime_list` | ~4.86M |
 | `im_nci_nsc_compounds` | ~332k |
-| `im_nci_cell_line_xref` | 163 lines |
+| `im_cellosaurus_nci60_to_depmap_bridge` | 163 lines (~124 CVCL, ~79 ACH) |
 
 **Prerequisites for cell xref:** `raw_cellosaurus_celllines` must exist (Cellosaurus extract — not in Drive NCI folder; run `extract_cellosaurus_celllines.py` separately or load from Drive `Cellosaurus/` subfolder).
 

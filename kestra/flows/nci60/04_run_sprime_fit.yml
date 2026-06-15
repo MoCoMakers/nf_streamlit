@@ -1,0 +1,138 @@
+id: run_sprime_fit
+namespace: prod.nci60
+
+description: |
+  Fit Hill curves to NCI-60 dose-response data and populate s_prime + four Hill
+  parameters (ec50, zero_asymptote, inf_asymptote, hill_slope) into
+  im_nci_nci60_doseresp_sprime_list.
+
+  Eligible curves (load_eligible = TRUE, fit_run_id IS NULL) are fetched in
+  batches, fit in parallel via multiprocessing.Pool, and committed per batch.
+  Fully resumable: a killed or restarted execution picks up from the last
+  committed batch. A flow retry is safe and idempotent.
+
+  Baseline before Stage 2 (2026-06-07): 270,400 fit / 4,858,493 total (~5.6%).
+  Remaining to fit: ~4,562,420 eligible curves. Full run takes many hours.
+  Use inputs.limit = 5000 for smoke tests.
+
+labels:
+  pipeline: nci60
+  stage: fit
+
+inputs:
+  - id: git_branch
+    type: STRING
+    defaults: main
+    description: Repo branch to clone. Use feature/NCI60 until merged to main.
+
+  - id: workers
+    type: INT
+    defaults: 4
+    description: multiprocessing worker count. 0 = serial (debug only).
+
+  - id: batch_size
+    type: INT
+    defaults: 5000
+    description: |
+      Rows fetched + fit + committed per iteration. Bounds crash-loss window:
+      on a kill, at most batch_size rows are re-fit on resume. 2000–5000 is
+      a good range; lower = more frequent checkpoints.
+
+  - id: limit
+    type: INT
+    defaults: 0
+    description: |
+      Cap total rows processed this execution. 0 = no limit (full run until
+      table is drained). Set to 5000 for a smoke test.
+
+  - id: chunksize
+    type: INT
+    defaults: 100
+    description: Pool.imap chunksize; items dispatched per worker round-trip.
+
+variables:
+  repo_dir: nf_streamlit
+
+tasks:
+  - id: preflight
+    type: io.kestra.plugin.jdbc.postgresql.Query
+    description: |
+      Report current fit coverage before the run starts. last_committed_curve_id
+      shows exactly where a prior run stopped — resume will continue from there.
+    url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
+    username: "{{ secret('PG_USER') }}"
+    password: "{{ secret('PG_PASSWORD') }}"
+    sql: |
+      SELECT
+        count(*)                                              AS total_curves,
+        count(*) FILTER (WHERE load_eligible = TRUE)         AS eligible,
+        count(*) FILTER (WHERE fit_run_id IS NOT NULL)       AS already_fit,
+        count(*) FILTER (WHERE load_eligible = TRUE
+                           AND fit_run_id IS NULL)           AS remaining_to_fit,
+        max(curve_id) FILTER (WHERE fit_run_id IS NOT NULL)  AS last_committed_curve_id
+      FROM im_nci_nci60_doseresp_sprime_list;
+    fetchType: FETCH_ONE
+
+  - id: workspace
+    type: io.kestra.plugin.core.flow.WorkingDirectory
+    description: Share worker filesystem so clone_repo and run_fit see the same repo tree.
+    tasks:
+      - id: clone_repo
+        type: io.kestra.plugin.git.Clone
+        url: https://github.com/mocomakers/nf_streamlit
+        branch: "{{ inputs.git_branch }}"
+        directory: "{{ vars.repo_dir }}"
+
+      - id: run_fit
+        type: io.kestra.plugin.scripts.python.Commands
+        warningOnStdErr: false
+        taskRunner:
+          type: io.kestra.plugin.scripts.runner.docker.Docker
+        containerImage: python:3.11-slim
+        beforeCommands:
+          - apt-get update -qq && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+          - pip install --no-cache-dir "psycopg[binary]" "sprime>=0.3.0"
+        env:
+          PGHOST:     "{{ secret('PG_HOST') }}"
+          PGPORT:     "{{ secret('PG_PORT') }}"
+          PGUSER:     "{{ secret('PG_USER') }}"
+          PGDATABASE: "{{ secret('PG_DATABASE') }}"
+          PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
+          PGSSLMODE:  "{{ secret('PG_SSLMODE') }}"
+        commands:
+          - cd {{ vars.repo_dir }}
+          - |
+            python kestra/scripts/run_sprime_fit.py \
+              --workers {{ inputs.workers }} \
+              --batch-size {{ inputs.batch_size }} \
+              --chunksize {{ inputs.chunksize }} \
+              $( [ "{{ inputs.limit }}" != "0" ] && echo "--limit {{ inputs.limit }}" )
+        timeout: PT24H
+        retry:
+          type: constant
+          interval: PT5M
+          maxAttempt: 3
+
+  - id: verify_fit
+    type: io.kestra.plugin.jdbc.postgresql.Query
+    description: |
+      Post-run fit coverage breakdown. Target for a full run: remaining_unfit = 0.
+      Baseline before Stage 2 (2026-06-07): 270,400 fit / 4,858,493 total.
+    url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
+    username: "{{ secret('PG_USER') }}"
+    password: "{{ secret('PG_PASSWORD') }}"
+    sql: |
+      SELECT
+        count(*)                                                AS total_curves,
+        count(*) FILTER (WHERE fit_run_id IS NOT NULL)         AS fit_attempted,
+        count(*) FILTER (WHERE fit_status = 'ok')              AS fit_ok,
+        count(*) FILTER (WHERE fit_status = 'failed')          AS fit_failed,
+        count(*) FILTER (WHERE fit_status = 'skipped')         AS fit_skipped,
+        count(*) FILTER (WHERE load_eligible = TRUE
+                           AND fit_run_id IS NULL)             AS remaining_unfit,
+        round(100.0 * count(*) FILTER (WHERE fit_run_id IS NOT NULL)
+              / count(*), 2)                                   AS pct_attempted
+      FROM im_nci_nci60_doseresp_sprime_list;
+    fetchType: FETCH_ONE
+
+triggers: []
