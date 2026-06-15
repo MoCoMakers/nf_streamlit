@@ -79,11 +79,12 @@ tasks:
         commands:
           - cd {{ vars.repo_dir }}
           - |
+            mkdir -p "$CELLO_DIR"
             if [ ! -f "$CELLO_DIR/cellosaurus.txt" ]; then
-              echo "ERROR: $CELLO_DIR/cellosaurus.txt not found in data cache." >&2
-              echo "Download it once: curl -L -o '$CELLO_DIR/cellosaurus.txt' https://ftp.expasy.org/databases/cellosaurus/cellosaurus.txt" >&2
-              exit 1
+              echo "cellosaurus.txt not cached -- downloading current release from ExPASy (one-time)..."
+              python -c "import urllib.request as u; u.urlretrieve('https://ftp.expasy.org/databases/cellosaurus/cellosaurus.txt', '$CELLO_DIR/cellosaurus.txt')"
             fi
+            echo -n "Cellosaurus release in cache: "; grep -m1 -iE 'release|version' "$CELLO_DIR/cellosaurus.txt" || echo "(release line not found)"
           - |
             python kestra/scripts/extract_cellosaurus_celllines.py \
               --src "$CELLO_DIR/cellosaurus.txt" \
