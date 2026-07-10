@@ -1,0 +1,84 @@
+id: build_demeter_cellosaurus_bridge
+namespace: prod.depmap
+
+description: |
+  Build im_depm_demeter_cellosurus_to_ach_cellline_mapping: bridge DEMETER2 RNAi
+  cell-line ids (raw_depm_demeter_combined_gene_dep_scores.ccle_id, CCLE
+  "CELLNAME_TISSUE" form) → Cellosaurus CVCL → DepMap ACH, the key the genotype
+  tables (im_dep_sprime_damaging_mutations) join on. Exact-string matching only;
+  ambiguity resolved over distinct ACHs. See the SQL header + methodology doc
+  (kestra/docs/NCI60_CELL_LINE_BRIDGE_METHODOLOGY.md).
+
+  Prerequisites (must already be loaded in the warehouse):
+    - raw_cellosaurus_celllines  (prod.nci60.build_nci60_cell_xref)
+    - raw_depm_demeter_combined_gene_dep_scores  (DepMap raw load)
+
+  Idempotent: the build SQL is DROP TABLE IF EXISTS + CREATE TABLE AS, so this flow
+  is safe to re-run from the top.
+
+labels:
+  pipeline: depmap
+  stage: build
+
+inputs:
+  - id: git_branch
+    type: STRING
+    defaults: main
+    description: Branch to clone the build SQL from (prod syncs main; override to test a feature branch).
+
+variables:
+  repo_dir: nf_streamlit
+
+tasks:
+  - id: workspace
+    type: io.kestra.plugin.core.flow.WorkingDirectory
+    description: Share the worker filesystem so clone + build see the same tree.
+    tasks:
+      - id: clone_repo
+        type: io.kestra.plugin.git.Clone
+        url: https://github.com/mocomakers/nf_streamlit
+        branch: "{{ inputs.git_branch }}"
+        directory: "{{ vars.repo_dir }}"
+
+      - id: run_build_sql
+        type: io.kestra.plugin.scripts.shell.Commands
+        description: |
+          Build the mapping table from the committed SQL, then GRANT SELECT to the
+          read-only analysis/MCP role (separate statement so a role mismatch cannot
+          abort the build).
+        taskRunner:
+          type: io.kestra.plugin.scripts.runner.docker.Docker
+        containerImage: postgres:16
+        env:
+          PGHOST: "{{ secret('PG_HOST') }}"
+          PGPORT: "{{ secret('PG_PORT') }}"
+          PGUSER: "{{ secret('PG_USER') }}"
+          PGDATABASE: "{{ secret('PG_DATABASE') }}"
+          PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
+        commands:
+          - cd {{ vars.repo_dir }}
+          - psql -v ON_ERROR_STOP=1 -f kestra/scripts/sql/build_im_depm_demeter_cellosurus_to_ach_cellline_mapping.sql
+          - psql -v ON_ERROR_STOP=1 -c "GRANT SELECT ON im_depm_demeter_cellosurus_to_ach_cellline_mapping TO compbio_dw_readonly;"
+        timeout: PT30M
+
+  - id: verify
+    type: io.kestra.plugin.jdbc.postgresql.Query
+    description: |
+      Expected on the current warehouse (Cellosaurus v55): 712 DEMETER lines across
+      27 tissues; ~699 resolve a usable ACH (~98%); lung 127/129. with_ach is the
+      count usable as a DepMap join key (excludes ambiguous/unmatched).
+    url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
+    username: "{{ secret('PG_USER') }}"
+    password: "{{ secret('PG_PASSWORD') }}"
+    sql: |
+      SELECT
+        count(*)                                          AS total_ccle_lines,
+        count(DISTINCT tissue)                            AS n_tissues,
+        count(*) FILTER (WHERE depmap_ach IS NOT NULL)    AS with_ach,
+        count(*) FILTER (WHERE match_source = 'ambiguous') AS ambiguous,
+        count(*) FILTER (WHERE match_source = 'unmatched') AS unmatched,
+        count(*) FILTER (WHERE depmap_ach LIKE '%|%')     AS merged_ach
+      FROM im_depm_demeter_cellosurus_to_ach_cellline_mapping;
+    fetchType: FETCH_ONE
+
+triggers: []
