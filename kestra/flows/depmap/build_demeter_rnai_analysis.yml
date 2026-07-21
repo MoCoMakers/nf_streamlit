@@ -55,22 +55,6 @@ variables:
   repo_dir: nf_streamlit
 
 tasks:
-  - id: preflight
-    type: io.kestra.plugin.jdbc.postgresql.Query
-    description: Work-queue coverage before this run starts.
-    url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
-    username: "{{ secret('PG_USER') }}"
-    password: "{{ secret('PG_PASSWORD') }}"
-    sql: |
-      SELECT
-        count(*) AS total_combos,
-        count(*) FILTER (WHERE analysis_run_id IS NOT NULL) AS completed_combos,
-        count(*) FILTER (WHERE analysis_run_id IS NULL)     AS remaining_combos,
-        count(DISTINCT driver_gene_id)                      AS distinct_driver_genes,
-        count(DISTINCT tissue)                               AS distinct_tissues
-      FROM im_depm_demeter_rnai_work_queue;
-    fetchType: FETCH_ONE
-
   - id: workspace
     type: io.kestra.plugin.core.flow.WorkingDirectory
     description: Share the worker filesystem so clone + build + run see the same tree.
@@ -105,6 +89,27 @@ tasks:
           - psql -v ON_ERROR_STOP=1 -f kestra/scripts/sql/build_im_depm_demeter_rnai_work_queue.sql
           - psql -v ON_ERROR_STOP=1 -f kestra/scripts/sql/create_fnl_depm_demeter_rnai_analysis.sql
         timeout: PT2H
+
+      - id: preflight
+        type: io.kestra.plugin.jdbc.postgresql.Query
+        description: |
+          Work-queue coverage after tables are built/refreshed, before the
+          batch loop starts. Moved here (not first) because
+          im_depm_demeter_rnai_work_queue doesn't exist until
+          build_pool_and_queue creates it -- a first-ever run fails
+          immediately if this runs before that.
+        url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
+        username: "{{ secret('PG_USER') }}"
+        password: "{{ secret('PG_PASSWORD') }}"
+        sql: |
+          SELECT
+            count(*) AS total_combos,
+            count(*) FILTER (WHERE analysis_run_id IS NOT NULL) AS completed_combos,
+            count(*) FILTER (WHERE analysis_run_id IS NULL)     AS remaining_combos,
+            count(DISTINCT driver_gene_id)                      AS distinct_driver_genes,
+            count(DISTINCT tissue)                               AS distinct_tissues
+          FROM im_depm_demeter_rnai_work_queue;
+        fetchType: FETCH_ONE
 
       - id: run_analysis
         type: io.kestra.plugin.scripts.python.Commands
