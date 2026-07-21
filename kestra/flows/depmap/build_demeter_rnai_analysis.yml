@@ -1,0 +1,151 @@
+id: build_demeter_rnai_analysis
+namespace: prod.depmap
+
+description: |
+  Populate fnl_depm_demeter_rnai_analysis: pooled DEMETER RNAi delta scores
+  for ALL driver genes x ALL DEMETER target genes x ALL tissues, generalizing
+  references/demeter/rnai_analysis.py (hardcoded to 4 driver genes, LUNG
+  only). See kestra/scripts/run_demeter_rnai_analysis.py for the full
+  methodology and mutation_value coding (0=WT/reference, 1=heterozygous/
+  excluded, 2=biallelic mutant).
+
+  Prerequisites (must already be loaded in the warehouse):
+    - raw_depm_demeter_combined_gene_dep_scores  (DepMap raw load)
+    - im_dep_sprime_damaging_mutations
+    - im_depm_demeter_cellosurus_to_ach_cellline_mapping  (prod.depmap.build_demeter_cellosaurus_bridge)
+
+  Chunked + resumable: a single query joining all driver genes against all
+  target genes across all tissues would produce a pre-aggregation join in
+  the tens of billions of rows. Instead, im_depm_demeter_rnai_work_queue
+  holds one row per usable (driver_gene, tissue) combo, and
+  run_demeter_rnai_analysis.py claims + computes + commits it in small
+  batches (WHERE analysis_run_id IS NULL), the same resumable-batch pattern
+  as prod.nci60.run_sprime_fit. A killed or restarted execution resumes from
+  the last committed batch; a flow retry is safe and idempotent.
+
+  im_depm_demeter_rnai_pool_members is a diagnostic (fully rebuilt every run)
+  listing every cell line's driver-gene genotype pool assignment per tissue.
+
+labels:
+  pipeline: depmap
+  stage: analysis
+
+inputs:
+  - id: git_branch
+    type: STRING
+    defaults: main
+    description: Branch to clone the build SQL / script from.
+
+  - id: batch_size
+    type: INT
+    defaults: 25
+    description: |
+      (driver_gene, tissue) combos claimed + computed + committed per
+      iteration. Bounds crash-loss window on a kill/timeout.
+
+  - id: limit
+    type: INT
+    defaults: 0
+    description: |
+      Cap total (driver_gene, tissue) combos processed this execution.
+      0 = no limit (full run until the work queue is drained). Set to a
+      small number (e.g. 10) for a smoke test.
+
+variables:
+  repo_dir: nf_streamlit
+
+tasks:
+  - id: preflight
+    type: io.kestra.plugin.jdbc.postgresql.Query
+    description: Work-queue coverage before this run starts.
+    url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
+    username: "{{ secret('PG_USER') }}"
+    password: "{{ secret('PG_PASSWORD') }}"
+    sql: |
+      SELECT
+        count(*) AS total_combos,
+        count(*) FILTER (WHERE analysis_run_id IS NOT NULL) AS completed_combos,
+        count(*) FILTER (WHERE analysis_run_id IS NULL)     AS remaining_combos,
+        count(DISTINCT driver_gene_id)                      AS distinct_driver_genes,
+        count(DISTINCT tissue)                               AS distinct_tissues
+      FROM im_depm_demeter_rnai_work_queue;
+    fetchType: FETCH_ONE
+
+  - id: workspace
+    type: io.kestra.plugin.core.flow.WorkingDirectory
+    description: Share the worker filesystem so clone + build + run see the same tree.
+    tasks:
+      - id: clone_repo
+        type: io.kestra.plugin.git.Clone
+        url: https://github.com/mocomakers/nf_streamlit
+        branch: "{{ inputs.git_branch }}"
+        directory: "{{ vars.repo_dir }}"
+
+      - id: build_pool_and_queue
+        type: io.kestra.plugin.scripts.shell.Commands
+        description: |
+          Add supporting indexes, rebuild the pool-membership diagnostic
+          (safe -- no process state), refresh the work queue (append-only --
+          never resets progress on already-claimed combos), and ensure the
+          final result table exists. GRANTs run inside each SQL file so a
+          role mismatch cannot abort the build.
+        taskRunner:
+          type: io.kestra.plugin.scripts.runner.docker.Docker
+        containerImage: postgres:16
+        env:
+          PGHOST: "{{ secret('PG_HOST') }}"
+          PGPORT: "{{ secret('PG_PORT') }}"
+          PGUSER: "{{ secret('PG_USER') }}"
+          PGDATABASE: "{{ secret('PG_DATABASE') }}"
+          PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
+        commands:
+          - cd {{ vars.repo_dir }}
+          - psql -v ON_ERROR_STOP=1 -f kestra/scripts/sql/add_rnai_analysis_indexes.sql
+          - psql -v ON_ERROR_STOP=1 -f kestra/scripts/sql/build_im_depm_demeter_rnai_pool_members.sql
+          - psql -v ON_ERROR_STOP=1 -f kestra/scripts/sql/build_im_depm_demeter_rnai_work_queue.sql
+          - psql -v ON_ERROR_STOP=1 -f kestra/scripts/sql/create_fnl_depm_demeter_rnai_analysis.sql
+        timeout: PT2H
+
+      - id: run_analysis
+        type: io.kestra.plugin.scripts.python.Commands
+        warningOnStdErr: false
+        taskRunner:
+          type: io.kestra.plugin.scripts.runner.docker.Docker
+        containerImage: python:3.11-slim
+        beforeCommands:
+          - apt-get update -qq && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+          - pip install --no-cache-dir "psycopg[binary]"
+        env:
+          PGHOST:     "{{ secret('PG_HOST') }}"
+          PGPORT:     "{{ secret('PG_PORT') }}"
+          PGUSER:     "{{ secret('PG_USER') }}"
+          PGDATABASE: "{{ secret('PG_DATABASE') }}"
+          PGPASSWORD: "{{ secret('PG_PASSWORD') }}"
+        commands:
+          - cd {{ vars.repo_dir }}
+          - |
+            python kestra/scripts/run_demeter_rnai_analysis.py \
+              --batch-size {{ inputs.batch_size }} \
+              $( [ "{{ inputs.limit }}" != "0" ] && echo "--limit {{ inputs.limit }}" )
+        timeout: PT24H
+        retry:
+          type: constant
+          interval: PT5M
+          maxAttempt: 3
+
+  - id: verify
+    type: io.kestra.plugin.jdbc.postgresql.Query
+    description: Post-run coverage. Target for a full run remaining_combos = 0.
+    url: "jdbc:postgresql://{{ secret('PG_HOST') }}:{{ secret('PG_PORT') }}/{{ secret('PG_DATABASE') }}"
+    username: "{{ secret('PG_USER') }}"
+    password: "{{ secret('PG_PASSWORD') }}"
+    sql: |
+      SELECT
+        (SELECT count(*) FROM im_depm_demeter_rnai_work_queue WHERE analysis_run_id IS NULL) AS remaining_combos,
+        (SELECT count(*) FROM fnl_depm_demeter_rnai_analysis) AS total_result_rows,
+        (SELECT count(DISTINCT driver_gene_id) FROM fnl_depm_demeter_rnai_analysis) AS distinct_driver_genes,
+        (SELECT count(DISTINCT tissue) FROM fnl_depm_demeter_rnai_analysis) AS distinct_tissues,
+        (SELECT count(DISTINCT target_gene) FROM fnl_depm_demeter_rnai_analysis) AS distinct_target_genes;
+    fetchType: FETCH_ONE
+
+triggers: []
