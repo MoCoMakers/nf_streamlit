@@ -143,10 +143,10 @@ def insert_batch_results(
            AND count(d.dep_score) FILTER (WHERE pm.genotype_pool = 'MUT')    > 0
         ON CONFLICT (driver_gene_id, tissue, target_gene) DO NOTHING
     """
-    # Param order must match placeholder order in the SQL text above: the
-    # VALUES list's (gene_id, tissue) pairs come first, then run_id (the
-    # SELECT's lone %s).
-    full_params = values_params + [run_id]
+    # Param order must match placeholder order in the SQL TEXT (left to
+    # right), not logical grouping: the SELECT list's lone %s (run_id) comes
+    # before the VALUES {values_sql} list, which is in the FROM clause.
+    full_params = [run_id] + values_params
     with conn.cursor() as cur:
         cur.execute(sql, full_params)
         return cur.rowcount
